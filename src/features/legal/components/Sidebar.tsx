@@ -1,5 +1,5 @@
 import {
-  Home, Briefcase, Calendar, UserLock, FolderTree,
+  Home, Briefcase, Calendar, Lock, FolderTree,
   FileSignature, UserCheck, BookUser, LineChart, ShieldCheck, ChevronLeft,
 } from "lucide-react";
 import type { Role, ViewKey } from "../types";
@@ -11,7 +11,7 @@ const ITEMS: NavItem[] = [
   { key: "dashboard", label: "Command Deck", Icon: Home },
   { key: "matters", label: "Matter Hub", Icon: Briefcase },
   { key: "calendar", label: "Calendar & Deadlines", Icon: Calendar },
-  { key: "clientportal", label: "Client Portal", Icon: UserLock },
+  { key: "clientportal", label: "Client Portal", Icon: Lock },
   { key: "vault", label: "Document Vault", Icon: FolderTree },
   { key: "drafting", label: "Legal Drafting", Icon: FileSignature },
   { key: "witness", label: "Witness & Experts", Icon: UserCheck },
