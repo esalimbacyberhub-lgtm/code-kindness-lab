@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import type { Matter, Role, Task, ViewKey } from "../types";
 
-const STORAGE_KEY = "legalOsStateNextGen";
+const STORAGE_KEY = "omuyomaLegalOs.v2";
 
 interface State {
   tasks: Task[];
