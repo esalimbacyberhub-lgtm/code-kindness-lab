@@ -49,6 +49,14 @@ export default {
         },
         success: "hsl(var(--success))",
         warning: "hsl(var(--warning))",
+        info: "hsl(var(--info))",
+        brand: {
+          burgundy: "hsl(var(--brand-burgundy))",
+          "burgundy-deep": "hsl(var(--brand-burgundy-deep))",
+          gold: "hsl(var(--brand-gold))",
+          "gold-soft": "hsl(var(--brand-gold-soft))",
+          ivory: "hsl(var(--brand-ivory))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

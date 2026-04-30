@@ -11,17 +11,17 @@ export function PriorityWidgets({ tasks }: Props) {
   const billables = pendingCount * 12500; // demo
 
   const items = [
-    { label: "Today", value: todayCount, sub: "Due today", Icon: CalendarDays, tone: "accent" as const },
-    { label: "High", value: highCount, sub: "Urgent", Icon: AlertTriangle, tone: "destructive" as const },
-    { label: "Pending", value: pendingCount, sub: "Awaiting", Icon: Clock, tone: "warning" as const },
-    { label: "Billables", value: `KES ${billables.toLocaleString()}`, sub: `${(pendingCount * 1.5).toFixed(1)} hrs`, Icon: Coins, tone: "primary" as const },
+    { label: "Today", value: todayCount, sub: "Due today", Icon: CalendarDays, tone: "info" as const },
+    { label: "Priority", value: highCount, sub: "Urgent", Icon: AlertTriangle, tone: "accent" as const },
+    { label: "Pending", value: pendingCount, sub: "In progress", Icon: Clock, tone: "ivory" as const },
+    { label: "Billables", value: `KES ${billables.toLocaleString()}`, sub: `${(pendingCount * 1.5).toFixed(1)} hrs`, Icon: Coins, tone: "gold" as const },
   ];
 
   const toneClasses: Record<string, string> = {
-    accent: "from-accent/10 to-accent/5 border-accent/20 [&_.icon-bg]:bg-accent/20 [&_.icon]:text-accent [&_.label]:text-accent",
-    destructive: "from-destructive/10 to-destructive/5 border-destructive/20 [&_.icon-bg]:bg-destructive/20 [&_.icon]:text-destructive [&_.label]:text-destructive",
-    warning: "from-warning/10 to-warning/5 border-warning/20 [&_.icon-bg]:bg-warning/20 [&_.icon]:text-warning [&_.label]:text-warning",
-    primary: "from-primary/10 to-primary/5 border-primary/20 [&_.icon-bg]:bg-primary/20 [&_.icon]:text-primary [&_.label]:text-primary",
+    info: "from-info/10 to-transparent border-info/25 [&_.icon-bg]:bg-info/20 [&_.icon]:text-info [&_.label]:text-info",
+    accent: "from-accent/15 to-transparent border-accent/30 [&_.icon-bg]:bg-accent/20 [&_.icon]:text-accent [&_.label]:text-accent",
+    ivory: "from-brand-ivory/10 to-transparent border-brand-ivory/20 [&_.icon-bg]:bg-brand-ivory/15 [&_.icon]:text-brand-ivory [&_.label]:text-brand-ivory",
+    gold: "from-brand-gold/15 to-transparent border-brand-gold/30 [&_.icon-bg]:bg-brand-gold/20 [&_.icon]:text-brand-gold [&_.label]:text-brand-gold",
   };
 
   return (
@@ -29,13 +29,13 @@ export function PriorityWidgets({ tasks }: Props) {
       {items.map(({ label, value, sub, Icon, tone }) => (
         <div
           key={label}
-          className={`glass-card rounded-xl p-3 flex flex-col items-center justify-center text-center bg-gradient-to-br ${toneClasses[tone]}`}
+          className={`glass-card glass-card-hover rounded-xl p-4 flex flex-col items-center justify-center text-center bg-gradient-to-br ${toneClasses[tone]}`}
         >
-          <div className="icon-bg w-9 h-9 rounded-full flex items-center justify-center mb-2">
-            <Icon className="icon w-4 h-4" />
+          <div className="icon-bg w-10 h-10 rounded-full flex items-center justify-center mb-2">
+            <Icon className="icon w-4.5 h-4.5" />
           </div>
-          <div className="label text-[10px] uppercase font-semibold tracking-wider">{label}</div>
-          <div className="text-lg sm:text-xl font-bold leading-tight mt-0.5">{value}</div>
+          <div className="label text-[10px] uppercase font-semibold tracking-[0.15em]">{label}</div>
+          <div className="text-xl sm:text-2xl font-serif font-semibold leading-tight mt-1">{value}</div>
           <div className="text-[10px] text-muted-foreground truncate w-full px-1">{sub}</div>
         </div>
       ))}
