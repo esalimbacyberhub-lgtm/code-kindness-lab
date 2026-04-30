@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import type { Matter, Role, Task, ViewKey } from "../types";
 
-const STORAGE_KEY = "legalOsStateNextGen";
+const STORAGE_KEY = "omuyomaLegalOs.v2";
 
 interface State {
   tasks: Task[];
@@ -15,18 +15,8 @@ const defaults: State = {
   currentView: "dashboard",
   role: "partner",
   sidebarCollapsed: false,
-  tasks: [
-    { id: "1", title: "Draft response in Kamau matter", priority: "high", status: "todo", due: "2026-05-03T17:00", matter: "Kamau vs Njeri" },
-    { id: "2", title: "Review Acme contract amendments", priority: "medium", status: "todo", due: "2026-05-04", matter: "Acme Ltd" },
-    { id: "3", title: "Prepare for Supreme Court hearing", priority: "high", status: "inprogress", due: "2026-05-05", matter: "Republic v. Ochieng" },
-    { id: "4", title: "File appeal in Muthoni case", priority: "low", status: "review", due: "2026-05-06", matter: "Muthoni case" },
-  ],
-  matters: [
-    { id: "m1", client: "Kamau", title: "Kamau vs Njeri", type: "Civil Litigation", status: "active" },
-    { id: "m2", client: "Acme Ltd", title: "Acme contract", type: "Commercial", status: "active" },
-    { id: "m3", client: "Republic", title: "Republic v. Ochieng", type: "Criminal", status: "active" },
-    { id: "m4", client: "Muthoni", title: "Muthoni case", type: "Family Law", status: "active" },
-  ],
+  tasks: [],
+  matters: [],
 };
 
 export function useLegalState() {

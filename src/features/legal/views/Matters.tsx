@@ -13,6 +13,11 @@ export function Matters({ matters }: { matters: Matter[] }) {
   return (
     <div>
       <h2 className="text-3xl font-serif mb-6">Matter Hub</h2>
+      {matters.length === 0 && (
+        <div className="glass-card rounded-2xl p-10 text-center text-sm text-muted-foreground">
+          No matters yet. Open a new matter from the Command Deck.
+        </div>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {matters.map(m => (
           <article key={m.id} className="glass-card glass-card-hover rounded-2xl p-5">
