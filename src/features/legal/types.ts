@@ -23,3 +23,14 @@ export type ViewKey =
   | "vault" | "drafting" | "witness" | "directory" | "finance" | "admin";
 
 export type Role = "partner" | "associate" | "paralegal" | "client";
+
+export type DeadlineType = "hearing" | "filing" | "mention" | "ruling" | "lsk";
+
+export interface Deadline {
+  id: string;
+  title: string;
+  matter: string;
+  court: string;
+  date: string; // ISO yyyy-mm-dd
+  type: DeadlineType;
+}

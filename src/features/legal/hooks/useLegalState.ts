@@ -1,11 +1,12 @@
 import { useEffect, useState, useCallback } from "react";
-import type { Matter, Role, Task, ViewKey } from "../types";
+import type { Deadline, Matter, Role, Task, ViewKey } from "../types";
 
 const STORAGE_KEY = "omuyomaLegalOs.v2";
 
 interface State {
   tasks: Task[];
   matters: Matter[];
+  deadlines: Deadline[];
   currentView: ViewKey;
   role: Role;
   sidebarCollapsed: boolean;
@@ -17,6 +18,7 @@ const defaults: State = {
   sidebarCollapsed: false,
   tasks: [],
   matters: [],
+  deadlines: [],
 };
 
 export function useLegalState() {
@@ -48,5 +50,16 @@ export function useLegalState() {
     }));
   }, []);
 
-  return { state, setView, setRole, toggleSidebar, moveTask, addMatter };
+  const addDeadline = useCallback((d: Omit<Deadline, "id">) => {
+    setState(s => ({
+      ...s,
+      deadlines: [...s.deadlines, { ...d, id: `d${Date.now()}` }],
+    }));
+  }, []);
+
+  const removeDeadline = useCallback((id: string) => {
+    setState(s => ({ ...s, deadlines: s.deadlines.filter(d => d.id !== id) }));
+  }, []);
+
+  return { state, setView, setRole, toggleSidebar, moveTask, addMatter, addDeadline, removeDeadline };
 }
