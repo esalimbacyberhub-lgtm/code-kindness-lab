@@ -6,12 +6,12 @@ import { Dashboard } from "@/features/legal/views/Dashboard";
 import { Matters } from "@/features/legal/views/Matters";
 import { Finance } from "@/features/legal/views/Finance";
 import { CalendarView } from "@/features/legal/views/CalendarView";
+import { Vault } from "@/features/legal/views/Vault";
 import { Placeholder } from "@/features/legal/views/Placeholder";
 import { useLegalState } from "@/features/legal/hooks/useLegalState";
 
 const VIEW_LABELS: Record<string, string> = {
   clientportal: "Client Portal",
-  vault: "Document Vault",
   drafting: "Legal Drafting",
   witness: "Witness & Experts",
   directory: "Firm Directory",
@@ -19,7 +19,10 @@ const VIEW_LABELS: Record<string, string> = {
 };
 
 const Index = () => {
-  const { state, setView, setRole, toggleSidebar, moveTask, addMatter, addDeadline, removeDeadline } = useLegalState();
+  const {
+    state, setView, setRole, toggleSidebar, moveTask, addMatter,
+    addDeadline, removeDeadline, addDocument, removeDocument,
+  } = useLegalState();
   const [newMatterOpen, setNewMatterOpen] = useState(false);
 
   return (
@@ -54,7 +57,15 @@ const Index = () => {
               onRemove={removeDeadline}
             />
           )}
-          {!["dashboard", "matters", "finance", "calendar"].includes(state.currentView) && (
+          {state.currentView === "vault" && (
+            <Vault
+              documents={state.documents}
+              matters={state.matters}
+              onUpload={addDocument}
+              onRemove={removeDocument}
+            />
+          )}
+          {!["dashboard", "matters", "finance", "calendar", "vault"].includes(state.currentView) && (
             <Placeholder name={VIEW_LABELS[state.currentView] ?? state.currentView} />
           )}
         </main>
