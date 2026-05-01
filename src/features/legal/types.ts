@@ -34,3 +34,13 @@ export interface Deadline {
   date: string; // ISO yyyy-mm-dd
   type: DeadlineType;
 }
+
+export interface VaultDocument {
+  id: string;
+  name: string;
+  matter: string; // matter id or "general"
+  uploadedAt: string; // ISO datetime
+  size: number; // bytes
+  mime: string;
+  data: string; // base64 data URL
+}
