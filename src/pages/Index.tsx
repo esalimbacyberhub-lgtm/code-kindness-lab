@@ -5,11 +5,11 @@ import { NewMatterDialog } from "@/features/legal/components/NewMatterDialog";
 import { Dashboard } from "@/features/legal/views/Dashboard";
 import { Matters } from "@/features/legal/views/Matters";
 import { Finance } from "@/features/legal/views/Finance";
+import { CalendarView } from "@/features/legal/views/CalendarView";
 import { Placeholder } from "@/features/legal/views/Placeholder";
 import { useLegalState } from "@/features/legal/hooks/useLegalState";
 
 const VIEW_LABELS: Record<string, string> = {
-  calendar: "Calendar & Deadlines",
   clientportal: "Client Portal",
   vault: "Document Vault",
   drafting: "Legal Drafting",
@@ -19,7 +19,7 @@ const VIEW_LABELS: Record<string, string> = {
 };
 
 const Index = () => {
-  const { state, setView, setRole, toggleSidebar, moveTask, addMatter } = useLegalState();
+  const { state, setView, setRole, toggleSidebar, moveTask, addMatter, addDeadline, removeDeadline } = useLegalState();
   const [newMatterOpen, setNewMatterOpen] = useState(false);
 
   return (
@@ -46,7 +46,15 @@ const Index = () => {
           )}
           {state.currentView === "matters" && <Matters matters={state.matters} />}
           {state.currentView === "finance" && <Finance />}
-          {!["dashboard", "matters", "finance"].includes(state.currentView) && (
+          {state.currentView === "calendar" && (
+            <CalendarView
+              deadlines={state.deadlines}
+              matters={state.matters}
+              onCreate={addDeadline}
+              onRemove={removeDeadline}
+            />
+          )}
+          {!["dashboard", "matters", "finance", "calendar"].includes(state.currentView) && (
             <Placeholder name={VIEW_LABELS[state.currentView] ?? state.currentView} />
           )}
         </main>
