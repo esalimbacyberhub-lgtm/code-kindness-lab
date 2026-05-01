@@ -7,12 +7,12 @@ import { Matters } from "@/features/legal/views/Matters";
 import { Finance } from "@/features/legal/views/Finance";
 import { CalendarView } from "@/features/legal/views/CalendarView";
 import { Vault } from "@/features/legal/views/Vault";
+import { Drafting } from "@/features/legal/views/Drafting";
 import { Placeholder } from "@/features/legal/views/Placeholder";
 import { useLegalState } from "@/features/legal/hooks/useLegalState";
 
 const VIEW_LABELS: Record<string, string> = {
   clientportal: "Client Portal",
-  drafting: "Legal Drafting",
   witness: "Witness & Experts",
   directory: "Firm Directory",
   admin: "Admin & Audit",
@@ -65,7 +65,8 @@ const Index = () => {
               onRemove={removeDocument}
             />
           )}
-          {!["dashboard", "matters", "finance", "calendar", "vault"].includes(state.currentView) && (
+          {state.currentView === "drafting" && <Drafting />}
+          {!["dashboard", "matters", "finance", "calendar", "vault", "drafting"].includes(state.currentView) && (
             <Placeholder name={VIEW_LABELS[state.currentView] ?? state.currentView} />
           )}
         </main>
