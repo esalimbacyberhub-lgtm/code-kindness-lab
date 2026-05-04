@@ -1,4 +1,4 @@
-import { Bell, Mic, Search } from "lucide-react";
+import { Bell, Mic, Search, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
 import logo from "@/assets/omuyoma-logo.png";
 import type { Role } from "../types";
@@ -6,6 +6,8 @@ import type { Role } from "../types";
 interface Props {
   role: Role;
   onRoleChange: (r: Role) => void;
+  onLogout?: () => void;
+  userName?: string;
 }
 
 const ROLE_LABEL: Record<Role, string> = {
@@ -15,7 +17,7 @@ const ROLE_LABEL: Record<Role, string> = {
   client: "Client View",
 };
 
-export function Header({ role, onRoleChange }: Props) {
+export function Header({ role, onRoleChange, onLogout, userName }: Props) {
   const [time, setTime] = useState(() =>
     new Date().toLocaleTimeString("en-KE", { hour: "2-digit", minute: "2-digit" })
   );
