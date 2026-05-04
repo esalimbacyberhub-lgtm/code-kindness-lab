@@ -103,6 +103,11 @@ export function Header({ role, onRoleChange, onLogout, userName }: Props) {
               aria-hidden
             >
               OA
+            {onLogout && (
+              <button onClick={onLogout} className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition" title="Sign out">
+                <LogOut className="w-4 h-4" />
+              </button>
+            )}
             </div>
           </div>
         </div>
@@ -110,3 +115,12 @@ export function Header({ role, onRoleChange, onLogout, userName }: Props) {
     </header>
   );
 }
+// logout button patch - ignore this comment
+
+open -e src/features/legal/components/Header.tsx
+{onLogout && (
+              <button onClick={onLogout} className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition" title="Sign out">
+                <LogOut className="w-4 h-4" />
+              </button>
+            )}
+
