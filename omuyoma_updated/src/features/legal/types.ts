@@ -1,0 +1,38 @@
+export type Priority = "high" | "medium" | "low";
+export type TaskStatus = "todo" | "inprogress" | "review" | "done";
+
+export interface Task {
+  id: string; title: string; priority: Priority;
+  status: TaskStatus; due: string; matter: string; assignedTo?: string;
+}
+export interface Matter {
+  id: string; client: string; title: string;
+  type: "Civil Litigation"|"Commercial"|"Family Law"|"Criminal"|"Conveyancing"|"Intellectual Property"|"Probate & Administration";
+  status: "active"|"closed"|"pending"; court?: string; fileNo?: string; openedDate?: string; notes?: string;
+}
+export interface Deadline {
+  id: string; title: string; matter: string; court: string; date: string;
+  type: "hearing"|"filing"|"mention"|"ruling"|"deadline";
+}
+export interface LedgerEntry {
+  id: string; date: string; description: string; matter: string;
+  debit: number; credit: number; type: "billable"|"disbursement"|"payment"|"trust";
+}
+export interface StaffMember {
+  id: string; name: string; role: Role; email: string; phone: string; practice: string; initials: string;
+}
+export interface VaultDocument {
+  id: string; name: string; matter: string; fileType: string; date: string; uploadedBy: string;
+}
+export interface Message {
+  id: string; from: string; content: string; timestamp: string; direction: "sent"|"received"; matter?: string;
+}
+export interface Witness {
+  id: string; name: string; type: "witness"|"expert"; matter: string;
+  contact: string; status: "confirmed"|"pending"|"contacted"; expertise?: string;
+}
+export interface AuditLog {
+  id: string; action: string; user: string; timestamp: string; module: string;
+}
+export type ViewKey = "dashboard"|"matters"|"calendar"|"clientportal"|"vault"|"drafting"|"witness"|"directory"|"finance"|"admin";
+export type Role = "partner"|"associate"|"paralegal"|"client";

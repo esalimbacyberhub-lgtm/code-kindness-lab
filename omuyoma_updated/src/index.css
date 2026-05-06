@@ -1,0 +1,186 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Omuyoma & Co. Advocates — Brand System
+  Brand: warm gold (#C9A227) on deep oxblood/burgundy (#3D1A1F), with ivory paper.
+  Voice: regal, East-African heritage gold + globally trusted legal burgundy.
+*/
+
+@layer base {
+  :root {
+    /* Default to the elegant DARK chamber — primary product surface */
+    --background: 350 35% 8%;          /* deep oxblood near-black */
+    --foreground: 36 32% 92%;          /* warm ivory text */
+
+    --card: 350 30% 12%;
+    --card-foreground: 36 32% 92%;
+
+    --popover: 350 30% 11%;
+    --popover-foreground: 36 32% 92%;
+
+    --primary: 43 70% 48%;             /* signature warm gold */
+    --primary-foreground: 350 35% 10%;
+
+    --secondary: 350 25% 18%;          /* burgundy surface */
+    --secondary-foreground: 36 32% 92%;
+
+    --muted: 350 22% 16%;
+    --muted-foreground: 36 18% 70%;
+
+    --accent: 8 72% 52%;               /* warm crimson accent */
+    --accent-foreground: 36 32% 96%;
+
+    --destructive: 0 78% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 152 50% 42%;
+    --warning: 38 90% 55%;
+    --info: 200 70% 55%;
+
+    --border: 350 20% 22%;
+    --input: 350 20% 22%;
+    --ring: 43 70% 48%;
+
+    --radius: 0.65rem;
+
+    /* Sidebar — slightly deeper than canvas */
+    --sidebar-background: 350 38% 6%;
+    --sidebar-foreground: 36 28% 88%;
+    --sidebar-primary: 43 70% 48%;
+    --sidebar-primary-foreground: 350 35% 10%;
+    --sidebar-accent: 350 25% 14%;
+    --sidebar-accent-foreground: 36 32% 92%;
+    --sidebar-border: 350 22% 16%;
+    --sidebar-ring: 43 70% 48%;
+
+    /* Brand-specific tokens */
+    --brand-burgundy: 350 55% 22%;
+    --brand-burgundy-deep: 350 60% 14%;
+    --brand-gold: 43 70% 48%;
+    --brand-gold-soft: 43 60% 65%;
+    --brand-ivory: 36 32% 95%;
+
+    --gradient-mesh:
+      radial-gradient(at 0% 0%, hsl(350 55% 14% / 1) 0, transparent 55%),
+      radial-gradient(at 80% 10%, hsl(350 45% 18% / 1) 0, transparent 50%),
+      radial-gradient(at 50% 100%, hsl(43 50% 14% / 1) 0, transparent 55%);
+    --gradient-gold: linear-gradient(135deg, hsl(43 70% 48%) 0%, hsl(38 80% 60%) 100%);
+    --gradient-burgundy: linear-gradient(135deg, hsl(350 55% 22%) 0%, hsl(350 65% 12%) 100%);
+
+    --shadow-glass: 0 8px 32px 0 hsl(350 60% 4% / 0.55);
+    --shadow-elevate: 0 24px 48px -12px hsl(350 60% 4% / 0.7);
+    --shadow-gold-glow: 0 0 40px hsl(43 70% 48% / 0.25);
+  }
+
+  /* Light "paper" mode — for Client Portal / printable surfaces */
+  .paper {
+    --background: 36 35% 96%;          /* ivory */
+    --foreground: 350 50% 16%;         /* burgundy ink */
+    --card: 36 35% 99%;
+    --card-foreground: 350 50% 16%;
+    --popover: 36 35% 99%;
+    --popover-foreground: 350 50% 16%;
+    --primary: 350 55% 22%;            /* burgundy primary on paper */
+    --primary-foreground: 36 35% 96%;
+    --secondary: 36 25% 90%;
+    --secondary-foreground: 350 50% 16%;
+    --muted: 36 22% 88%;
+    --muted-foreground: 350 20% 35%;
+    --accent: 43 70% 48%;              /* gold accent on paper */
+    --accent-foreground: 350 50% 16%;
+    --border: 36 22% 82%;
+    --input: 36 22% 82%;
+    --ring: 350 55% 22%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  html, body, #root { height: 100%; }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "ss01", "cv11";
+  }
+  ::selection {
+    background: hsl(var(--primary) / 0.35);
+    color: hsl(var(--foreground));
+  }
+}
+
+@layer components {
+  .mesh-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: var(--gradient-mesh);
+    background-size: 200% 200%;
+    animation: gradient-x 22s ease infinite;
+  }
+  .mesh-bg::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(hsl(43 70% 48% / 0.06) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: radial-gradient(ellipse at 50% 30%, black 0%, transparent 70%);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mesh-bg { animation: none; }
+  }
+
+  .glass-panel {
+    background: hsl(var(--brand-burgundy-deep) / 0.55);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid hsl(var(--brand-gold) / 0.12);
+  }
+  .glass-card {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--brand-burgundy) / 0.35) 0%,
+      hsl(var(--brand-burgundy-deep) / 0.55) 100%
+    );
+    backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--brand-gold) / 0.14);
+    box-shadow: var(--shadow-glass);
+  }
+  .glass-card-hover { transition: all .35s cubic-bezier(.2,.7,.3,1); }
+  .glass-card-hover:hover {
+    transform: translateY(-3px);
+    border-color: hsl(var(--brand-gold) / 0.35);
+    box-shadow: var(--shadow-elevate), var(--shadow-gold-glow);
+  }
+
+  .gold-divider {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(var(--brand-gold) / 0.6) 50%,
+      transparent 100%
+    );
+  }
+
+  .text-gradient-gold {
+    background: var(--gradient-gold);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .custom-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+  .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+  .custom-scroll::-webkit-scrollbar-thumb {
+    background: hsl(var(--brand-gold) / 0.18);
+    border-radius: 4px;
+  }
+  .custom-scroll::-webkit-scrollbar-thumb:hover { background: hsl(var(--brand-gold) / 0.35); }
+}
+
+@keyframes gradient-x {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
