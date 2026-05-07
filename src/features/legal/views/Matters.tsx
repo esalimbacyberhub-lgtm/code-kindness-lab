@@ -32,6 +32,7 @@ export function Matters({ matters }: { matters: Matter[] }) {
               <div className="flex-1 min-w-0">
                 <h3 className="font-serif text-lg leading-tight truncate">{m.title}</h3>
                 <p className="text-xs text-muted-foreground">{m.client}</p>
+              {(m.partyA || m.partyB) && <p className="text-xs text-amber-400/80 font-medium mt-0.5">{m.partyA}{m.partyA && m.partyB ? " v. " : ""}{m.partyB}</p>}
               </div>
             </div>
             <div className="flex items-center justify-between">

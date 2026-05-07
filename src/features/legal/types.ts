@@ -8,7 +8,7 @@ export interface Task {
 export interface Matter {
   id: string; client: string; title: string;
   type: "Civil Litigation"|"Commercial"|"Family Law"|"Criminal"|"Conveyancing"|"Intellectual Property"|"Probate & Administration";
-  status: "active"|"closed"|"pending"; court?: string; fileNo?: string; openedDate?: string; notes?: string;
+  status: "active"|"closed"|"pending"; court?: string; fileNo?: string; openedDate?: string; notes?: string; partyA?: string; partyB?: string; assignedTo?: string;
 }
 export interface Deadline {
   id: string; title: string; matter: string; court: string; date: string;
@@ -46,5 +46,5 @@ export interface InvoiceItem {
 export interface Invoice {
   id: string; invoiceNo: string; matter: string; client: string;
   date: string; dueDate: string; items: InvoiceItem[];
-  status: "draft"|"sent"|"paid"|"overdue"; notes?: string; totalAmount: number;
+  status: "draft"|"sent"|"paid"|"overdue"; notes?: string; partyA?: string; partyB?: string; assignedTo?: string; totalAmount: number;
 }
