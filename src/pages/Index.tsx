@@ -8,6 +8,7 @@ import { Calendar } from "@/features/legal/views/Calendar";
 import { DocumentVault } from "@/features/legal/views/DocumentVault";
 import { FirmDirectory } from "@/features/legal/views/FirmDirectory";
 import { Invoices } from "@/features/legal/views/Invoices";
+import FinancialsModule from "@/components/FinancialsModule";
 import { AdminAudit } from "@/features/legal/views/AdminAudit";
 import { Login } from "@/features/legal/views/Login";
 import { NewMatterDialog } from "@/features/legal/components/NewMatterDialog";
@@ -30,7 +31,7 @@ const Index = () => {
       case "calendar": return <Calendar deadlines={state.deadlines} matters={state.matters} onAdd={addDeadline} onDelete={deleteDeadline} />;
       case "vault": return <DocumentVault documents={state.documents} matters={state.matters} onAdd={addDocument} onDelete={deleteDocument} />;
       case "directory": return <FirmDirectory staff={state.staff} currentRole={state.role} onAdd={addStaff} onRemove={removeStaff} />;
-      case "invoices": return <Invoices invoices={state.invoices ?? []} matters={state.matters} onAdd={addInvoice} ledger={state.ledger} />;
+      case "invoices": return <FinancialsModule />;
       case "admin": return <AdminAudit logs={state.auditLog} matters={state.matters} staff={state.staff} ledger={state.ledger} role={state.role} />;
       default: return null;
     }
