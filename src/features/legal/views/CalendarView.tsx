@@ -18,6 +18,7 @@ const TYPE_META: Record<DeadlineType, { label: string; dot: string; chip: string
   mention: { label: "Mention", dot: "bg-warning", chip: "bg-warning/15 text-warning border-warning/30", Icon: Megaphone },
   ruling: { label: "Ruling", dot: "bg-accent", chip: "bg-accent/15 text-accent border-accent/30", Icon: Scale },
   lsk: { label: "LSK Event", dot: "bg-success", chip: "bg-success/15 text-success border-success/30", Icon: Users2 },
+  deadline: { label: "Deadline", dot: "bg-destructive", chip: "bg-destructive/15 text-destructive border-destructive/30", Icon: AlertTriangle },
 };
 
 const startOfDay = (d: Date) => {
