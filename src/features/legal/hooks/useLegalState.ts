@@ -66,8 +66,8 @@ export function useLegalState() {
   const removeStaff = useCallback((id: string) =>
     setState(s => ({ ...s, staff: s.staff.filter(m => m.id !== id) })), []);
 
-  const addInvoice = useCallback((inv: Omit<Invoice, "id">) =>
-    setState(s => ({ ...s, invoices: [...s.invoices, { ...inv, id: `inv${Date.now()}` }] })), []);
+  const addInvoice = useCallback((inv: Invoice) =>
+    setState(s => ({ ...s, invoices: [...s.invoices, inv] })), []);
   const addDocument = useCallback((d: Omit<VaultDocument, "id">) =>
     setState(s => ({ ...s, documents: [...s.documents, { ...d, id: `doc${Date.now()}` }] })), []);
 
