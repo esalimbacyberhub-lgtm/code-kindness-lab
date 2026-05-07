@@ -2,35 +2,69 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
 @layer base {
   :root {
-    --background: 220 50% 6%;
-    --foreground: 210 40% 95%;
-    --card: 220 45% 9%;
-    --card-foreground: 210 40% 95%;
-    --popover: 220 45% 8%;
-    --popover-foreground: 210 40% 95%;
-    --primary: 220 80% 52%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 40% 14%;
-    --secondary-foreground: 210 40% 95%;
-    --muted: 220 35% 16%;
-    --muted-foreground: 215 25% 60%;
-    --accent: 43 70% 48%;
-    --accent-foreground: 220 50% 6%;
-    --destructive: 0 78% 55%;
+    /* ── Base ── */
+    --background:          222 52% 5%;
+    --foreground:          210 40% 95%;
+    --card:                222 48% 8%;
+    --card-foreground:     210 40% 95%;
+    --popover:             222 48% 7%;
+    --popover-foreground:  210 40% 95%;
+
+    /* ── Royal Blue Primary ── */
+    --primary:             225 73% 57%;
+    --primary-foreground:  0 0% 100%;
+
+    /* ── Secondary / Muted ── */
+    --secondary:           225 38% 14%;
+    --secondary-foreground:210 40% 95%;
+    --muted:               225 32% 16%;
+    --muted-foreground:    215 22% 58%;
+
+    /* ── Accent = Royal Blue ── */
+    --accent:              225 73% 57%;
+    --accent-foreground:   0 0% 100%;
+
+    /* ── Semantic ── */
+    --destructive:         0 78% 55%;
     --destructive-foreground: 0 0% 100%;
-    --success: 152 50% 42%;
-    --warning: 38 90% 55%;
-    --info: 200 70% 55%;
-    --border: 220 30% 20%;
-    --input: 220 30% 18%;
-    --ring: 220 80% 52%;
-    --radius: 0.75rem;
-    --sidebar-background: 220 55% 5%;
-    --sidebar-foreground: 210 35% 88%;
-    --brand-gold: 43 65% 48%;
-    --brand-blue: 220 80% 52%;
+    --success:             152 50% 42%;
+    --warning:             38 90% 55%;
+    --info:                200 70% 55%;
+
+    /* ── Chrome ── */
+    --border:              225 28% 22%;
+    --input:               225 28% 18%;
+    --ring:                225 73% 57%;
+    --radius:              0.75rem;
+
+    /* ── Sidebar ── */
+    --sidebar-background:       225 55% 4%;
+    --sidebar-foreground:       210 35% 88%;
+    --sidebar-border:           225 28% 16%;
+    --sidebar-primary:          225 73% 57%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent:           225 38% 13%;
+    --sidebar-accent-foreground:210 40% 95%;
+    --sidebar-ring:             225 73% 57%;
+
+    /* ── Brand tokens — all royal blue now ── */
+    --brand-gold:          225 73% 57%;   /* Royal Blue replaces Gold */
+    --brand-gold-soft:     225 60% 68%;   /* Lighter Royal Blue */
+    --brand-burgundy:      225 83% 32%;   /* Deep Royal Blue */
+    --brand-burgundy-deep: 226 90% 22%;   /* Navy */
+    --brand-ivory:         210 40% 95%;
+    --brand-blue:          225 73% 57%;
+
+    /* ── Glass tokens ── */
+    --glass-bg:            rgba(255, 255, 255, 0.04);
+    --glass-border:        rgba(99, 155, 255, 0.15);
+    --glass-shadow:        rgba(30, 58, 138, 0.20);
+    --glass-glow:          rgba(65, 105, 225, 0.12);
+    --glass-highlight:     rgba(255, 255, 255, 0.07);
   }
 }
 
@@ -42,61 +76,183 @@
   }
 }
 
+/* ══════════════════════════════════════════════
+   GLASSMORPHISM SYSTEM
+══════════════════════════════════════════════ */
 .glass-card {
-  background: rgba(255,255,255,0.04);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(99,155,255,0.12);
-  box-shadow: 0 4px 24px rgba(30,58,138,0.15), inset 0 1px 0 rgba(255,255,255,0.06);
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 4px 24px var(--glass-shadow),
+    inset 0 1px 0 var(--glass-highlight),
+    inset 0 -1px 0 rgba(99,155,255,0.04);
 }
-.glass-card-hover { transition: all 0.2s ease; }
+
+.glass-card-hover {
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
 .glass-card-hover:hover {
-  background: rgba(255,255,255,0.07);
-  border-color: rgba(99,155,255,0.25);
-  box-shadow: 0 8px 32px rgba(30,58,138,0.25);
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(99, 155, 255, 0.30);
+  box-shadow:
+    0 8px 40px rgba(30, 58, 138, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    0 0 0 1px rgba(65, 105, 225, 0.08);
+  transform: translateY(-2px);
 }
+
 .glass-panel {
-  background: rgba(255,255,255,0.03);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(99,155,255,0.10);
+  background: rgba(255, 255, 255, 0.025);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(99, 155, 255, 0.10);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
+
+/* Deep glass — for modals, sidebars */
+.glass-deep {
+  background: rgba(14, 22, 48, 0.85);
+  backdrop-filter: blur(32px) saturate(1.4);
+  -webkit-backdrop-filter: blur(32px) saturate(1.4);
+  border: 1px solid rgba(99, 155, 255, 0.18);
+  box-shadow:
+    0 20px 60px rgba(10, 20, 60, 0.50),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* ══════════════════════════════════════════════
+   MESH BACKGROUND — Royal Blue
+══════════════════════════════════════════════ */
 .mesh-bg {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at 15% 25%, rgba(30,58,138,0.18) 0%, transparent 55%),
-    radial-gradient(ellipse at 85% 10%, rgba(37,99,235,0.12) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, rgba(29,78,216,0.10) 0%, transparent 55%);
+    radial-gradient(ellipse at 15% 20%, rgba(37, 99, 235, 0.20) 0%, transparent 55%),
+    radial-gradient(ellipse at 82% 8%,  rgba(65, 105, 225, 0.14) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 85%, rgba(29, 78, 216, 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse at 90% 70%, rgba(30, 58, 138, 0.10) 0%, transparent 45%);
 }
+
+/* ══════════════════════════════════════════════
+   TYPOGRAPHY GRADIENTS
+══════════════════════════════════════════════ */
 .text-gradient-gold {
-  background: linear-gradient(135deg, #C9A84C 0%, #E8C76A 50%, #C9A84C 100%);
+  /* Renamed but now royal blue gradient */
+  background: linear-gradient(135deg, #4169E1 0%, #6B8FEF 50%, #4169E1 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 .text-gradient-blue {
-  background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 50%, #3B82F6 100%);
+  background: linear-gradient(135deg, #3B82F6 0%, #93C5FD 50%, #3B82F6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+.text-gradient-royal {
+  background: linear-gradient(135deg, #1E40AF 0%, #4169E1 40%, #6B8FEF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ══════════════════════════════════════════════
+   DIVIDERS
+══════════════════════════════════════════════ */
 .gold-divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.5), transparent);
+  background: linear-gradient(90deg, transparent, rgba(65, 105, 225, 0.50), transparent);
 }
 .blue-divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(59,130,246,0.5), transparent);
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.50), transparent);
 }
+
+/* ══════════════════════════════════════════════
+   SCROLLBAR
+══════════════════════════════════════════════ */
 .custom-scroll::-webkit-scrollbar { width: 4px; }
 .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-.custom-scroll::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.3); border-radius: 2px; }
-.custom-scroll::-webkit-scrollbar-thumb:hover { background: rgba(59,130,246,0.5); }
-.text-brand-gold { color: #C9A84C; }
-.text-brand-gold-soft { color: rgba(201,168,76,0.7); }
-.text-brand-blue { color: #3B82F6; }
-.from-brand-gold { --tw-gradient-from: #C9A84C; }
-.to-brand-burgundy { --tw-gradient-to: #1E3A8A; }
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: rgba(65, 105, 225, 0.35);
+  border-radius: 2px;
+}
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(65, 105, 225, 0.60);
+}
+
+/* ══════════════════════════════════════════════
+   BRAND UTILITY CLASSES — Royal Blue
+══════════════════════════════════════════════ */
+.text-brand-gold      { color: #4169E1; }
+.text-brand-gold-soft { color: rgba(107, 143, 239, 0.80); }
+.text-brand-blue      { color: #4169E1; }
+.from-brand-gold      { --tw-gradient-from: #4169E1; }
+.to-brand-burgundy    { --tw-gradient-to: #1E3A8A; }
+
+/* ══════════════════════════════════════════════
+   DOCUMENT COLOR CODING
+   Financial docs = blue, Court dockets = green
+══════════════════════════════════════════════ */
+.doc-financial {
+  border-left: 3px solid #4169E1;
+  background: rgba(65, 105, 225, 0.06);
+}
+.doc-docket {
+  border-left: 3px solid #22c55e;
+  background: rgba(34, 197, 94, 0.06);
+}
+.doc-pleading {
+  border-left: 3px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.02);
+}
+.doc-correspondence {
+  border-left: 3px solid #4169E1;
+  background: rgba(65, 105, 225, 0.06);
+}
+
+/* ══════════════════════════════════════════════
+   ROYAL BLUE GLOW EFFECTS
+══════════════════════════════════════════════ */
+.royal-glow {
+  box-shadow: 0 0 20px rgba(65, 105, 225, 0.25), 0 0 40px rgba(65, 105, 225, 0.10);
+}
+.royal-glow-sm {
+  box-shadow: 0 0 10px rgba(65, 105, 225, 0.20);
+}
+
+/* Active nav indicator */
+.nav-active-glow {
+  box-shadow: inset 0 0 12px rgba(65, 105, 225, 0.15);
+}
+
+/* ══════════════════════════════════════════════
+   BUTTON VARIANTS
+══════════════════════════════════════════════ */
+.btn-royal {
+  background: linear-gradient(135deg, #3B5FCC 0%, #4169E1 100%);
+  color: white;
+  border: 1px solid rgba(107, 143, 239, 0.40);
+  box-shadow: 0 2px 12px rgba(65, 105, 225, 0.30);
+  transition: all 0.18s ease;
+}
+.btn-royal:hover {
+  background: linear-gradient(135deg, #4169E1 0%, #5A7FEF 100%);
+  box-shadow: 0 4px 20px rgba(65, 105, 225, 0.45);
+  transform: translateY(-1px);
+}
+.btn-glass {
+  background: rgba(65, 105, 225, 0.10);
+  color: #6B8FEF;
+  border: 1px solid rgba(65, 105, 225, 0.25);
+  backdrop-filter: blur(8px);
+  transition: all 0.18s ease;
+}
+.btn-glass:hover {
+  background: rgba(65, 105, 225, 0.20);
+  border-color: rgba(65, 105, 225, 0.45);
+}
