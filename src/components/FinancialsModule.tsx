@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react"
+import { FeeNotesTab } from "./FeeNotesTab"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS & UTILITIES
@@ -314,6 +315,7 @@ const TABS = [
   { id: "is",       label: "Income Statement" },
   { id: "trust",    label: "Trust Account" },
   { id: "aged",     label: "Aged Debtors" },
+  { id: "feenotes", label: "Fee Notes" },
 ]
 
 export default function FinancialsModule() {
