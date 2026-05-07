@@ -271,9 +271,11 @@ export function Drafting() {
     const margin = 56;
     const contentW = pageW - margin * 2;
 
+    const COURT_PLEADINGS = ["plaint", "defence", "affidavit"];
     const drawHeaderFooter = () => {
+      const addWatermark = !COURT_PLEADINGS.includes(activeKey);
       // Watermark
-      doc.saveGraphicsState();
+      if (addWatermark) { doc.saveGraphicsState();
       // @ts-expect-error - setGState exists at runtime in jsPDF
       doc.setGState(new doc.GState({ opacity: 0.07 }));
       doc.setFont("times", "bold");
@@ -281,7 +283,7 @@ export function Drafting() {
       doc.setTextColor(61, 26, 31); // brand burgundy
       doc.text("OMUYOMA & CO.", pageW / 2, pageH / 2, { align: "center", angle: 30 });
       doc.text("ADVOCATES", pageW / 2, pageH / 2 + 60, { align: "center", angle: 30 });
-      doc.restoreGraphicsState();
+      doc.restoreGraphicsState(); }
 
       // Header band
       doc.setFillColor(61, 26, 31);
