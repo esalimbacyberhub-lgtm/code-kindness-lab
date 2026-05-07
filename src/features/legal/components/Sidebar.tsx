@@ -1,7 +1,7 @@
-import {
+import { Receipt,
   Home, Briefcase, Calendar, Lock, FolderTree,
   FileSignature, UserCheck, BookUser, LineChart, ShieldCheck, ChevronLeft,
-} from "lucide-react";
+Receipt, } from "lucide-react";
 import type { Role, ViewKey } from "../types";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +13,7 @@ const ITEMS: NavItem[] = [
   { key: "calendar", label: "Calendar & Deadlines", Icon: Calendar },
   { key: "vault", label: "Document Vault", Icon: FolderTree },
   { key: "directory", label: "Firm Directory", Icon: BookUser },
+  { key: "invoices", label: "Invoices", Icon: Receipt },
   { key: "admin", label: "Admin & Audit", Icon: ShieldCheck, partnerOnly: true },
 ];
 

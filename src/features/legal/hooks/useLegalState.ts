@@ -1,18 +1,18 @@
 import { useEffect, useState, useCallback } from "react";
-import type { Matter, Role, Task, ViewKey, Deadline, LedgerEntry, StaffMember, VaultDocument, Message, Witness, AuditLog } from "../types";
+import type { Matter, Role, Task, ViewKey, Deadline, LedgerEntry, StaffMember, VaultDocument, Message, Witness, AuditLog, Invoice } from "../types";
 
 const STORAGE_KEY = "omuyomaLegalOs.v3";
 
 interface State {
   tasks: Task[]; matters: Matter[]; currentView: ViewKey; role: Role;
   sidebarCollapsed: boolean; deadlines: Deadline[]; ledger: LedgerEntry[];
-  staff: StaffMember[]; documents: VaultDocument[]; messages: Message[];
+  staff: StaffMember[]; documents: VaultDocument[]; messages: Message[]; invoices: Invoice[];
   witnesses: Witness[]; auditLog: AuditLog[];
 }
 
 const defaults: State = {
   currentView: "dashboard", role: "partner", sidebarCollapsed: false,
-  tasks: [], matters: [], deadlines: [], ledger: [], staff: [], documents: [], messages: [], witnesses: [],
+  tasks: [], matters: [], deadlines: [], ledger: [], staff: [], documents: [], messages: [], witnesses: [], invoices: [],
   auditLog: [
     { id: "a1", action: "System initialised", user: "System", timestamp: new Date().toISOString(), module: "System" },
   ],
@@ -66,6 +66,8 @@ export function useLegalState() {
   const removeStaff = useCallback((id: string) =>
     setState(s => ({ ...s, staff: s.staff.filter(m => m.id !== id) })), []);
 
+  const addInvoice = useCallback((inv: Omit<Invoice, "id">) =>
+    setState(s => ({ ...s, invoices: [...s.invoices, { ...inv, id: `inv${Date.now()}` }] })), []);
   const addDocument = useCallback((d: Omit<VaultDocument, "id">) =>
     setState(s => ({ ...s, documents: [...s.documents, { ...d, id: `doc${Date.now()}` }] })), []);
 
@@ -84,6 +86,6 @@ export function useLegalState() {
   return {
     state, setView, setRole, toggleSidebar, moveTask, addTask, addMatter,
     addDeadline, deleteDeadline, addLedgerEntry, addStaff, removeStaff,
-    addDocument, deleteDocument, sendMessage, addWitness, updateWitnessStatus, log
+    addDocument, deleteDocument, addInvoice, sendMessage, addWitness, updateWitnessStatus, log
   };
 }

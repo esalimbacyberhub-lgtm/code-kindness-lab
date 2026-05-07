@@ -34,5 +34,14 @@ export interface Witness {
 export interface AuditLog {
   id: string; action: string; user: string; timestamp: string; module: string;
 }
-export type ViewKey = "dashboard"|"matters"|"calendar"|"vault"|"directory"|"admin";
+export type ViewKey = "dashboard"|"matters"|"calendar"|"vault"|"directory"|"invoices"|"admin";
 export type Role = "partner"|"associate"|"paralegal"|"client";
+
+export interface InvoiceItem {
+  id: string; description: string; quantity: number; rate: number; amount: number;
+}
+export interface Invoice {
+  id: string; invoiceNo: string; matter: string; client: string;
+  date: string; dueDate: string; items: InvoiceItem[];
+  status: "draft"|"sent"|"paid"|"overdue"; notes?: string; totalAmount: number;
+}
