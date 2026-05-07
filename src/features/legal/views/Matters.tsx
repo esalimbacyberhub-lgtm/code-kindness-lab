@@ -7,7 +7,11 @@ const TYPE_TONE: Record<Matter["type"], string> = {
   "Family Law": "bg-warning/15 text-warning",
   "Criminal": "bg-destructive/15 text-destructive",
   "Conveyancing": "bg-success/15 text-success",
+  "Intellectual Property": "bg-primary/15 text-primary",
+  "Probate & Administration": "bg-muted text-foreground",
 };
+
+export const MatterHub = Matters;
 
 export function Matters({ matters }: { matters: Matter[] }) {
   return (

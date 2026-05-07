@@ -14,6 +14,7 @@ export interface Deadline {
   id: string; title: string; matter: string; court: string; date: string;
   type: "hearing"|"filing"|"mention"|"ruling"|"deadline";
 }
+export type DeadlineType = Deadline["type"];
 export interface LedgerEntry {
   id: string; date: string; description: string; matter: string;
   debit: number; credit: number; type: "billable"|"disbursement"|"payment"|"trust";
@@ -23,6 +24,7 @@ export interface StaffMember {
 }
 export interface VaultDocument {
   id: string; name: string; matter: string; fileType: string; date: string; uploadedBy: string;
+  uploadedAt: string; size: number; mime: string; data: string;
 }
 export interface Message {
   id: string; from: string; content: string; timestamp: string; direction: "sent"|"received"; matter?: string;
@@ -34,7 +36,7 @@ export interface Witness {
 export interface AuditLog {
   id: string; action: string; user: string; timestamp: string; module: string;
 }
-export type ViewKey = "dashboard"|"matters"|"calendar"|"vault"|"directory"|"invoices"|"admin";
+export type ViewKey = "dashboard"|"matters"|"calendar"|"vault"|"directory"|"invoices"|"admin"|"finance"|"clientportal"|"drafting"|"witness";
 export type Role = "partner"|"associate"|"paralegal"|"client";
 
 export interface InvoiceItem {
