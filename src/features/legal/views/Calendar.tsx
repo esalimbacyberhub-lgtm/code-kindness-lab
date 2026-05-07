@@ -35,7 +35,7 @@ export function Calendar({ deadlines, matters, onAdd, onDelete }: Props) {
     setOpen(false);
   };
 
-  const KENYAN_COURTS = ["Milimani Law Courts (Commercial Division)", "Milimani Law Courts (Family Division)", "Milimani Law Courts (Constitutional & HR)", "Milimani Criminal Courts", "Employment & Labour Relations Court", "Environment & Land Court Nairobi", "Makadara Law Courts", "Kibera Law Courts", "Mombasa Law Courts", "Kisumu Law Courts", "Nakuru Law Courts", "Eldoret Law Courts", "Nyeri Law Courts", "Court of Appeal Nairobi", "Supreme Court of Kenya", "Business Premises Rent Tribunal", "Rent Restriction Tribunal", "Cooperative Tribunal"];
+  const KENYAN_COURTS = ["Supreme Court of Kenya","Court of Appeal - Nairobi","Court of Appeal - Mombasa","Court of Appeal - Kisumu","Court of Appeal - Nyeri","Court of Appeal - Eldoret","High Court - Constitutional & Human Rights Division","High Court - Commercial & Tax Division","High Court - Family Division","High Court - Criminal Division","High Court - Anti-Corruption & Economic Crimes Division","High Court - Mombasa","High Court - Kisumu","High Court - Nakuru","High Court - Eldoret","High Court - Nyeri","Employment & Labour Relations Court","Environment & Land Court - Nairobi","Environment & Land Court - Mombasa","Milimani Chief Magistrates Court","Milimani Criminal Courts","Makadara Law Courts","Kibera Law Courts","Mombasa Law Courts","Kisumu Law Courts","Nakuru Law Courts","Eldoret Law Courts","Nyeri Law Courts","Kadhis Court","Business Premises Rent Tribunal","Rent Restriction Tribunal","Cooperative Tribunal","Tax Appeals Tribunal"];
 
   return (
     <div>
