@@ -19,6 +19,7 @@ const Index = () => {
   const [loggedInName, setLoggedInName] = useState("");
   const handleLogin = (role: Role, name: string) => { setRole(role); setIsLoggedIn(true); setLoggedInName(name); };
   const handleLogout = () => { setIsLoggedIn(false); setLoggedInName(""); };
+  if (!isLoggedIn) return <Login onLogin={handleLogin} />;
   const renderView = () => {
     switch (state.currentView) {
       case "dashboard": return <Dashboard tasks={state.tasks} onMoveTask={moveTask} onNewMatter={() => {}} />;
