@@ -14,12 +14,11 @@ import { useLegalState } from "@/features/legal/hooks/useLegalState";
 import type { Role } from "@/features/legal/types";
 
 const Index = () => {
-  const { state, setView, setRole, toggleSidebar, moveTask, addDeadline, deleteDeadline, addLedgerEntry, addStaff, removeStaff, addDocument, deleteDocument, addInvoice } = useLegalState();
+  const { state, setView, setRole, toggleSidebar, moveTask, addDeadline, deleteDeadline, addLedgerEntry, addStaff, removeStaff, addDocument, deleteDocument, addInvoice, assignMatter } = useLegalState();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loggedInName, setLoggedInName] = useState("");
   const handleLogin = (role: Role, name: string) => { setRole(role); setIsLoggedIn(true); setLoggedInName(name); };
   const handleLogout = () => { setIsLoggedIn(false); setLoggedInName(""); };
-  if (!isLoggedIn) return <Login onLogin={handleLogin} />;
   const renderView = () => {
     switch (state.currentView) {
       case "dashboard": return <Dashboard tasks={state.tasks} onMoveTask={moveTask} onNewMatter={() => {}} />;
