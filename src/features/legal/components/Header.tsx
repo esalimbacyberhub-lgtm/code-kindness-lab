@@ -39,7 +39,7 @@ export function Header({ role, onRoleChange, onLogout, userName }: Props) {
               <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-widest bg-brand-gold/15 text-brand-gold border border-brand-gold/30">Practice OS</span>
               <span className="text-[11px] text-muted-foreground font-mono">Nairobi · {time}</span>
             </div>
-            <h1 className="font-serif text-xl text-foreground tracking-tight leading-none">Omuyoma <span className="text-brand-gold">&amp;</span> Co.{" "}<span className="text-muted-foreground font-normal">Advocates</span></h1>
+            <h1 className="font-serif text-xl text-foreground tracking-tight leading-none">Omuyoma <span className="text-brand-gold">&amp;</span> Co.</h1>
           </div>
         </div>
         <div className="hidden md:flex flex-1 max-w-md mx-6">
