@@ -34,5 +34,5 @@ export interface Witness {
 export interface AuditLog {
   id: string; action: string; user: string; timestamp: string; module: string;
 }
-export type ViewKey = "dashboard"|"matters"|"calendar"|"clientportal"|"vault"|"drafting"|"witness"|"directory"|"finance"|"admin";
+export type ViewKey = "dashboard"|"matters"|"calendar"|"vault"|"directory"|"admin";
 export type Role = "partner"|"associate"|"paralegal"|"client";
