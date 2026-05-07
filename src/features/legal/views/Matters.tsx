@@ -1,5 +1,6 @@
-import type { Matter, StaffMember, Role } from "../types";
-import { Briefcase } from "lucide-react";
+import { useState } from "react";
+import { Briefcase, Upload, Trash2, FileText, Link, ArrowLeft, Plus } from "lucide-react";
+import type { Matter, StaffMember, Role, VaultDocument } from "../types";
 
 const TYPE_TONE: Record<Matter["type"], string> = {
   "Civil Litigation": "bg-accent/15 text-accent",
@@ -11,41 +12,46 @@ const TYPE_TONE: Record<Matter["type"], string> = {
   "Probate & Administration": "bg-muted text-foreground",
 };
 
-export const MatterHub = Matters;
-
-export function Matters({ matters }: { matters: Matter[] }) {
-  return (
-    <div>
-      <h2 className="text-3xl font-serif mb-6">Matter Hub</h2>
-      {matters.length === 0 && (
-        <div className="glass-card rounded-2xl p-10 text-center text-sm text-muted-foreground">
-          No matters yet. Open a new matter from the Command Deck.
-        </div>
-      )}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {matters.map(m => (
-          <article key={m.id} className="glass-card glass-card-hover rounded-2xl p-5">
-            <div className="flex items-start gap-3 mb-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center">
-                <Briefcase className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-serif text-lg leading-tight truncate">{m.title}</h3>
-                <p className="text-xs text-muted-foreground">{m.client}</p>
-              {(m.partyA || m.partyB) && <p className="text-xs text-amber-400/80 font-medium mt-0.5">{m.partyA}{m.partyA && m.partyB ? " v. " : ""}{m.partyB}</p>}
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <select onChange={(e) => onAssign(m.id, e.target.value)} value={m.assignedTo || ""} className="text-[10px] bg-transparent border border-white/10 rounded px-1 py-0.5 text-gray-400 cursor-pointer">
-                <option value="">Unassigned</option>
-                {staff.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
-              </select>
-              <span className={`text-[11px] px-2 py-1 rounded-full font-medium ${TYPE_TONE[m.type]}`}>{m.type}</span>
-              <span className="text-[11px] uppercase tracking-wider text-muted-foreground">{m.status}</span>
-            </div>
-          </article>
-        ))}
-      </div>
-    </div>
-  );
+interface Props {
+  matters: Matter[]; staff: StaffMember[]; role: Role;
+  onAssign: (matterId: string, staffName: string) => void;
+  documents: VaultDocument[]; onAddDocument: (d: Omit<VaultDocument, "id">) => void;
+  onDeleteDocument: (id: string) => void;
 }
+
+const genId = () => Math.random().toString(36).slice(2, 9);
+
+export const Matters = ({ matters, staff, role, onAssign, documents, onAddDocument, onDeleteDocument }: Props) => {
+  const [selected, setSelected] = useState<Matter | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>, matter: Matter) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    onAddDocument({
+      name: file.name, matter: matter.id, fileType: file.type || "application/octet-stream",
+      date: new Date().toISOString().split("T")[0], uploadedBy: role,
+    });
+    e.target.value = "";
+  };
+
+  const handleCopyLink = (matter: Matter) => {
+    const link = `${window.location.origin}/client-portal?matter=${matter.id}&token=${btoa(matter.id + Date.now())}`;
+    navigator.clipboard.writeText(link);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  };
+
+  if (selected) {
+    const matterDocs = documents.filter(d => d.matter === selected.id);
+    return (
+      <div className="space-y-6">
+        <button onClick={() => setSelected(null)} className="flex items-center gap-2 text-sm text-blue-400 hover:underline">
+          <ArrowLeft className="w-4 h-4" /> Back to matters
+        </button>
+        <div className="glass-card p-6 rounded-xl space-y-4">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="text-xs text-gray-400 font-mono">{selected.fileNo}</p>
+              <h2 className="text-xl font-bold text-white">{selected.title}</h2>
+              <p className="text-gray-400 text-sm">{selected.client}</p>
