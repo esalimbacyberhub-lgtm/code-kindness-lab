@@ -13,7 +13,7 @@ const ITEMS: NavItem[] = [
   { key: "calendar", label: "Calendar & Deadlines", Icon: Calendar },
   { key: "vault", label: "Document Vault", Icon: FolderTree },
   { key: "directory", label: "Firm Directory", Icon: BookUser },
-  { key: "invoices", label: "Invoices", Icon: Receipt },
+  { key: "invoices", label: "Invoices", Icon: Receipt, partnerOnly: true },
   { key: "admin", label: "Admin & Audit", Icon: ShieldCheck, partnerOnly: true },
 ];
 
