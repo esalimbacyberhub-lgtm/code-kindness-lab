@@ -12,7 +12,7 @@ export interface Matter {
 }
 export interface Deadline {
   id: string; title: string; matter: string; court: string; date: string;
-  type: "hearing"|"filing"|"mention"|"ruling"|"deadline";
+  type: "hearing"|"filing"|"mention"|"ruling"|"deadline"|"lsk";
 }
 export type DeadlineType = Deadline["type"];
 export interface LedgerEntry {
@@ -23,8 +23,9 @@ export interface StaffMember {
   id: string; name: string; role: Role; email: string; phone: string; practice: string; initials: string;
 }
 export interface VaultDocument {
-  id: string; name: string; matter: string; fileType: string; date: string; uploadedBy: string;
-  uploadedAt: string; size: number; mime: string; data: string;
+  id: string; name: string; matter: string;
+  fileType?: string; date?: string; uploadedBy?: string;
+  uploadedAt?: string; size?: number; mime?: string; data?: string;
 }
 export interface Message {
   id: string; from: string; content: string; timestamp: string; direction: "sent"|"received"; matter?: string;
