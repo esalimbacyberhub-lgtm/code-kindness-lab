@@ -3,7 +3,7 @@ import { Header } from "@/features/legal/components/Header";
 import { Sidebar } from "@/features/legal/components/Sidebar";
 import { NewMatterDialog } from "@/features/legal/components/NewMatterDialog";
 import { Dashboard } from "@/features/legal/views/Dashboard";
-import { Matters } from "@/features/legal/views/Matters";
+import { MatterHub } from "@/features/legal/views/Matters";
 import { Finance } from "@/features/legal/views/Finance";
 import { Calendar } from "@/features/legal/views/Calendar";
 import { ClientPortal } from "@/features/legal/views/ClientPortal";
@@ -30,7 +30,7 @@ const Index = () => {
   const renderView = () => {
     switch (state.currentView) {
       case "dashboard": return <Dashboard tasks={state.tasks} onMoveTask={moveTask} onNewMatter={() => setNewMatterOpen(true)} />;
-      case "matters": return <Matters matters={state.matters} />;
+      case "matters": return <MatterHub role={state.role} />;
       case "finance": return <Finance ledger={state.ledger} matters={state.matters} onAdd={addLedgerEntry} />;
       case "calendar": return <Calendar deadlines={state.deadlines} matters={state.matters} onAdd={addDeadline} onDelete={deleteDeadline} />;
       case "clientportal": return <ClientPortal messages={state.messages} matters={state.matters} role={state.role} onSend={sendMessage} />;
