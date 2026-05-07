@@ -44,7 +44,7 @@ const Index = () => {
         <Sidebar current={state.currentView} role={state.role} collapsed={state.sidebarCollapsed} onToggle={toggleSidebar} onNavigate={setView} />
         <main className="flex-1 overflow-y-auto custom-scroll p-6 md:p-8">{renderView()}</main>
       </div>
-      <NewMatterDialog open={matterDialogOpen} onOpenChange={setMatterDialogOpen} onCreate={(m) => { addMatter(m); setMatterDialogOpen(false); }} />
+      <NewMatterDialog open={matterDialogOpen} onOpenChange={setMatterDialogOpen} matterCount={state.matters.length} onCreate={(m) => { addMatter(m); setMatterDialogOpen(false); }} />
     </div>
   );
 };
