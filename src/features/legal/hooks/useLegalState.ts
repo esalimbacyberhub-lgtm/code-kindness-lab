@@ -12,7 +12,11 @@ interface State {
 
 const defaults: State = {
   currentView: "dashboard", role: "partner", sidebarCollapsed: false,
-  tasks: [], matters: [], deadlines: [], ledger: [], staff: [], documents: [], messages: [], witnesses: [], invoices: [],
+  tasks: [], matters: [
+    { id: "m1", client: "Kariuki Enterprises Ltd", title: "Commercial Dispute vs Equity Bank", type: "Commercial", status: "active", fileNo: "OM/COMM/2026/001", court: "High Court - Commercial & Tax Division", partyA: "Kariuki Enterprises Ltd", partyB: "Equity Bank Kenya", openedDate: "2026-01-15" },
+    { id: "m2", client: "Jane Wanjiku", title: "Divorce Petition", type: "Family Law", status: "active", fileNo: "OM/FAM/2026/002", court: "High Court - Family Division", partyA: "Jane Wanjiku", partyB: "Peter Wanjiku", openedDate: "2026-02-20" },
+    { id: "m3", client: "Mombasa Properties Ltd", title: "Land Dispute - LR No. 4521", type: "Conveyancing", status: "pending", fileNo: "OM/CONV/2026/003", court: "Environment & Land Court - Nairobi", partyA: "Mombasa Properties Ltd", partyB: "County Government of Mombasa", openedDate: "2026-03-10" }
+  ], deadlines: [], ledger: [], staff: [], documents: [], messages: [], witnesses: [], invoices: [],
   auditLog: [
     { id: "a1", action: "System initialised", user: "System", timestamp: new Date().toISOString(), module: "System" },
   ],
