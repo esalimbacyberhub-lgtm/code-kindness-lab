@@ -28,7 +28,7 @@ export function AdminAudit({ logs, matters, staff, ledger, role }: Props) {
   const MODULE_COLOR: Record<string, string> = {
     "System": "bg-muted/40 text-muted-foreground",
     "Matters": "bg-primary/15 text-primary",
-    "Finance": "bg-success/15 text-success",
+    "Finance": "bg-blue-500/15 text-blue-400",
     "Calendar": "bg-accent/15 text-accent",
     "Vault": "bg-warning/15 text-warning",
     "Directory": "bg-brand-gold/15 text-brand-gold",

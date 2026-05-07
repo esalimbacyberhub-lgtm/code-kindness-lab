@@ -13,10 +13,10 @@ interface Props {
 }
 
 const TYPE_META: Record<DeadlineType, { label: string; dot: string; chip: string; Icon: typeof Gavel }> = {
-  hearing: { label: "Hearing", dot: "bg-primary", chip: "bg-primary/15 text-primary border-primary/30", Icon: Gavel },
-  filing: { label: "Filing", dot: "bg-info", chip: "bg-info/15 text-info border-info/30", Icon: FileText },
-  mention: { label: "Mention", dot: "bg-warning", chip: "bg-warning/15 text-warning border-warning/30", Icon: Megaphone },
-  ruling: { label: "Ruling", dot: "bg-accent", chip: "bg-accent/15 text-accent border-accent/30", Icon: Scale },
+  hearing: { label: "Hearing", dot: "bg-green-500", chip: "bg-green-500/15 text-green-400 border-green-500/30", Icon: Gavel },
+  filing: { label: "Filing", dot: "bg-green-500", chip: "bg-green-500/15 text-green-400 border-green-500/30", Icon: FileText },
+  mention: { label: "Mention", dot: "bg-green-500", chip: "bg-green-500/15 text-green-400 border-green-500/30", Icon: Megaphone },
+  ruling: { label: "Ruling", dot: "bg-green-500", chip: "bg-green-500/15 text-green-400 border-green-500/30", Icon: Scale },
   lsk: { label: "LSK Event", dot: "bg-success", chip: "bg-success/15 text-success border-success/30", Icon: Users2 },
   deadline: { label: "Deadline", dot: "bg-destructive", chip: "bg-destructive/15 text-destructive border-destructive/30", Icon: AlertTriangle },
 };
