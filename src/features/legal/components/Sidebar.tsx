@@ -1,7 +1,7 @@
 import { Receipt,
   Home, Briefcase, Calendar, Lock, FolderTree,
   FileSignature, UserCheck, BookUser, LineChart, ShieldCheck, ChevronLeft,
-Receipt, } from "lucide-react";
+} from "lucide-react";
 import type { Role, ViewKey } from "../types";
 import { cn } from "@/lib/utils";
 
