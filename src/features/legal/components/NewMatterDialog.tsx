@@ -18,11 +18,13 @@ export function NewMatterDialog({ open, onOpenChange, onCreate }: Props) {
   const [client, setClient] = useState("");
   const [title, setTitle] = useState("");
   const [type, setType] = useState<Matter["type"]>("Civil Litigation");
+  const [partyA, setPartyA] = useState("");
+  const [partyB, setPartyB] = useState("");
 
   const submit = () => {
     if (!client.trim() || !title.trim()) return;
-    onCreate({ client: client.trim(), title: title.trim(), type });
-    setClient(""); setTitle(""); setType("Civil Litigation");
+    onCreate({ client: client.trim(), title: title.trim(), type, partyA: partyA.trim(), partyB: partyB.trim() });
+    setClient(""); setTitle(""); setType("Civil Litigation"); setPartyA(""); setPartyB("");
     onOpenChange(false);
   };
 
