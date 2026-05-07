@@ -23,7 +23,7 @@ const Index = () => {
   const renderView = () => {
     switch (state.currentView) {
       case "dashboard": return <Dashboard tasks={state.tasks} onMoveTask={moveTask} onNewMatter={() => {}} />;
-      case "matters": return <MatterHub matters={state.matters} />;
+      case "matters": return <MatterHub matters={state.matters} staff={state.staff} role={state.role} onAssign={assignMatter} />
       case "finance": return <Finance ledger={state.ledger} matters={state.matters} onAdd={addLedgerEntry} />;
       case "calendar": return <Calendar deadlines={state.deadlines} matters={state.matters} onAdd={addDeadline} onDelete={deleteDeadline} />;
       case "vault": return <DocumentVault documents={state.documents} matters={state.matters} onAdd={addDocument} onDelete={deleteDocument} />;

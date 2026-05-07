@@ -1,4 +1,4 @@
-import type { Matter } from "../types";
+import type { Matter, StaffMember, Role } from "../types";
 import { Briefcase } from "lucide-react";
 
 const TYPE_TONE: Record<Matter["type"], string> = {
@@ -36,6 +36,10 @@ export function Matters({ matters }: { matters: Matter[] }) {
               </div>
             </div>
             <div className="flex items-center justify-between">
+              <select onChange={(e) => onAssign(m.id, e.target.value)} value={m.assignedTo || ""} className="text-[10px] bg-transparent border border-white/10 rounded px-1 py-0.5 text-gray-400 cursor-pointer">
+                <option value="">Unassigned</option>
+                {staff.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
+              </select>
               <span className={`text-[11px] px-2 py-1 rounded-full font-medium ${TYPE_TONE[m.type]}`}>{m.type}</span>
               <span className="text-[11px] uppercase tracking-wider text-muted-foreground">{m.status}</span>
             </div>

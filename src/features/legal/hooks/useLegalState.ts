@@ -66,6 +66,8 @@ export function useLegalState() {
   const removeStaff = useCallback((id: string) =>
     setState(s => ({ ...s, staff: s.staff.filter(m => m.id !== id) })), []);
 
+  const assignMatter = useCallback((matterId: string, staffName: string) =>
+    setState(s => ({ ...s, matters: s.matters.map(m => m.id === matterId ? { ...m, assignedTo: staffName } : m) })), []);
   const addInvoice = useCallback((inv: Invoice) =>
     setState(s => ({ ...s, invoices: [...s.invoices, inv] })), []);
   const addDocument = useCallback((d: Omit<VaultDocument, "id">) =>
@@ -86,6 +88,6 @@ export function useLegalState() {
   return {
     state, setView, setRole, toggleSidebar, moveTask, addTask, addMatter,
     addDeadline, deleteDeadline, addLedgerEntry, addStaff, removeStaff,
-    addDocument, deleteDocument, addInvoice, sendMessage, addWitness, updateWitnessStatus, log
+    addDocument, deleteDocument, addInvoice, assignMatter, sendMessage, addWitness, updateWitnessStatus, log
   };
 }
