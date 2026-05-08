@@ -25,7 +25,7 @@
     --muted-foreground:    215 22% 58%;
 
     /* ── Accent = Royal Blue ── */
-    --accent:              225 73% 57%;
+    --accent:              258 90% 66%;
     --accent-foreground:   0 0% 100%;
 
     /* ── Semantic ── */
@@ -33,7 +33,7 @@
     --destructive-foreground: 0 0% 100%;
     --success:             152 50% 42%;
     --warning:             38 90% 55%;
-    --info:                200 70% 55%;
+    --info:                199 89% 48%;
 
     /* ── Chrome ── */
     --border:              225 28% 22%;
