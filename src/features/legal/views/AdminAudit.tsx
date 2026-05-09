@@ -1,17 +1,18 @@
 import { useState } from "react";
 import {
   Shield, Activity, TrendingUp, Users, Briefcase,
-  Lock, BookOpen, BarChart3, ArrowDownLeft, ArrowUpRight,
+  Lock, BookOpen, BarChart3, ArrowDownLeft, ArrowUpRight, Building2,
 } from "lucide-react";
-import type { AuditLog, Matter, StaffMember, LedgerEntry, Role } from "../types";
+import type { AuditLog, Matter, StaffMember, LedgerEntry, Role, Deadline } from "../types";
 import { cn } from "@/lib/utils";
 
 interface Props {
-  logs:    AuditLog[];
-  matters: Matter[];
-  staff:   StaffMember[];
-  ledger:  LedgerEntry[];
-  role:    Role;
+  logs:      AuditLog[];
+  matters:   Matter[];
+  staff:     StaffMember[];
+  ledger:    LedgerEntry[];
+  deadlines: Deadline[];
+  role:      Role;
 }
 
 const LEDGER_TYPE_STYLE: Record<string, string> = {
@@ -42,7 +43,7 @@ const TABS = [
 
 type Tab = (typeof TABS)[number]["id"];
 
-export function AdminAudit({ logs, matters, staff, ledger, role }: Props) {
+export function AdminAudit({ logs, matters, staff, ledger, deadlines, role }: Props) {
   const [tab, setTab]           = useState<Tab>("overview");
   const [ledgerFilter, setLedgerFilter] = useState<string>("all");
 
@@ -329,6 +330,89 @@ export function AdminAudit({ logs, matters, staff, ledger, role }: Props) {
           )}
         </div>
       )}
+
+      {/* ════════════════════ COURT STATIONS ════════════════════ */}
+      {tab === "courts" && (
+        <>
+          <div style={{marginBottom:16,padding:"10px 16px",background:"rgba(65,105,225,0.07)",border:"1px solid rgba(65,105,225,0.18)",borderRadius:9,fontSize:12,color:"#60A5FA",display:"flex",alignItems:"center",gap:8}}>
+            <span style={{fontSize:15}}>⚖️</span>
+            <span>Cases aggregated by court station from all deadlines and matters on the docket.</span>
+          </div>
+          {(() => {
+            const today = new Date().toISOString().slice(0,10);
+            // Build station map from deadlines
+            const stationMap: Record<string,{total:number;upcoming:number;overdue:number;matters:Set<string>}> = {};
+            deadlines.forEach(d => {
+              const station = d.court || "Unspecified";
+              if (!stationMap[station]) stationMap[station] = {total:0,upcoming:0,overdue:0,matters:new Set()};
+              stationMap[station].total++;
+              if (d.date >= today) stationMap[station].upcoming++;
+              else stationMap[station].overdue++;
+              if (d.matter && d.matter !== "General") stationMap[station].matters.add(d.matter);
+            });
+            const rows = Object.entries(stationMap).sort((a,b)=>b[1].total-a[1].total);
+            return deadlines.length === 0 ? (
+              <div className="glass-card rounded-2xl p-10 text-center text-muted-foreground text-sm">
+                No court deadlines recorded yet. Add deadlines in Calendar &amp; Deadlines to see the station breakdown.
+              </div>
+            ) : (
+              <div className="glass-card rounded-2xl overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border/50">
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">#</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Court Station</th>
+                      <th className="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-primary">Active</th>
+                      <th className="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-destructive">Overdue</th>
+                      <th className="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Total</th>
+                      <th className="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-info">Matters</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map(([station, data], idx) => (
+                      <tr key={station} className="border-b border-border/30 hover:bg-secondary/20 transition-colors">
+                        <td className="px-4 py-3 text-muted-foreground font-mono text-xs">{idx+1}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <Building2 className="w-3.5 h-3.5 text-primary/60 shrink-0"/>
+                            <span className="font-medium text-sm">{station}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {data.upcoming > 0 ? (
+                            <span className="inline-block px-2 py-0.5 rounded-full text-xs font-bold bg-primary/15 text-primary">{data.upcoming}</span>
+                          ) : <span className="text-muted-foreground">—</span>}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {data.overdue > 0 ? (
+                            <span className="inline-block px-2 py-0.5 rounded-full text-xs font-bold bg-destructive/15 text-destructive">{data.overdue}</span>
+                          ) : <span className="text-muted-foreground">—</span>}
+                        </td>
+                        <td className="px-4 py-3 text-center font-semibold text-foreground">{data.total}</td>
+                        <td className="px-4 py-3 text-center">
+                          {data.matters.size > 0 ? (
+                            <span className="inline-block px-2 py-0.5 rounded-full text-xs font-bold bg-info/15 text-info">{data.matters.size}</span>
+                          ) : <span className="text-muted-foreground">—</span>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t border-primary/20 bg-primary/5">
+                      <td colSpan={2} className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-primary">Totals</td>
+                      <td className="px-4 py-3 text-center font-bold text-primary">{rows.reduce((s,[,d])=>s+d.upcoming,0)}</td>
+                      <td className="px-4 py-3 text-center font-bold text-destructive">{rows.reduce((s,[,d])=>s+d.overdue,0)}</td>
+                      <td className="px-4 py-3 text-center font-bold text-foreground">{deadlines.length}</td>
+                      <td className="px-4 py-3 text-center font-bold text-info">{new Set(deadlines.filter(d=>d.matter&&d.matter!=="General").map(d=>d.matter)).size}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            );
+          })()}
+        </>
+      )}
+
     </div>
   );
 }
