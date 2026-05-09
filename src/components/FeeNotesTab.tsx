@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react"
+import { FirmLetterhead, FirmFooter, FIRM } from "./FirmLetterhead"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -82,31 +83,8 @@ function FeeNoteDocument({ fn, onClose }: { fn: FeeNote; onClose: () => void }) 
         {/* Document */}
         <div id="fee-note-print" style={{ ...S.page, background: "#0c1527", border: "1px solid rgba(65,105,225,0.25)", borderRadius: 14, borderLeft: "6px solid #4169E1" }}>
 
-          {/* Firm Header */}
-          <div style={S.header}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-              <div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: "#e8eaf0", letterSpacing: "0.04em", marginBottom: 4 }}>
-                  OMUYOMA &amp; CO. ADVOCATES
-                </div>
-                <div style={{ fontSize: 12, color: "#6b7fa3", lineHeight: 1.7, fontFamily: "'DM Sans', sans-serif" }}>
-                  Nairobi, Kenya<br />
-                  Members: Law Society of Kenya · East African Law Society
-                </div>
-              </div>
-              <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#4169E1", marginBottom: 4 }}>
-                  FEE NOTE
-                </div>
-                <div style={{ fontSize: 22, fontWeight: 900, color: "#4169E1", fontFamily: "'DM Sans', monospace", letterSpacing: "0.06em" }}>
-                  {fn.feeNoteNo}
-                </div>
-                <div style={{ fontSize: 12, color: "#6b7fa3", marginTop: 4 }}>
-                  Date: {fmtDate(fn.date)}
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Firm Letterhead */}
+          <FirmLetterhead docRef={fn.feeNoteNo} docDate={fn.date} docTitle="FEE NOTE" />
 
           {/* Client + Matter */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 24 }}>
