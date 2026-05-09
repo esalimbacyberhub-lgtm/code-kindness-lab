@@ -1,6 +1,6 @@
 import { Bell, Mic, Search, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
-import logo from "@/assets/omuyoma-logo.png";
+import { ShieldLogo } from "@/components/FirmLetterhead";
 import type { Role } from "../types";
 
 interface Props {
@@ -33,7 +33,7 @@ export function Header({ role, onRoleChange, onLogout, userName }: Props) {
     <header className="relative z-20 px-6 pt-5 pb-4 border-b border-brand-gold/10">
       <div className="flex flex-wrap justify-between items-center gap-4">
         <div className="flex items-center gap-4">
-          <img src={logo} alt="Omuyoma & Co. Advocates" className="h-14 w-auto drop-shadow-[0_2px_8px_hsl(43_70%_48%/0.35)]" />
+          <ShieldLogo size={52} />
           <div className="hidden sm:block">
             <div className="flex items-center gap-2 mb-0.5">
               <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-widest bg-brand-gold/15 text-brand-gold border border-brand-gold/30">Practice OS</span>
