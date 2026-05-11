@@ -159,15 +159,7 @@ export function Calendar({ deadlines, matters, onAdd, onDelete }: Props) {
       </div>
       <div className="blue-divider mb-6"/>
 
-      {/* Court hierarchy legend */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        {COURT_LEVELS.map((lvl,i)=>(
-          <span key={lvl} className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono border border-primary/20 bg-primary/5 text-primary/80">
-            <span className="w-4 h-4 rounded-full bg-primary/20 text-primary text-[9px] flex items-center justify-center font-bold">{i+1}</span>
-            {lvl}
-          </span>
-        ))}
-      </div>
+
 
       {/* ══ GRID VIEW ══ */}
       {view==="grid" && (
