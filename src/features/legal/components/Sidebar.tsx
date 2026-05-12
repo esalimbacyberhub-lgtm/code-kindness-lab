@@ -1,4 +1,4 @@
-import { Receipt,
+import { Receipt, Globe,
   Home, Briefcase, Calendar, Lock, FolderTree,
   FileSignature, UserCheck, BookUser, LineChart, ShieldCheck, ChevronLeft,
 } from "lucide-react";
@@ -15,6 +15,7 @@ const ITEMS: NavItem[] = [
   { key: "directory", label: "Firm Directory", Icon: BookUser },
 
   { key: "admin", label: "Admin & Audit", Icon: ShieldCheck, partnerOnly: true },
+  { key: "clientportal", label: "Client Portal", Icon: Globe, partnerOnly: true },
 ];
 
 interface Props {

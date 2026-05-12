@@ -12,6 +12,7 @@ import {
   SelectLabel, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import type { Deadline, Matter } from "../types";
+import { DeadlineCalculator } from "./DeadlineCalculator";
 import { cn } from "@/lib/utils";
 
 // ── Icons & colours per deadline type ────────────────────────────────────────

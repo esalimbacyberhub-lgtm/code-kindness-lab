@@ -8,6 +8,7 @@ import { Calendar } from "@/features/legal/views/Calendar";
 import { DocumentVault } from "@/features/legal/views/DocumentVault";
 import { FirmDirectory } from "@/features/legal/views/FirmDirectory";
 import { Invoices } from "@/features/legal/views/Invoices";
+import { ClientPortal } from "@/features/legal/views/ClientPortal";
 import FinancialsModule from "@/components/FinancialsModule";
 import { AdminAudit } from "@/features/legal/views/AdminAudit";
 import { Login } from "@/features/legal/views/Login";
