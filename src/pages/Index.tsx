@@ -31,7 +31,7 @@ const Index = () => {
       case "calendar": return <Calendar deadlines={state.deadlines} matters={state.matters} onAdd={addDeadline} onDelete={deleteDeadline} />;
       case "vault": return <DocumentVault documents={state.documents} matters={state.matters} onAdd={addDocument} onDelete={deleteDocument} />;
       case "directory": return <FirmDirectory staff={state.staff} currentRole={state.role} onAdd={addStaff} onRemove={removeStaff} />;
-      case "invoices": return <FinancialsModule />;
+      case "invoices": return null; // Financials moved to Admin & Audit
       case "admin": return <AdminAudit logs={state.auditLog} matters={state.matters} staff={state.staff} ledger={state.ledger} deadlines={state.deadlines} role={state.role} />;
       default: return null;
     }

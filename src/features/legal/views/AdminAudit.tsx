@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import type { AuditLog, Matter, StaffMember, LedgerEntry, Role, Deadline } from "../types";
 import { cn } from "@/lib/utils";
+import FinancialsModule from "@/components/FinancialsModule";
 
 interface Props {
   logs:      AuditLog[];
@@ -328,6 +329,13 @@ export function AdminAudit({ logs, matters, staff, ledger, deadlines, role }: Pr
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* ════════════════════ FINANCIALS ════════════════════ */}
+      {tab === "financials" && (
+        <div className="-mx-0">
+          <FinancialsModule />
         </div>
       )}
 
