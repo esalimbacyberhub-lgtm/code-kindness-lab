@@ -27,7 +27,7 @@ export function useLegalState() {
     if (typeof window === "undefined") return defaults;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return { ...defaults, ...JSON.parse(raw) };
+      if (raw) return { ...defaults, ...JSON.parse(raw) , addMessage};
     } catch {}
     return defaults;
   });
@@ -72,6 +72,9 @@ export function useLegalState() {
 
   const assignMatter = useCallback((matterId: string, staffName: string) =>
     setState(s => ({ ...s, matters: s.matters.map(m => m.id === matterId ? { ...m, assignedTo: staffName } : m) })), []);
+  const addMessage = useCallback((content: string, from: string, direction: "sent" | "received") =>
+    setState(s => ({ ...s, messages: [...(s.messages || []), { id: `msg${Date.now()}`, from, content, timestamp: new Date().toISOString(), direction }] })), []);
+
   const addInvoice = useCallback((inv: Invoice) =>
     setState(s => ({ ...s, invoices: [...s.invoices, inv] })), []);
   const addDocument = useCallback((d: Omit<VaultDocument, "id">) =>

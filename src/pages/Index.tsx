@@ -17,7 +17,7 @@ import { useLegalState } from "@/features/legal/hooks/useLegalState";
 import type { Role } from "@/features/legal/types";
 
 const Index = () => {
-  const { state, setView, setRole, toggleSidebar, moveTask, addDeadline, deleteDeadline, addLedgerEntry, addStaff, removeStaff, addDocument, deleteDocument, addInvoice, addMatter, assignMatter } = useLegalState();
+  const { state, setView, setRole, toggleSidebar, moveTask, addDeadline, deleteDeadline, addLedgerEntry, addStaff, removeStaff, addDocument, deleteDocument, addInvoice, addMessage, addMatter, assignMatter } = useLegalState();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [matterDialogOpen, setMatterDialogOpen] = useState(false);
   const [loggedInName, setLoggedInName] = useState("");
