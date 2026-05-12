@@ -7,15 +7,15 @@
 @layer base {
   :root {
     /* ── Base ── */
-    --background:          224 58% 4%;
+    --background:          215 62% 9%;
     --foreground:          210 40% 95%;
-    --card:                224 52% 7%;
+    --card:                217 64% 14%;
     --card-foreground:     210 40% 95%;
     --popover:             222 48% 7%;
     --popover-foreground:  210 40% 95%;
 
     /* ── Royal Blue Primary ── */
-    --primary:             224 80% 55%;
+    --primary:             43 56% 54%;
     --primary-foreground:  0 0% 100%;
 
     /* ── Secondary / Muted ── */
@@ -25,7 +25,7 @@
     --muted-foreground:    215 22% 58%;
 
     /* ── Accent = Royal Blue ── */
-    --accent:              252 95% 65%;
+    --accent:              43 70% 60%;
     --accent-foreground:   0 0% 100%;
 
     /* ── Semantic ── */
@@ -61,7 +61,7 @@
 
     /* ── Glass tokens ── */
     --glass-bg:            rgba(255, 255, 255, 0.04);
-    --glass-border:        rgba(82, 142, 255, 0.25);
+    --glass-border:        rgba(201, 168, 76, 0.20);
     --glass-shadow:        rgba(30, 58, 138, 0.20);
     --glass-glow:          rgba(65, 105, 225, 0.12);
     --glass-highlight:     rgba(255, 255, 255, 0.07);
@@ -131,7 +131,7 @@
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at 15% 20%, rgba(37, 99, 235, 0.30) 0%, transparent 55%),
+    radial-gradient(ellipse at 15% 20%, rgba(201, 168, 76, 0.18) 0%, transparent 55%),
     radial-gradient(ellipse at 82% 8%,  rgba(65, 105, 225, 0.14) 0%, transparent 50%),
     radial-gradient(ellipse at 50% 85%, rgba(29, 78, 216, 0.12) 0%, transparent 55%),
     radial-gradient(ellipse at 90% 70%, rgba(30, 58, 138, 0.10) 0%, transparent 45%);

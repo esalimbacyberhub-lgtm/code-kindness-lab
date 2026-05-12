@@ -22,14 +22,14 @@ export function ShieldLogo({ size = 72 }: { size?: number }) {
     <svg width={size} height={size} viewBox="0 0 90 90" fill="none">
       <defs>
         <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%"   stopColor="#0f172a"/>
-          <stop offset="50%"  stopColor="#1E3A8A"/>
-          <stop offset="100%" stopColor="#1d4ed8"/>
+          <stop offset="0%"   stopColor="#0A1628"/>
+          <stop offset="50%"  stopColor="#0D1F3C"/>
+          <stop offset="100%" stopColor="#1E3A5F"/>
         </linearGradient>
         <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%"   stopColor="#60A5FA"/>
-          <stop offset="50%"  stopColor="#0EA5E9"/>
-          <stop offset="100%" stopColor="#6366F1"/>
+          <stop offset="0%"   stopColor="#C9A84C"/>
+          <stop offset="50%"  stopColor="#E5C76B"/>
+          <stop offset="100%" stopColor="#9B7E2E"/>
         </linearGradient>
         <linearGradient id="innerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%"   stopColor="#EFF6FF"/>
@@ -50,7 +50,7 @@ export function ShieldLogo({ size = 72 }: { size?: number }) {
       <path
         d="M45 11 L72 23 L72 50 Q72 66 45 80 Q18 66 18 50 L18 23 Z"
         fill="none"
-        stroke="#3B82F6"
+        stroke="#C9A84C"
         strokeWidth="1"
         strokeLinejoin="round"
         opacity="0.5"
@@ -64,12 +64,12 @@ export function ShieldLogo({ size = 72 }: { size?: number }) {
       />
 
       {/* Teal accent dots at shield corners */}
-      <circle cx="45" cy="4"  r="2.5" fill="#0EA5E9"/>
-      <circle cx="78" cy="18" r="2"   fill="#6366F1"/>
-      <circle cx="78" cy="50" r="2"   fill="#6366F1"/>
-      <circle cx="45" cy="86" r="2.5" fill="#0EA5E9"/>
-      <circle cx="12" cy="50" r="2"   fill="#6366F1"/>
-      <circle cx="12" cy="18" r="2"   fill="#6366F1"/>
+      <circle cx="45" cy="4"  r="2.5" fill="#C9A84C"/>
+      <circle cx="78" cy="18" r="2"   fill="#9B7E2E"/>
+      <circle cx="78" cy="50" r="2"   fill="#9B7E2E"/>
+      <circle cx="45" cy="86" r="2.5" fill="#C9A84C"/>
+      <circle cx="12" cy="50" r="2"   fill="#9B7E2E"/>
+      <circle cx="12" cy="18" r="2"   fill="#9B7E2E"/>
 
       {/* O Monogram */}
       <text
@@ -83,7 +83,7 @@ export function ShieldLogo({ size = 72 }: { size?: number }) {
       >O</text>
 
       {/* Teal inner O ring */}
-      <circle cx="45" cy="45" r="17" fill="none" stroke="#0EA5E9" strokeWidth="0.8" opacity="0.4"/>
+      <circle cx="45" cy="45" r="17" fill="none" stroke="#C9A84C" strokeWidth="0.8" opacity="0.5"/>
     </svg>
   )
 }
