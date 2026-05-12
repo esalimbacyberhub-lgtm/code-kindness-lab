@@ -16,14 +16,7 @@ interface SubfolderStore {
 }
 
 // ── Constants ────────────────────────────────────────────────────────────────
-const DEFAULT_FOLDERS = [
-  "Pleadings",
-  "Correspondence",
-  "Court Orders",
-  "Evidence",
-  "Financial Documents",
-  "Contracts & Agreements",
-];
+const DEFAULT_FOLDERS: string[] = [];
 
 const SUBFOLDER_STORAGE = "omuyoma_subfolders_v1";
 
@@ -107,7 +100,7 @@ export const Matters = ({
 
   // ── Subfolder helpers ──────────────────────────────────────────────────────
   const getMatterFolders = (matterId: string): string[] =>
-    subfolders[matterId]?.folders ?? DEFAULT_FOLDERS;
+    subfolders[matterId]?.folders ?? [];
 
   const getDocFolder = (matterId: string, docId: string): string =>
     subfolders[matterId]?.docFolders?.[docId] ?? "Uncategorised";
@@ -127,7 +120,7 @@ export const Matters = ({
     setSubfolders(prev => ({
       ...prev,
       [matterId]: {
-        folders:    [...(prev[matterId]?.folders ?? DEFAULT_FOLDERS), name.trim()],
+        folders:    [...(prev[matterId]?.folders ?? []), name.trim()],
         docFolders: prev[matterId]?.docFolders ?? {},
       },
     }));
@@ -140,7 +133,7 @@ export const Matters = ({
     if (!confirm(`Delete folder "${folder}"? Documents inside will move to Uncategorised.`)) return;
     setSubfolders(prev => {
       const updated = { ...prev[matterId] };
-      updated.folders = (updated.folders ?? DEFAULT_FOLDERS).filter(f => f !== folder);
+      updated.folders = (updated.folders ?? []).filter(f => f !== folder);
       // Move docs to uncategorised
       const newDocFolders = { ...updated.docFolders };
       Object.keys(newDocFolders).forEach(docId => {
@@ -188,7 +181,7 @@ export const Matters = ({
       client: matter.client, matter: matter.fileNo, matterTitle: matter.title,
       partyA: matter.partyA, partyB: matter.partyB,
     }));
-    alert(`Navigate to Financials → Invoices to create an invoice for ${matter.fileNo}`);
+    alert(`Go to Admin & Audit → Financials to raise an invoice for: ${matter.title || matter.client || "this matter"}`);
   };
 
   // ── Matter detail view ───────────────────────────────────────────────────
@@ -314,7 +307,7 @@ export const Matters = ({
                     client: selected.client, matterRef: selected.fileNo,
                     matterTitle: selected.title, partyA: selected.partyA, partyB: selected.partyB,
                   }));
-                  alert(`Navigate to Financials → Fee Notes to issue a fee note for ${selected.fileNo}`);
+                  alert(`Go to Admin & Audit → Financials → Fee Notes to raise a fee note for: ${selected.title || selected.client || "this matter"}`);
                 }}
                 className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/20 border border-accent/20 transition-all"
               >
