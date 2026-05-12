@@ -40,7 +40,7 @@ function genFileNo(
     customAbbrev ||
     MATTER_TYPES.find(t => t.value === type)?.abbrev ||
     "OTH";
-  return `OM/${abbrev}/${new Date().getFullYear()}/${String(count + 1).padStart(3, "0")}`;
+  return `OM/${abbrev}/${String(count + 1).padStart(3, "0")}`;
 }
 
 // ── Blank form state ─────────────────────────────────────────────────────────

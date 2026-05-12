@@ -1,23 +1,27 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   Plus, Trash2, Calendar as CalIcon, Scale,
   FileText, Gavel, AlertCircle, Building2,
-  ChevronLeft, ChevronRight, LayoutList, LayoutGrid,
 } from "lucide-react";
 import { Button }   from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input }    from "@/components/ui/input";
 import { Label }    from "@/components/ui/label";
 import {
-  Select, SelectContent, SelectItem,
-  SelectTrigger, SelectValue,
+  Select, SelectContent, SelectGroup, SelectItem,
+  SelectLabel, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import type { Deadline, Matter } from "../types";
 import { cn } from "@/lib/utils";
 
+// ── Icons & colours per deadline type ────────────────────────────────────────
 const TYPE_ICON: Record<string, typeof Gavel> = {
-  hearing: Gavel, filing: FileText, mention: CalIcon,
-  ruling: Scale, deadline: AlertCircle, lsk: Building2,
+  hearing:  Gavel,
+  filing:   FileText,
+  mention:  CalIcon,
+  ruling:   Scale,
+  deadline: AlertCircle,
+  lsk:      Building2,
 };
 const TYPE_COLOR: Record<string, string> = {
   hearing:  "text-primary bg-primary/10 border-primary/30",
@@ -27,260 +31,253 @@ const TYPE_COLOR: Record<string, string> = {
   deadline: "text-warning bg-warning/10 border-warning/30",
   lsk:      "text-success bg-success/10 border-success/30",
 };
-const PILL_BG: Record<string, string> = {
-  hearing:  "bg-primary text-white",
-  filing:   "bg-info/90 text-white",
-  mention:  "bg-accent/90 text-white",
-  ruling:   "bg-destructive/90 text-white",
-  deadline: "bg-warning/90 text-white",
-  lsk:      "bg-success/90 text-white",
-};
 
+// ── Kenya Court Hierarchy ─────────────────────────────────────────────────────
+// 8 levels as required, each with specific stations
 const COURT_LEVELS = [
-  "Supreme Court", "Court of Appeal", "High Court",
-  "Environment & Land Court", "Employment & Labour Relations Court",
-  "Magistrates Court", "Kadhis Court", "Small Claims Court", "Tribunal",
+  "Supreme Court",
+  "Court of Appeal",
+  "High Court",
+  "Environment & Land Court",
+  "Employment & Labour Relations Court",
+  "Magistrates Court",
+  "Kadhis Court",
+  "Tribunal",
 ] as const;
+
 type CourtLevel = (typeof COURT_LEVELS)[number];
 
 const COURT_STATIONS: Record<CourtLevel, string[]> = {
-  "Supreme Court": ["Nairobi — Principal Registry"],
-  "Court of Appeal": ["Nairobi","Mombasa","Kisumu","Nyeri","Eldoret","Malindi","Nakuru"],
+  "Supreme Court": [
+    "Nairobi — Principal Registry",
+  ],
+  "Court of Appeal": [
+    "Nairobi", "Mombasa", "Kisumu", "Nyeri",
+    "Eldoret", "Malindi", "Nakuru",
+  ],
   "High Court": [
     "Nairobi — Constitutional & Human Rights Division",
-    "Nairobi — Commercial & Tax Division","Nairobi — Family Division",
-    "Nairobi — Criminal Division","Nairobi — Anti-Corruption & Economic Crimes Division",
-    "Mombasa","Kisumu","Nakuru","Eldoret","Nyeri","Kakamega","Malindi","Garissa",
-    "Machakos","Thika","Bungoma","Kericho","Homabay","Kajiado","Kapenguria",
+    "Nairobi — Commercial & Tax Division",
+    "Nairobi — Family Division",
+    "Nairobi — Criminal Division",
+    "Nairobi — Anti-Corruption & Economic Crimes Division",
+    "Mombasa", "Kisumu", "Nakuru", "Eldoret", "Nyeri",
+    "Kakamega", "Malindi", "Garissa", "Machakos",
+    "Thika", "Bungoma", "Kericho", "Homabay",
   ],
-  "Environment & Land Court": ["Nairobi","Mombasa","Kisumu","Nakuru","Eldoret","Nyeri","Machakos","Malindi","Garissa","Bungoma","Kericho"],
-  "Employment & Labour Relations Court": ["Nairobi","Mombasa","Kisumu","Nakuru","Eldoret","Nyeri","Kakamega"],
+  "Environment & Land Court": [
+    "Nairobi", "Mombasa", "Kisumu", "Nakuru",
+    "Eldoret", "Nyeri", "Machakos", "Malindi", "Garissa",
+    "Bungoma", "Kericho",
+  ],
+  "Employment & Labour Relations Court": [
+    "Nairobi", "Mombasa", "Kisumu", "Nakuru",
+    "Eldoret", "Nyeri", "Kakamega",
+  ],
   "Magistrates Court": [
-    "Milimani — Chief Magistrates Court","Milimani — Criminal Courts",
-    "Makadara","Kibera","Mombasa","Kisumu","Nakuru","Eldoret","Nyeri","Kakamega",
-    "Garissa","Machakos","Thika","Bungoma","Malindi","Kericho","Homabay","Kitale",
+    "Milimani — Chief Magistrates Court",
+    "Milimani — Criminal Courts",
+    "Makadara", "Kibera", "Mombasa", "Kisumu",
+    "Nakuru", "Eldoret", "Nyeri", "Kakamega",
+    "Garissa", "Machakos", "Thika", "Bungoma",
+    "Malindi", "Kericho", "Homabay", "Kitale",
   ],
-  "Kadhis Court": ["Nairobi","Mombasa","Kisumu","Malindi","Garissa","Lamu","Wajir","Mandera"],
-  "Small Claims Court": ["Nairobi","Mombasa","Kisumu","Nakuru","Eldoret","Thika","Machakos","Nyeri","Bungoma","Malindi"],
+  "Kadhis Court": [
+    "Nairobi", "Mombasa", "Kisumu",
+    "Malindi", "Garissa", "Lamu", "Wajir", "Mandera",
+  ],
   "Tribunal": [
-    "Business Premises Rent Tribunal","Rent Restriction Tribunal","Tax Appeals Tribunal",
-    "Cooperative Tribunal","National Environment Tribunal",
-    "Public Procurement Administrative Review Board","Sports Disputes Tribunal",
-    "Retirement Benefits Appeals Tribunal","Capital Markets Tribunal",
-    "Financial Centre Tribunal","Other (specify below)",
+    "Business Premises Rent Tribunal",
+    "Rent Restriction Tribunal",
+    "Tax Appeals Tribunal",
+    "Cooperative Tribunal",
+    "National Environment Tribunal",
+    "Public Procurement Administrative Review Board",
+    "Sports Disputes Tribunal",
+    "Retirement Benefits Appeals Tribunal",
+    "Capital Markets Tribunal",
+    "Financial Centre Tribunal",
+    "Other (specify below)",
   ],
 };
 
+// Combine level + station into the stored court string
 const buildCourtString = (level: CourtLevel, station: string, custom: string) => {
   if (station === "Other (specify below)" && custom.trim()) return `${level} — ${custom.trim()}`;
-  if (level === "Supreme Court") return station;
+  if (level === "Supreme Court") return station; // single court
   return `${level} — ${station}`;
 };
 
+// ── Court hierarchy number badge ─────────────────────────────────────────────
 const LEVEL_RANK: Record<string, number> = {
-  "Supreme Court": 1, "Court of Appeal": 2, "High Court": 3,
-  "Environment & Land Court": 4, "Employment & Labour Relations Court": 5,
-  "Magistrates Court": 6, "Kadhis Court": 7, "Small Claims Court": 8, "Tribunal": 9,
+  "Supreme Court": 1,
+  "Court of Appeal": 2,
+  "High Court": 3,
+  "Environment & Land Court": 4,
+  "Employment & Labour Relations Court": 5,
+  "Magistrates Court": 6,
+  "Kadhis Court": 7,
+  "Tribunal": 8,
 };
-function courtRank(s: string) {
-  for (const [lvl, r] of Object.entries(LEVEL_RANK)) if (s.startsWith(lvl)) return r;
-  return 10;
+
+function courtRank(courtStr: string): number {
+  for (const [lvl, rank] of Object.entries(LEVEL_RANK)) {
+    if (courtStr.startsWith(lvl)) return rank;
+  }
+  return 9;
 }
 
-const BLANK = {
-  title: "", matter: "", courtLevel: "High Court" as CourtLevel,
-  courtStation: "", customStation: "", date: "", type: "hearing" as Deadline["type"],
+// ── Blank form ────────────────────────────────────────────────────────────────
+const BLANK_FORM = {
+  title:        "",
+  matter:       "",
+  courtLevel:   "High Court" as CourtLevel,
+  courtStation: "",
+  customStation:"",
+  date:         "",
+  type:         "hearing" as Deadline["type"],
 };
 
-const DAYS   = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+// ── Props ─────────────────────────────────────────────────────────────────────
+interface Props {
+  deadlines: Deadline[];
+  matters:   Matter[];
+  onAdd:     (d: Omit<Deadline, "id">) => void;
+  onDelete:  (id: string) => void;
+}
 
-function daysInMonth(y: number, m: number) { return new Date(y, m+1, 0).getDate(); }
-function firstDay(y: number, m: number) { const d = new Date(y,m,1).getDay(); return d===0?6:d-1; }
-
-interface Props { deadlines: Deadline[]; matters: Matter[]; onAdd: (d: Omit<Deadline,"id">) => void; onDelete: (id: string) => void; }
-
+// ══════════════════════════════════════════════════════════════════════════════
 export function Calendar({ deadlines, matters, onAdd, onDelete }: Props) {
-  const [open, setOpen]   = useState(false);
-  const [form, setForm]   = useState(BLANK);
-  const [view, setView]   = useState<"grid"|"list">("grid");
-  const set = <K extends keyof typeof BLANK>(k: K, v: (typeof BLANK)[K]) => setForm(p=>({...p,[k]:v}));
+  const [open, setOpen]  = useState(false);
+  const [form, setForm]  = useState(BLANK_FORM);
+  const set = <K extends keyof typeof BLANK_FORM>(k: K, v: (typeof BLANK_FORM)[K]) =>
+    setForm(p => ({ ...p, [k]: v }));
 
-  const now = new Date();
-  const todayStr = now.toISOString().slice(0,10);
-  const [cy, setCy] = useState(now.getFullYear());
-  const [cm, setCm] = useState(now.getMonth());
-  const [selDay, setSelDay] = useState<string|null>(null);
+  const today    = new Date().toISOString().slice(0, 10);
+  const sorted   = [...deadlines].sort((a, b) => a.date.localeCompare(b.date));
+  const upcoming = sorted.filter(d => d.date >= today);
+  const overdue  = sorted.filter(d => d.date < today);
 
-  const prev = () => { if(cm===0){setCy(y=>y-1);setCm(11);}else setCm(m=>m-1); setSelDay(null); };
-  const next = () => { if(cm===11){setCy(y=>y+1);setCm(0);}else setCm(m=>m+1); setSelDay(null); };
-
-  const dlMap = useMemo(()=>{
-    const m: Record<string,Deadline[]>={};
-    deadlines.forEach(d=>{ if(!m[d.date])m[d.date]=[]; m[d.date].push(d); });
-    return m;
-  },[deadlines]);
-
-  const dim  = daysInMonth(cy, cm);
-  const off  = firstDay(cy, cm);
-  const cells: (number|null)[] = [...Array(off).fill(null), ...Array.from({length:dim},(_,i)=>i+1)];
-  while(cells.length%7!==0) cells.push(null);
-  const ds = (d: number) => `${cy}-${String(cm+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
-
-  const sorted   = [...deadlines].sort((a,b)=>a.date.localeCompare(b.date));
-  const upcoming = sorted.filter(d=>d.date>=todayStr);
-  const overdue  = sorted.filter(d=>d.date<todayStr);
+  // When court level changes, reset station
+  const handleLevelChange = (v: string) => {
+    setForm(p => ({ ...p, courtLevel: v as CourtLevel, courtStation: "", customStation: "" }));
+  };
 
   const submit = () => {
-    if(!form.title||!form.date||!form.courtStation) return;
-    onAdd({ title:form.title, matter:form.matter, court:buildCourtString(form.courtLevel,form.courtStation,form.customStation), date:form.date, type:form.type });
-    setForm(BLANK); setOpen(false);
+    if (!form.title || !form.date || !form.courtStation) return;
+    const court = buildCourtString(form.courtLevel, form.courtStation, form.customStation);
+    onAdd({ title: form.title, matter: form.matter, court, date: form.date, type: form.type });
+    setForm(BLANK_FORM);
+    setOpen(false);
   };
+
+  const stations = COURT_STATIONS[form.courtLevel] || [];
 
   return (
     <div>
-      {/* Header */}
+      {/* ── Header ── */}
       <div className="flex items-end justify-between mb-6">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.25em] text-primary/80 font-mono mb-2">Kenyan Judiciary</p>
-          <h2 className="text-4xl font-serif">Calendar <span className="text-gradient-blue">&amp; Deadlines</span></h2>
+          <p className="text-[11px] uppercase tracking-[0.25em] text-primary/80 font-mono mb-2">
+            Kenyan Judiciary
+          </p>
+          <h2 className="text-4xl font-serif">
+            Calendar <span className="text-gradient-blue">&amp; Deadlines</span>
+          </h2>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center rounded-lg border border-border overflow-hidden">
-            <button onClick={()=>setView("grid")} className={cn("flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition-all", view==="grid"?"bg-primary text-white":"text-muted-foreground hover:text-foreground")}>
-              <LayoutGrid className="w-3.5 h-3.5"/> Grid
-            </button>
-            <button onClick={()=>setView("list")} className={cn("flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition-all", view==="list"?"bg-primary text-white":"text-muted-foreground hover:text-foreground")}>
-              <LayoutList className="w-3.5 h-3.5"/> List
-            </button>
-          </div>
-          <Button onClick={()=>setOpen(true)} className="btn-royal"><Plus className="w-4 h-4 mr-2"/>Add Deadline</Button>
-        </div>
+        <Button onClick={() => setOpen(true)} className="btn-royal">
+          <Plus className="w-4 h-4 mr-2" /> Add Deadline
+        </Button>
       </div>
-      <div className="blue-divider mb-6"/>
+      <div className="blue-divider mb-6" />
 
+      {/* ── Court Hierarchy Legend ── */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        {COURT_LEVELS.map((lvl, i) => (
+          <span
+            key={lvl}
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono border border-primary/20 bg-primary/5 text-primary/80"
+          >
+            <span className="w-4 h-4 rounded-full bg-primary/20 text-primary text-[9px] flex items-center justify-center font-bold">
+              {i + 1}
+            </span>
+            {lvl}
+          </span>
+        ))}
+      </div>
 
-
-      {/* ══ GRID VIEW ══ */}
-      {view==="grid" && (
-        <div className="glass-card rounded-2xl overflow-hidden">
-          {/* Month nav */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
-            <button onClick={prev} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all">
-              <ChevronLeft className="w-4 h-4"/>
-            </button>
-            <div className="flex items-center gap-4">
-              <h3 className="font-serif text-xl font-semibold">{MONTHS[cm]} <span className="text-primary">{cy}</span></h3>
-              <button onClick={()=>{setCy(now.getFullYear());setCm(now.getMonth());setSelDay(null);}} className="text-xs px-3 py-1 rounded-full border border-primary/30 text-primary hover:bg-primary/10 transition-all font-medium">Today</button>
-            </div>
-            <button onClick={next} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all">
-              <ChevronRight className="w-4 h-4"/>
-            </button>
+      {/* ── Overdue ── */}
+      {overdue.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-sm font-semibold text-destructive mb-3 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4" /> Overdue ({overdue.length})
+          </h3>
+          <div className="space-y-2">
+            {overdue.map(d => <DeadlineRow key={d.id} d={d} onDelete={onDelete} overdue />)}
           </div>
-
-          {/* Day headers */}
-          <div className="grid grid-cols-7 border-b border-border/30">
-            {DAYS.map(d=>(
-              <div key={d} className={cn("py-2.5 text-center text-[11px] font-bold uppercase tracking-wider text-muted-foreground", (d==="Sat"||d==="Sun")&&"text-primary/50")}>{d}</div>
-            ))}
-          </div>
-
-          {/* Cells */}
-          <div className="grid grid-cols-7">
-            {cells.map((day,idx)=>{
-              if(!day) return <div key={`e${idx}`} className="min-h-[100px] border-r border-b border-border/20 bg-muted/5"/>;
-              const d    = ds(day);
-              const evts = dlMap[d]||[];
-              const isT  = d===todayStr;
-              const isSel= d===selDay;
-              const isWe = (idx%7)>=5;
-              return (
-                <div key={d} onClick={()=>setSelDay(isSel?null:d)}
-                  className={cn("min-h-[100px] border-r border-b border-border/20 p-2 cursor-pointer transition-all",
-                    isT&&"bg-primary/5", isSel&&"bg-primary/10 ring-1 ring-primary/40 ring-inset",
-                    isWe&&!isT&&!isSel&&"bg-muted/10", !isT&&!isSel&&"hover:bg-secondary/30"
-                  )}>
-                  <div className={cn("w-7 h-7 rounded-full flex items-center justify-center text-sm font-semibold mb-1.5",
-                    isT?"bg-primary text-white shadow-lg shadow-primary/30":"text-foreground/80")}>
-                    {day}
-                  </div>
-                  <div className="space-y-0.5">
-                    {evts.slice(0,3).map(e=>(
-                      <div key={e.id} className={cn("text-[10px] font-semibold px-1.5 py-0.5 rounded truncate", PILL_BG[e.type]||"bg-primary text-white")}>
-                        {e.title}
-                      </div>
-                    ))}
-                    {evts.length>3&&<div className="text-[10px] font-bold text-primary/70 pl-1">+{evts.length-3} more</div>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Selected day panel */}
-          {selDay&&(
-            <div className="border-t border-primary/20 bg-primary/5 px-5 py-4">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="font-semibold text-sm text-primary">
-                  {new Date(selDay+"T00:00:00").toLocaleDateString("en-KE",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}
-                  <span className="ml-2 text-muted-foreground font-normal">— {(dlMap[selDay]||[]).length} matter{(dlMap[selDay]||[]).length!==1?"s":""}</span>
-                </h4>
-                <button onClick={()=>setSelDay(null)} className="text-muted-foreground hover:text-foreground text-xs">✕</button>
-              </div>
-              {(dlMap[selDay]||[]).length===0
-                ? <p className="text-sm text-muted-foreground">No deadlines on this day.</p>
-                : <div className="space-y-2">{(dlMap[selDay]||[]).map(d=><DeadlineRow key={d.id} d={d} onDelete={onDelete} overdue={d.date<todayStr}/>)}</div>
-              }
-            </div>
-          )}
         </div>
       )}
 
-      {/* ══ LIST VIEW ══ */}
-      {view==="list"&&(
-        <>
-          {overdue.length>0&&(
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold text-destructive mb-3 flex items-center gap-2"><AlertCircle className="w-4 h-4"/> Overdue ({overdue.length})</h3>
-              <div className="space-y-2">{overdue.map(d=><DeadlineRow key={d.id} d={d} onDelete={onDelete} overdue/>)}</div>
-            </div>
-          )}
-          <div>
-            <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Upcoming ({upcoming.length})</h3>
-            {upcoming.length===0
-              ? <div className="glass-card rounded-2xl p-10 text-center text-sm text-muted-foreground">No upcoming deadlines. Add your first court date or filing deadline.</div>
-              : <div className="space-y-2">{upcoming.map(d=><DeadlineRow key={d.id} d={d} onDelete={onDelete}/>)}</div>
-            }
+      {/* ── Upcoming ── */}
+      <div>
+        <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">
+          Upcoming ({upcoming.length})
+        </h3>
+        {upcoming.length === 0 ? (
+          <div className="glass-card rounded-2xl p-10 text-center text-sm text-muted-foreground">
+            No upcoming deadlines. Add your first court date or filing deadline.
           </div>
-        </>
-      )}
+        ) : (
+          <div className="space-y-2">
+            {upcoming.map(d => <DeadlineRow key={d.id} d={d} onDelete={onDelete} />)}
+          </div>
+        )}
+      </div>
 
-      {/* Add Dialog */}
-      <Dialog open={open} onOpenChange={v=>{if(!v)setForm(BLANK);setOpen(v);}}>
+      {/* ── Add Deadline Dialog ── */}
+      <Dialog open={open} onOpenChange={v => { if (!v) setForm(BLANK_FORM); setOpen(v); }}>
         <DialogContent className="glass-card border-border max-w-lg">
-          <DialogHeader><DialogTitle className="font-serif text-2xl">Add Court Date / Deadline</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle className="font-serif text-2xl">Add Court Date / Deadline</DialogTitle>
+          </DialogHeader>
+
           <div className="space-y-4 py-2">
-            <div className="space-y-1.5"><Label>Title *</Label>
-              <Input value={form.title} onChange={e=>set("title",e.target.value)} placeholder="e.g. File Defence — Kamau v. Njeri"/>
+
+            {/* Title */}
+            <div className="space-y-1.5">
+              <Label>Title *</Label>
+              <Input
+                value={form.title}
+                onChange={e => set("title", e.target.value)}
+                placeholder="e.g. File Defence — Kamau v. Njeri"
+              />
             </div>
-            <div className="space-y-1.5"><Label>Type</Label>
-              <Select value={form.type} onValueChange={v=>set("type",v as Deadline["type"])}>
-                <SelectTrigger><SelectValue/></SelectTrigger>
+
+            {/* Type */}
+            <div className="space-y-1.5">
+              <Label>Type</Label>
+              <Select value={form.type} onValueChange={v => set("type", v as Deadline["type"])}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {["hearing","filing","mention","ruling","deadline","lsk"].map(t=>(
-                    <SelectItem key={t} value={t}>{t==="lsk"?"LSK Event":t.charAt(0).toUpperCase()+t.slice(1)}</SelectItem>
+                  {["hearing","filing","mention","ruling","deadline","lsk"].map(t => (
+                    <SelectItem key={t} value={t} className="capitalize">{t === "lsk" ? "LSK Event" : t.charAt(0).toUpperCase() + t.slice(1)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5"><Label>Court Level *</Label>
-              <Select value={form.courtLevel} onValueChange={v=>setForm(p=>({...p,courtLevel:v as CourtLevel,courtStation:"",customStation:""}))}>
-                <SelectTrigger><SelectValue/></SelectTrigger>
+
+            {/* ── Court Hierarchy: Step 1 — Level ── */}
+            <div className="space-y-1.5">
+              <Label>Court Level *</Label>
+              <Select value={form.courtLevel} onValueChange={handleLevelChange}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {COURT_LEVELS.map((lvl,i)=>(
+                  {COURT_LEVELS.map((lvl, i) => (
                     <SelectItem key={lvl} value={lvl}>
                       <span className="inline-flex items-center gap-2">
-                        <span className="w-5 h-5 rounded-full bg-primary/20 text-primary text-[10px] flex items-center justify-center font-bold shrink-0">{i+1}</span>
+                        <span className="w-5 h-5 rounded-full bg-primary/20 text-primary text-[10px] flex items-center justify-center font-bold shrink-0">
+                          {i + 1}
+                        </span>
                         {lvl}
                       </span>
                     </SelectItem>
@@ -288,32 +285,82 @@ export function Calendar({ deadlines, matters, onAdd, onDelete }: Props) {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5"><Label>Court Station / Registry *</Label>
-              <Select value={form.courtStation} onValueChange={v=>set("courtStation",v)} disabled={!form.courtLevel}>
-                <SelectTrigger><SelectValue placeholder="Select station..."/></SelectTrigger>
-                <SelectContent>{COURT_STATIONS[form.courtLevel]?.map(s=><SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+
+            {/* ── Court Hierarchy: Step 2 — Station ── */}
+            <div className="space-y-1.5">
+              <Label>Court Station / Registry *</Label>
+              <Select
+                value={form.courtStation}
+                onValueChange={v => set("courtStation", v)}
+                disabled={!form.courtLevel}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select station..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {stations.map(s => (
+                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
-              {form.courtStation==="Other (specify below)"&&<Input value={form.customStation} onChange={e=>set("customStation",e.target.value)} placeholder="Enter tribunal or court name..." className="mt-1.5"/>}
-              {form.courtStation&&form.courtStation!=="Other (specify below)"&&(
-                <p className="text-[11px] text-primary/70 font-mono mt-1 pl-1">→ {buildCourtString(form.courtLevel,form.courtStation,form.customStation)}</p>
+
+              {/* Custom station input (for "Other" or Tribunals) */}
+              {(form.courtStation === "Other (specify below)") && (
+                <Input
+                  value={form.customStation}
+                  onChange={e => set("customStation", e.target.value)}
+                  placeholder="Enter tribunal or court name..."
+                  className="mt-1.5"
+                />
+              )}
+
+              {/* Preview of the full court string */}
+              {form.courtStation && form.courtStation !== "Other (specify below)" && (
+                <p className="text-[11px] text-primary/70 font-mono mt-1 pl-1">
+                  → {buildCourtString(form.courtLevel, form.courtStation, form.customStation)}
+                </p>
               )}
             </div>
-            <div className="space-y-1.5"><Label>Linked Matter</Label>
-              <Select value={form.matter} onValueChange={v=>set("matter",v)}>
-                <SelectTrigger><SelectValue placeholder="Link to matter (optional)..."/></SelectTrigger>
+
+            {/* Matter */}
+            <div className="space-y-1.5">
+              <Label>Linked Matter</Label>
+              <Select value={form.matter} onValueChange={v => set("matter", v)}>
+                <SelectTrigger><SelectValue placeholder="Link to matter (optional)..." /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="General">General — not linked to a matter</SelectItem>
-                  {matters.map(m=><SelectItem key={m.id} value={m.title}>{m.fileNo?`${m.fileNo} · `:""}{m.title}</SelectItem>)}
+                  {matters.map(m => (
+                    <SelectItem key={m.id} value={m.title}>
+                      {m.fileNo ? `${m.fileNo} · ` : ""}{m.title}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5"><Label>Date *</Label>
-              <Input type="date" value={form.date} onChange={e=>set("date",e.target.value)}/>
+
+            {/* Date */}
+            <div className="space-y-1.5">
+              <Label>Date *</Label>
+              <Input
+                type="date"
+                value={form.date}
+                onChange={e => set("date", e.target.value)}
+              />
             </div>
+
           </div>
+
           <DialogFooter>
-            <Button variant="ghost" onClick={()=>{setForm(BLANK);setOpen(false);}}>Cancel</Button>
-            <Button onClick={submit} disabled={!form.title||!form.date||!form.courtStation} className="btn-royal">Save Deadline</Button>
+            <Button variant="ghost" onClick={() => { setForm(BLANK_FORM); setOpen(false); }}>
+              Cancel
+            </Button>
+            <Button
+              onClick={submit}
+              disabled={!form.title || !form.date || !form.courtStation}
+              className="btn-royal"
+            >
+              Save Deadline
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -321,28 +368,67 @@ export function Calendar({ deadlines, matters, onAdd, onDelete }: Props) {
   );
 }
 
-function DeadlineRow({d,onDelete,overdue=false}:{d:Deadline;onDelete:(id:string)=>void;overdue?:boolean}) {
-  const Icon = TYPE_ICON[d.type]??CalIcon;
+// ── Deadline Row ──────────────────────────────────────────────────────────────
+function DeadlineRow({
+  d, onDelete, overdue = false,
+}: {
+  d: Deadline; onDelete: (id: string) => void; overdue?: boolean;
+}) {
+  const Icon = TYPE_ICON[d.type] ?? CalIcon;
   const rank = courtRank(d.court);
+
   return (
-    <div className={cn("glass-card glass-card-hover rounded-xl p-4 flex items-center gap-4",overdue&&"border border-destructive/30")}>
-      <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center text-xs border shrink-0",TYPE_COLOR[d.type]??TYPE_COLOR.deadline)}>
-        <Icon className="w-4 h-4"/>
+    <div className={cn(
+      "glass-card glass-card-hover rounded-xl p-4 flex items-center gap-4",
+      overdue && "border border-destructive/30",
+    )}>
+      {/* Type icon */}
+      <div className={cn(
+        "w-9 h-9 rounded-lg flex items-center justify-center text-xs border shrink-0",
+        TYPE_COLOR[d.type] ?? TYPE_COLOR.deadline,
+      )}>
+        <Icon className="w-4 h-4" />
       </div>
+
+      {/* Main info */}
       <div className="flex-1 min-w-0">
         <p className="font-medium text-sm truncate">{d.title}</p>
         <div className="flex items-center gap-2 mt-0.5">
-          {rank<=9&&<span className="w-4 h-4 rounded-full bg-primary/20 text-primary text-[9px] flex items-center justify-center font-bold shrink-0">{rank}</span>}
-          <p className="text-xs text-muted-foreground truncate">{d.court}{d.matter&&d.matter!=="General"?` · ${d.matter}`:""}</p>
+          {/* Court hierarchy rank badge */}
+          {rank <= 8 && (
+            <span className="w-4 h-4 rounded-full bg-primary/20 text-primary text-[9px] flex items-center justify-center font-bold shrink-0">
+              {rank}
+            </span>
+          )}
+          <p className="text-xs text-muted-foreground truncate">
+            {d.court}
+            {d.matter && d.matter !== "General" ? ` · ${d.matter}` : ""}
+          </p>
         </div>
       </div>
+
+      {/* Date + type */}
       <div className="text-right shrink-0">
-        <p className={cn("text-sm font-semibold",overdue?"text-destructive":"text-primary")}>
-          {new Date(d.date+"T00:00:00").toLocaleDateString("en-KE",{day:"numeric",month:"short",year:"numeric"})}
+        <p className={cn(
+          "text-sm font-semibold",
+          overdue ? "text-destructive" : "text-primary",
+        )}>
+          {new Date(d.date + "T00:00:00").toLocaleDateString("en-KE", {
+            day: "numeric", month: "short", year: "numeric",
+          })}
         </p>
-        <p className="text-[10px] uppercase text-muted-foreground capitalize mt-0.5">{d.type==="lsk"?"LSK Event":d.type}</p>
+        <p className="text-[10px] uppercase text-muted-foreground capitalize mt-0.5">
+          {d.type === "lsk" ? "LSK Event" : d.type}
+        </p>
       </div>
-      <button onClick={()=>onDelete(d.id)} className="text-muted-foreground hover:text-destructive ml-1 transition-colors"><Trash2 className="w-4 h-4"/></button>
+
+      {/* Delete */}
+      <button
+        onClick={() => onDelete(d.id)}
+        className="text-muted-foreground hover:text-destructive ml-1 transition-colors"
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
     </div>
   );
 }

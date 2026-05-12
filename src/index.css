@@ -31,9 +31,9 @@
     /* ── Semantic ── */
     --destructive:         0 78% 55%;
     --destructive-foreground: 0 0% 100%;
-    --success:             152 50% 42%;
-    --warning:             38 90% 55%;
-    --info:                199 89% 48%;
+    --success:             152 60% 40%;
+    --warning:             35 95% 52%;
+    --info:                192 100% 42%;
 
     /* ── Chrome ── */
     --border:              225 28% 22%;
@@ -189,6 +189,7 @@
    BRAND UTILITY CLASSES — Royal Blue
 ══════════════════════════════════════════════ */
 .text-brand-gold      { color: #4169E1; }
+.accent-cyan { color: #00B4D8; }
 .text-brand-gold-soft { color: rgba(107, 143, 239, 0.80); }
 .text-brand-blue      { color: #4169E1; }
 .from-brand-gold      { --tw-gradient-from: #4169E1; }
