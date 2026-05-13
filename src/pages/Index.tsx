@@ -34,6 +34,7 @@ const Index = () => {
       case "directory": return <FirmDirectory staff={state.staff} currentRole={state.role} onAdd={addStaff} onRemove={removeStaff} />;
       case "invoices": return null; // Financials moved to Admin & Audit
       case "admin": return <AdminAudit logs={state.auditLog} matters={state.matters} staff={state.staff} ledger={state.ledger} deadlines={state.deadlines} role={state.role} />;
+      case "clientportal": return <ClientPortal messages={state.messages||[]} matters={state.matters||[]} role={state.role} documents={state.documents||[]} invoices={state.invoices||[]} onSend={addMessage} />;
       default: return null;
     }
   };
