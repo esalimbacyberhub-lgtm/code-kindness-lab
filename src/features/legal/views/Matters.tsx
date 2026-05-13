@@ -66,6 +66,7 @@ function fileIcon(name: string) {
 
 // ── Props ────────────────────────────────────────────────────────────────────
 interface Props {
+  onNewMatter?:     () => void;
   matters:          Matter[];
   staff:            StaffMember[];
   role:             Role;
@@ -77,7 +78,7 @@ interface Props {
 
 // ════════════════════════════════════════════════════════════════════════════
 export const Matters = ({
-  matters, staff, role, onAssign,
+  onNewMatter, matters, staff, role, onAssign,
   documents, onAddDocument, onDeleteDocument,
 }: Props) => {
   const [selected,    setSelected]    = useState<Matter | null>(null);
@@ -509,6 +510,12 @@ export const Matters = ({
             Matter <span className="text-gradient-blue">Hub</span>
           </h2>
         </div>
+        <div className="flex items-center gap-3">
+          {onNewMatter && (
+            <button onClick={onNewMatter} className="btn-royal flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold">
+              <Plus className="w-4 h-4" /> New Matter
+            </button>
+          )}
         <div className="relative">
           <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -517,6 +524,7 @@ export const Matters = ({
             placeholder="Search matters..."
             className="pl-9 pr-4 py-2 text-sm bg-card border border-border rounded-lg outline-none focus:ring-1 focus:ring-primary w-56"
           />
+        </div>
         </div>
       </div>
       <div className="blue-divider" />

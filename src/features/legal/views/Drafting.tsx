@@ -299,7 +299,6 @@ export function Drafting() {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
       doc.setTextColor(120, 120, 120);
-      doc.text("Counsel of record across East Africa", margin, 50);
       doc.text(TODAY, pageW - margin, 50, { align: "right" });
 
       // Divider
