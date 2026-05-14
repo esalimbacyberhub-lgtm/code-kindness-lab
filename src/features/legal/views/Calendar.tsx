@@ -44,6 +44,7 @@ const COURT_LEVELS = [
   "Magistrates Court",
   "Kadhis Court",
   "Tribunal",
+  "Small Claims Court",
 ] as const;
 
 type CourtLevel = (typeof COURT_LEVELS)[number];
@@ -87,6 +88,7 @@ const COURT_STATIONS: Record<CourtLevel, string[]> = {
     "Nairobi", "Mombasa", "Kisumu",
     "Malindi", "Garissa", "Lamu", "Wajir", "Mandera",
   ],
+  "Small Claims Court": ["Nairobi","Mombasa","Kisumu","Nakuru","Eldoret","Thika","Machakos","Nyeri","Bungoma","Malindi"],
   "Tribunal": [
     "Business Premises Rent Tribunal",
     "Rent Restriction Tribunal",
@@ -118,7 +120,7 @@ const LEVEL_RANK: Record<string, number> = {
   "Employment & Labour Relations Court": 5,
   "Magistrates Court": 6,
   "Kadhis Court": 7,
-  "Tribunal": 8,
+  "Tribunal": 8, "Small Claims Court": 9,
 };
 
 function courtRank(courtStr: string): number {
