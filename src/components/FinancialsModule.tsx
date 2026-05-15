@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react"
 import { FirmLetterhead, FirmFooter, FIRM } from "./FirmLetterhead"
+import { FinancialNotes } from "./FinancialNotes";
 import { FeeNotesTab } from "./FeeNotesTab"
 
 // ─────────────────────────────────────────────────────────────────────────────
