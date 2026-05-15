@@ -12,6 +12,11 @@ export interface Matter {
 }
 export interface Deadline {
   id: string; title: string; matter: string; court: string; date: string;
+  time?: string;
+  mode?: "online" | "physical";
+  meetingLink?: string;
+  judge?: string;
+  summary?: string;
   type: "hearing"|"filing"|"mention"|"ruling"|"deadline"|"lsk";
 }
 export type DeadlineType = Deadline["type"];
