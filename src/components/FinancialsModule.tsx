@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react"
 import { FirmLetterhead, FirmFooter, FIRM } from "./FirmLetterhead"
+import { FinancialsOverview } from "./FinancialsOverview";
 import { FinancialNotes } from "./FinancialNotes";
 import { FeeNotesTab } from "./FeeNotesTab"
 
@@ -311,6 +312,7 @@ function InvoiceForm({ onSave, onClose, count }) {
 // MAIN FINANCIALS MODULE
 // ─────────────────────────────────────────────────────────────────────────────
 const TABS = [
+  { id: 'overview', label: 'Overview', icon: null },
   { id: "invoices", label: "Invoices" },
   { id: "gl",       label: "General Ledger" },
   { id: "bs",       label: "Balance Sheet" },
