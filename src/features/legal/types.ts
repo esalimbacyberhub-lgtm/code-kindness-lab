@@ -8,7 +8,12 @@ export interface Task {
 export interface Matter {
   id: string; client: string; title: string;
   type: "Civil Litigation"|"Commercial"|"Family Law"|"Criminal"|"Conveyancing"|"Intellectual Property"|"Probate & Administration";
-  status: "active"|"closed"|"pending"; court?: string; fileNo?: string; openedDate?: string; notes?: string; partyA?: string; partyB?: string; assignedTo?: string;
+  status: "active"|"closed"|"pending";
+  caseStatus?: "pending" | "hearing-scheduled" | "completed";
+  nextHearingDate?: string;
+  result?: "won" | "lost" | "settled" | "withdrawn" | "dismissed";
+  resultNote?: string;
+  resultDate?: string; court?: string; fileNo?: string; openedDate?: string; notes?: string; partyA?: string; partyB?: string; assignedTo?: string;
 }
 export interface Deadline {
   id: string; title: string; matter: string; court: string; date: string;

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   Briefcase, Upload, Trash2, FileText, Link as LinkIcon,
-  ArrowLeft, FolderOpen, Folder, Plus, Users, Receipt,
+  ArrowLeft, FolderOpen, Folder, Plus, Edit3, Users, Receipt,
   ClipboardList, ChevronRight, Search, Filter,
 } from "lucide-react";
 import type { Matter, StaffMember, Role, VaultDocument } from "../types";

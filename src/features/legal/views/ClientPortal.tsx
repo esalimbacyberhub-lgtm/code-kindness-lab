@@ -115,6 +115,49 @@ export function ClientPortal({ messages, matters, role, documents, invoices, onS
           </div>
 
           {tab === "case" && (
+            <div className="space-y-6">
+              {/* Prominent Case Status Banner */}
+              {selectedMatter.caseStatus === "pending" && (
+                <div className="glass-card rounded-2xl p-5 border-l-4 border-l-warning bg-warning/5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-warning/20 flex items-center justify-center text-2xl">⏳</div>
+                    <div>
+                      <p className="text-[11px] uppercase font-bold tracking-wider text-warning">Current Status</p>
+                      <h3 className="text-xl font-serif font-semibold mt-0.5">Case Pending</h3>
+                      <p className="text-xs text-muted-foreground mt-1">Your case is active. We will update you as soon as a court date is set.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {selectedMatter.caseStatus === "hearing-scheduled" && selectedMatter.nextHearingDate && (
+                <div className="glass-card rounded-2xl p-5 border-l-4 border-l-info bg-info/5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-info/20 flex items-center justify-center text-2xl">⚖️</div>
+                    <div>
+                      <p className="text-[11px] uppercase font-bold tracking-wider text-info">Current Status</p>
+                      <h3 className="text-xl font-serif font-semibold mt-0.5">Hearing Scheduled</h3>
+                      <p className="text-sm text-info font-semibold mt-1">{new Date(selectedMatter.nextHearingDate).toLocaleDateString("en-KE",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {selectedMatter.caseStatus === "completed" && (
+                <div className="glass-card rounded-2xl p-5 border-l-4 border-l-success bg-success/5">
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-12 rounded-full bg-success/20 flex items-center justify-center text-2xl shrink-0">✓</div>
+                    <div className="flex-1">
+                      <p className="text-[11px] uppercase font-bold tracking-wider text-success">Case Completed</p>
+                      <h3 className="text-xl font-serif font-semibold mt-0.5">Result: {(selectedMatter.result || "").toUpperCase()}</h3>
+                      {selectedMatter.resultDate && (
+                        <p className="text-xs text-muted-foreground mt-1">Concluded on {new Date(selectedMatter.resultDate).toLocaleDateString("en-KE",{day:"numeric",month:"long",year:"numeric"})}</p>
+                      )}
+                      {selectedMatter.resultNote && (
+                        <p className="text-sm mt-3 p-3 bg-success/10 rounded-lg border border-success/20">{selectedMatter.resultNote}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="glass-card rounded-2xl p-5">
                 <h3 className="font-semibold mb-4 flex items-center gap-2 text-sm"><Briefcase className="w-4 h-4 text-primary" /> Case Details</h3>
@@ -138,6 +181,7 @@ export function ClientPortal({ messages, matters, role, documents, invoices, onS
                   </div>
                 </div>
               </div>
+            </div>
             </div>
           )}
 
