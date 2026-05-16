@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { CaseStatusDialog } from "../components/CaseStatusDialog";
 import {
   Briefcase, Upload, Trash2, FileText, Link as LinkIcon,
   ArrowLeft, FolderOpen, Folder, Plus, Edit3, Users, Receipt,
@@ -74,14 +75,16 @@ interface Props {
   documents:        VaultDocument[];
   onAddDocument:    (d: Omit<VaultDocument, "id">) => void;
   onDeleteDocument: (id: string) => void;
+  onUpdateMatter?: (id: string, updates: Partial<Matter>) => void;
 }
 
 // ════════════════════════════════════════════════════════════════════════════
 export const Matters = ({
   onNewMatter, matters, staff, role, onAssign,
-  documents, onAddDocument, onDeleteDocument,
+  documents, onAddDocument, onDeleteDocument, onUpdateMatter,
 }: Props) => {
   const [selected,    setSelected]    = useState<Matter | null>(null);
+  const [statusEdit,  setStatusEdit]  = useState<Matter | null>(null);
   const [linkCopied,  setLinkCopied]  = useState(false);
   const [activeFolder,setActiveFolder]= useState<string>("All");
   const [newFolderMode,setNewFolderMode] = useState(false);
@@ -211,6 +214,7 @@ export const Matters = ({
 
     return (
       <div className="space-y-5">
+      <CaseStatusDialog matter={statusEdit} open={!!statusEdit} onClose={() => setStatusEdit(null)} onSave={updates => statusEdit && onUpdateMatter && onUpdateMatter(statusEdit.id, updates)} />
         {/* ── Back ── */}
         <button
           onClick={() => setSelected(null)}
