@@ -27,7 +27,6 @@ const CATEGORIES = [
   { id: "general",        label: "General",             color: "bg-secondary text-foreground border-border" },
 ];
 
-const STORAGE = "omuyoma_financial_notes_v1";
 
 const BLANK = { date: new Date().toISOString().slice(0,10), category: "general", title: "", body: "", relatedRef: "" };
 
@@ -40,17 +39,6 @@ export function FinancialNotes() {
   const [edit,  setEdit]  = useState<FinancialNote | null>(null);
   const [form,  setForm]  = useState(BLANK);
   const [filter,setFilter]= useState<string>("all");
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE);
-      if (raw) setNotes(JSON.parse(raw));
-    } catch {}
-  }, []);
-
-  useEffect(() => {
-    try { localStorage.setItem(STORAGE, JSON.stringify(notes)); } catch {}
-  }, [notes]);
 
   const set = <K extends keyof typeof BLANK>(k: K, v: (typeof BLANK)[K]) => setForm(p => ({ ...p, [k]: v }));
 
