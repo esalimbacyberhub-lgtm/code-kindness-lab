@@ -1,7 +1,7 @@
 import { Receipt, Globe,
   Home, Briefcase, Calendar, Lock, FolderTree,
   FileSignature, UserCheck, BookUser, LineChart, ShieldCheck, ChevronLeft,
-} from "lucide-react";
+, UserCog} from "lucide-react";
 import type { Role, ViewKey } from "../types";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +15,7 @@ const ITEMS: NavItem[] = [
   { key: "directory", label: "Firm Directory", Icon: BookUser },
 
   { key: "admin", label: "Admin & Audit", Icon: ShieldCheck, partnerOnly: true },
+  { key: "users", label: "User Management", Icon: UserCog, partnerOnly: true },
   { key: "clientportal", label: "Client Portal", Icon: Globe, partnerOnly: true },
 ];
 
