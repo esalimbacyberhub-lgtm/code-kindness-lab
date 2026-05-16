@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useSupabaseFinancialNotes } from "@/features/legal/hooks/useSupabaseFinancialNotes";
 import { Plus, Trash2, FileText, Tag, Calendar as CalIcon, X, AlertCircle, Edit3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -33,7 +34,8 @@ const BLANK = { date: new Date().toISOString().slice(0,10), category: "general",
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString("en-KE", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
 export function FinancialNotes() {
-  const [notes, setNotes] = useState<FinancialNote[]>([]);
+  const { notes, addNote, updateNote, deleteNote } = useSupabaseFinancialNotes();
+  
   const [open,  setOpen]  = useState(false);
   const [edit,  setEdit]  = useState<FinancialNote | null>(null);
   const [form,  setForm]  = useState(BLANK);
@@ -52,23 +54,18 @@ export function FinancialNotes() {
 
   const set = <K extends keyof typeof BLANK>(k: K, v: (typeof BLANK)[K]) => setForm(p => ({ ...p, [k]: v }));
 
-  const save = () => {
+  const save = async () => {
     if (!form.title.trim() || !form.body.trim()) return;
     if (edit) {
-      setNotes(ns => ns.map(n => n.id === edit.id ? { ...n, ...form } : n));
+      await updateNote(edit.id, form);
     } else {
-      const newNote: FinancialNote = {
-        id: `fn${Date.now()}`,
-        ...form,
-        createdAt: new Date().toISOString(),
-      };
-      setNotes(ns => [newNote, ...ns]);
+      await addNote(form);
     }
     setForm(BLANK); setEdit(null); setOpen(false);
   };
 
-  const remove = (id: string) => {
-    if (confirm("Delete this note?")) setNotes(ns => ns.filter(n => n.id !== id));
+  const remove = async (id: string) => {
+    if (confirm("Delete this note?")) await deleteNote(id);
   };
 
   const startEdit = (n: FinancialNote) => {
