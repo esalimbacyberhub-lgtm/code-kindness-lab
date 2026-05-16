@@ -13,10 +13,13 @@ import FinancialsModule from "@/components/FinancialsModule";
 import { AdminAudit } from "@/features/legal/views/AdminAudit";
 import { Login } from "@/features/legal/views/Login";
 import { NewMatterDialog } from "@/features/legal/components/NewMatterDialog";
+import { Login } from "@/features/auth/Login";
+import { useAuth } from "@/features/auth/useAuth";
 import { useLegalState } from "@/features/legal/hooks/useLegalState";
 import type { Role } from "@/features/legal/types";
 
 const Index = () => {
+  const { user, profile, loading: authLoading, signOut } = useAuth();
   const { state, setView, setRole, toggleSidebar, moveTask, addDeadline, deleteDeadline, addLedgerEntry, addStaff, removeStaff, addDocument, deleteDocument, addInvoice, addMessage, addMatter, assignMatter } = useLegalState();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [matterDialogOpen, setMatterDialogOpen] = useState(false);
@@ -38,6 +41,14 @@ const Index = () => {
       default: return null;
     }
   };
+  // Auth gate
+  if (authLoading) {
+    return <div className="min-h-screen flex items-center justify-center bg-background"><div className="text-sm text-muted-foreground">Loading...</div></div>;
+  }
+  if (!user) {
+    return <Login />;
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <div className="mesh-bg" aria-hidden />
