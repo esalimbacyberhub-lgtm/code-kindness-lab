@@ -21,7 +21,7 @@ const Index = () => {
   const { user, profile, loading: authLoading, signOut } = useAuth();
   const { state, setView, setRole, toggleSidebar, moveTask, addDeadline, deleteDeadline, addLedgerEntry, addStaff, removeStaff, addDocument, deleteDocument, addInvoice, addMessage, addMatter, assignMatter } = useLegalState();
   const [matterDialogOpen, setMatterDialogOpen] = useState(false);
-  const handleLogout = () => { setIsLoggedIn(false); setLoggedInName(""); };
+  const handleLogout = () => { signOut(); };
   const renderView = () => {
     switch (state.currentView) {
       case "dashboard": return <Dashboard tasks={state.tasks} deadlines={state.deadlines||[]} onMoveTask={moveTask} onNewMatter={() => setMatterDialogOpen(true)} onGoToCalendar={() => setView("calendar")} />;
@@ -47,7 +47,7 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <div className="mesh-bg" aria-hidden />
-      <Header role={state.role} onRoleChange={setRole} onLogout={handleLogout} userName={loggedInName} />
+      <Header role={state.role} onRoleChange={setRole} onLogout={handleLogout} userName={profile?.full_name || user?.email || ""} />
       <div className="flex flex-1 overflow-hidden relative z-10 min-h-0">
         <Sidebar current={state.currentView} role={state.role} collapsed={state.sidebarCollapsed} onToggle={toggleSidebar} onNavigate={setView} />
         <main className="flex-1 overflow-y-auto custom-scroll p-6 md:p-8">{renderView()}</main>
