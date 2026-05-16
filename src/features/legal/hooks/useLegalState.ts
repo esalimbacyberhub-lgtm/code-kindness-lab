@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import type { Matter, Role, Task, ViewKey, Deadline, LedgerEntry, StaffMember, VaultDocument, Message, Witness, AuditLog, Invoice } from "../types";
+import { useSupabaseMatters } from "./useSupabaseMatters";
 
 const STORAGE_KEY = "omuyomaLegalOs.v3";
 
@@ -23,6 +24,7 @@ const defaults: State = {
 };
 
 export function useLegalState() {
+  const sb = useSupabaseMatters();
   const [state, setState] = useState<State>(() => {
     if (typeof window === "undefined") return defaults;
     try {
@@ -52,8 +54,9 @@ export function useLegalState() {
   const addTask = useCallback((t: Omit<Task, "id">) =>
     setState(s => ({ ...s, tasks: [...s.tasks, { ...t, id: `t${Date.now()}` }] })), []);
 
-  const addMatter = useCallback((m: Omit<Matter, "id" | "status">) =>
-    setState(s => ({ ...s, matters: [...s.matters, { ...m, id: `m${Date.now()}`, status: "active", openedDate: new Date().toISOString().slice(0, 10) }] })), []);
+  const addMatter = useCallback((m: Omit<Matter, "id" | "status">) => {
+    sb.addMatter({ ...m, openedDate: new Date().toISOString().slice(0, 10) });
+  }, [sb]);
 
   const addDeadline = useCallback((d: Omit<Deadline, "id">) =>
     setState(s => ({ ...s, deadlines: [...s.deadlines, { ...d, id: `d${Date.now()}` }] })), []);
@@ -70,8 +73,9 @@ export function useLegalState() {
   const removeStaff = useCallback((id: string) =>
     setState(s => ({ ...s, staff: s.staff.filter(m => m.id !== id) })), []);
 
-  const assignMatter = useCallback((matterId: string, staffName: string) =>
-    setState(s => ({ ...s, matters: s.matters.map(m => m.id === matterId ? { ...m, assignedTo: staffName } : m) })), []);
+  const assignMatter = useCallback((matterId: string, staffName: string) => {
+    sb.assignMatter(matterId, staffName);
+  }, [sb]);
   const addMessage = useCallback((content: string, from: string, direction: "sent" | "received") =>
     setState(s => ({ ...s, messages: [...(s.messages || []), { id: `msg${Date.now()}`, from, content, timestamp: new Date().toISOString(), direction }] })), []);
 
@@ -92,8 +96,9 @@ export function useLegalState() {
   const updateWitnessStatus = useCallback((id: string, status: Witness["status"]) =>
     setState(s => ({ ...s, witnesses: s.witnesses.map(w => w.id === id ? { ...w, status } : w) })), []);
 
+  const stateWithSb = { ...state, matters: sb.matters };
   return {
-    state, setView, setRole, toggleSidebar, moveTask, addTask, addMatter,
+    state: stateWithSb, setView, setRole, toggleSidebar, moveTask, addTask, addMatter, updateMatter: sb.updateMatter,
     addDeadline, deleteDeadline, addLedgerEntry, addStaff, removeStaff,
     addDocument, deleteDocument, addInvoice, assignMatter, sendMessage, addWitness, updateWitnessStatus, log
   };
