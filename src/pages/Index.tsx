@@ -11,7 +11,6 @@ import { Invoices } from "@/features/legal/views/Invoices";
 import { ClientPortal } from "@/features/legal/views/ClientPortal";
 import FinancialsModule from "@/components/FinancialsModule";
 import { AdminAudit } from "@/features/legal/views/AdminAudit";
-import { Login } from "@/features/legal/views/Login";
 import { NewMatterDialog } from "@/features/legal/components/NewMatterDialog";
 import { Login } from "@/features/auth/Login";
 import { useAuth } from "@/features/auth/useAuth";
@@ -21,12 +20,8 @@ import type { Role } from "@/features/legal/types";
 const Index = () => {
   const { user, profile, loading: authLoading, signOut } = useAuth();
   const { state, setView, setRole, toggleSidebar, moveTask, addDeadline, deleteDeadline, addLedgerEntry, addStaff, removeStaff, addDocument, deleteDocument, addInvoice, addMessage, addMatter, assignMatter } = useLegalState();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [matterDialogOpen, setMatterDialogOpen] = useState(false);
-  const [loggedInName, setLoggedInName] = useState("");
-  const handleLogin = (role: Role, name: string) => { setRole(role); setIsLoggedIn(true); setLoggedInName(name); };
   const handleLogout = () => { setIsLoggedIn(false); setLoggedInName(""); };
-  if (!isLoggedIn) return <Login onLogin={handleLogin} />;
   const renderView = () => {
     switch (state.currentView) {
       case "dashboard": return <Dashboard tasks={state.tasks} deadlines={state.deadlines||[]} onMoveTask={moveTask} onNewMatter={() => setMatterDialogOpen(true)} onGoToCalendar={() => setView("calendar")} />;
