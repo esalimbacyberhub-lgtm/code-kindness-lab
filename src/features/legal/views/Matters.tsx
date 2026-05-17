@@ -576,6 +576,18 @@ export const Matters = ({
                 {/* Title + client */}
                 <h3 className="font-semibold text-sm leading-tight">{m.title}</h3>
                 <p className="text-xs text-muted-foreground mt-1">{m.client}</p>
+                {(m as any).caseStatus === "hearing-scheduled" && (m as any).nextHearingDate && (
+                  <p className="text-[10px] text-info font-semibold mt-1">⚖️ Hearing: {new Date((m as any).nextHearingDate).toLocaleDateString("en-KE",{day:"numeric",month:"short",year:"numeric"})}</p>
+                )}
+                {(m as any).caseStatus === "completed" && (m as any).result && (
+                  <p className="text-[10px] text-success font-semibold mt-1">✓ Completed — {((m as any).result || "").toUpperCase()}</p>
+                )}
+                {(!((m as any).caseStatus) || (m as any).caseStatus === "pending") && (
+                  <p className="text-[10px] text-warning font-semibold mt-1">⏳ Pending</p>
+                )}
+                {role !== "client" && onUpdateMatter && (
+                  <button onClick={(e) => { e.stopPropagation(); setStatusEdit(m); }} className="text-[10px] text-primary hover:underline mt-1 font-semibold">Update status →</button>
+                )}
 
                 {/* Parties */}
                 {(m.partyA || m.partyB) && (
