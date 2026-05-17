@@ -10,6 +10,7 @@ function rowToFn(row: any, matters: any[]): any {
     client: row.client_name || "",
     matter: matter?.fileNo || "",
     totalAmount: parseFloat(row.total_amount) || 0,
+    total: parseFloat(row.total_amount) || 0,
     status: row.status || "draft",
     lineItems: row.line_items || [],
   };
@@ -21,6 +22,7 @@ function fnToRow(fn: any, matters: any[]): any {
   if (fn.date !== undefined) row.date = fn.date;
   if (fn.client !== undefined) row.client_name = fn.client;
   if (fn.totalAmount !== undefined) row.total_amount = fn.totalAmount;
+  if (fn.total !== undefined) row.total_amount = fn.total;
   if (fn.status !== undefined) row.status = fn.status;
   if (fn.lineItems !== undefined) row.line_items = fn.lineItems;
   if (fn.matter !== undefined) {

@@ -34,7 +34,6 @@ interface FeeNote {
 // ─────────────────────────────────────────────────────────────────────────────
 // UTILS
 // ─────────────────────────────────────────────────────────────────────────────
-const FN_STORAGE = "omuyoma_fee_notes_v1"
 const VAT        = 0.16
 const uid        = () => Math.random().toString(36).slice(2, 9).toUpperCase()
 const isoToday   = () => new Date().toISOString().split("T")[0]
@@ -354,29 +353,21 @@ function FeeNoteForm({ onSave, onClose, count }: { onSave: (fn: FeeNote) => void
 // MAIN EXPORT — drop this as the 7th tab inside FinancialsModule
 // ─────────────────────────────────────────────────────────────────────────────
 export function FeeNotesTab() {
-  const [feeNotes, setFeeNotes] = useState<FeeNote[]>(() => {
-    try { return JSON.parse(localStorage.getItem(FN_STORAGE) || "[]") } catch { return [] }
-  })
+  const { feeNotes, addFeeNote, updateFeeNote, deleteFeeNote } = useSupabaseFeeNotes()
   const [showForm, setShowForm]   = useState(false)
   const [viewing, setViewing]     = useState<FeeNote | null>(null)
 
-  const save = (fn: FeeNote) => {
-    const updated = [...feeNotes, fn]
-    setFeeNotes(updated)
-    localStorage.setItem(FN_STORAGE, JSON.stringify(updated))
+  const save = async (fn: FeeNote) => {
+    await addFeeNote(fn)
   }
 
-  const deleteFN = (id: string) => {
+  const deleteFN = async (id: string) => {
     if (!confirm("Delete this fee note?")) return
-    const updated = feeNotes.filter(f => f.id !== id)
-    setFeeNotes(updated)
-    localStorage.setItem(FN_STORAGE, JSON.stringify(updated))
+    await deleteFeeNote(id)
   }
 
-  const markIssued = (id: string) => {
-    const updated = feeNotes.map(f => f.id === id ? { ...f, status: "issued" as const } : f)
-    setFeeNotes(updated)
-    localStorage.setItem(FN_STORAGE, JSON.stringify(updated))
+  const markIssued = async (id: string) => {
+    await updateFeeNote(id, { status: "issued" })
   }
 
   const statusStyle = (s: string) => {
