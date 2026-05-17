@@ -4,6 +4,7 @@ import { useSupabaseMatters } from "./useSupabaseMatters";
 import { useSupabaseDeadlines } from "./useSupabaseDeadlines";
 import { useSupabaseDocuments } from "./useSupabaseDocuments";
 import { useSupabaseInvoices } from "./useSupabaseInvoices";
+import { useSupabaseMessages } from "./useSupabaseMessages";
 
 const STORAGE_KEY = "omuyomaLegalOs.v3";
 
@@ -31,6 +32,7 @@ export function useLegalState() {
   const sbDl = useSupabaseDeadlines(sb.matters);
   const sbDoc = useSupabaseDocuments(sb.matters);
   const sbInv = useSupabaseInvoices(sb.matters);
+  const sbMsg = useSupabaseMessages(sb.matters);
   const [state, setState] = useState<State>(() => {
     if (typeof window === "undefined") return defaults;
     try {
@@ -80,16 +82,14 @@ export function useLegalState() {
   const assignMatter = useCallback((matterId: string, staffName: string) => {
     sb.assignMatter(matterId, staffName);
   }, [sb]);
-  const addMessage = useCallback((content: string, from: string, direction: "sent" | "received") =>
-    setState(s => ({ ...s, messages: [...(s.messages || []), { id: `msg${Date.now()}`, from, content, timestamp: new Date().toISOString(), direction }] })), []);
+  const addMessage = useCallback((msg: any) => { sbMsg.sendMessage(msg); }, [sbMsg]);
 
   const addInvoice = useCallback((i: any) => { sbInv.addInvoice(i); }, [sbInv]);
   const addDocument = useCallback((d: any) => { sbDoc.addDocument(d); }, [sbDoc]);
 
   const deleteDocument = useCallback((id: string) => { sbDoc.deleteDocument(id); }, [sbDoc]);
 
-  const sendMessage = useCallback((content: string, from: string, dir: Message["direction"]) =>
-    setState(s => ({ ...s, messages: [...s.messages, { id: `msg${Date.now()}`, from, content, timestamp: new Date().toISOString(), direction: dir }] })), []);
+  const sendMessage = useCallback((msg: any) => { sbMsg.sendMessage(msg); }, [sbMsg]);
 
   const addWitness = useCallback((w: Omit<Witness, "id">) =>
     setState(s => ({ ...s, witnesses: [...s.witnesses, { ...w, id: `w${Date.now()}` }] })), []);
@@ -97,7 +97,7 @@ export function useLegalState() {
   const updateWitnessStatus = useCallback((id: string, status: Witness["status"]) =>
     setState(s => ({ ...s, witnesses: s.witnesses.map(w => w.id === id ? { ...w, status } : w) })), []);
 
-  const stateWithSb = { ...state, matters: sb.matters, deadlines: sbDl.deadlines, documents: sbDoc.documents, financials: { ...(state as any).financials, invoices: sbInv.invoices } };
+  const stateWithSb = { ...state, matters: sb.matters, deadlines: sbDl.deadlines, documents: sbDoc.documents, messages: sbMsg.messages, financials: { ...(state as any).financials, invoices: sbInv.invoices } };
   return {
     state: stateWithSb, setView, setRole, toggleSidebar, moveTask, addTask, addMatter, updateMatter: sb.updateMatter,
     addDeadline, deleteDeadline, addLedgerEntry, addStaff, removeStaff,
