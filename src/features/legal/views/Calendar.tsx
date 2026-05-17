@@ -3,7 +3,7 @@ import {
   Plus, Trash2, Calendar as CalIcon, Scale, FileText,
   Gavel, AlertCircle, Building2, ChevronLeft, ChevronRight,
   LayoutList, LayoutGrid, X, User, AlignLeft, Video, MapPin, ExternalLink,
-} from "lucide-react";
+, Clock , Link2 , Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input }  from "@/components/ui/input";
@@ -78,8 +78,9 @@ function courtRank(s:string){for(const[l,r] of Object.entries(LEVEL_RANK))if(s.s
 const BLANK = {
   title:"", matter:"", courtLevel:"High Court" as CourtLevel,
   courtStation:"", customStation:"", useCustomStation:false,
-  date:"", type:"hearing" as Deadline["type"],
+  date:"", time:"", type:"hearing" as Deadline["type"],
   judge:"", summary:"",
+  mode:"physical" as "physical"|"online", meetingLink:"",
 };
 
 const DAYS   = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
@@ -137,17 +138,49 @@ export function Calendar({deadlines,matters,onAdd,onDelete}:Props) {
           : form.courtLevel;
     onAdd({
       title:form.title, matter:form.matter, court:station,
-      date:form.date, type:form.type,
+      date:form.date, type:form.type, mode:form.mode,
+      ...(form.time && {time:form.time}),
       ...(form.judge && {judge:form.judge}),
       ...(form.summary && {summary:form.summary}),
+      ...(form.mode==="online" && form.meetingLink && {meetingLink:form.meetingLink}),
     } as Omit<Deadline,"id">);
     setForm(BLANK); setOpen(false);
   };
 
   const selDeadlines = selDay ? (dlMap[selDay]||[]) : [];
 
+  const todayHearings = deadlines.filter(d => d.date === todayStr);
+
   return (
     <div>
+      {/* Today's reminder banner */}
+      {todayHearings.length > 0 && (
+        <div className="mb-4 glass-card border-l-4 border-l-primary rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Bell className="w-4 h-4 text-primary"/>
+            <p className="font-semibold text-sm">Today ({todayHearings.length} scheduled)</p>
+          </div>
+          <div className="space-y-2">
+            {todayHearings.map(d => (
+              <div key={d.id} className="flex items-center justify-between gap-3 text-xs bg-background/40 rounded-lg p-2">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  {(d as any).time && <span className="font-bold text-primary shrink-0">{(d as any).time}</span>}
+                  <span className="font-medium truncate">{d.title}</span>
+                  <span className="text-muted-foreground truncate hidden sm:inline">— {d.court}</span>
+                </div>
+                {(d as any).mode === "online" && (d as any).meetingLink ? (
+                  <a href={(d as any).meetingLink} target="_blank" rel="noopener noreferrer"
+                     className="px-2.5 py-1 rounded-md bg-primary text-white text-[10px] font-bold hover:bg-primary/90 transition flex items-center gap-1 shrink-0">
+                    <Video className="w-3 h-3"/> Join
+                  </a>
+                ) : (
+                  <span className="text-[10px] text-muted-foreground shrink-0">📍 Physical</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-end justify-between mb-6">
         <div>
@@ -255,16 +288,36 @@ export function Calendar({deadlines,matters,onAdd,onDelete}:Props) {
                 d.type==="filing"?"border-l-info":"border-l-warning")}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-bold uppercase",TYPE_COLOR[d.type])}>
                         {d.type==="lsk"?"LSK Event":d.type}
                       </span>
+                      {(d as any).time && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-primary/20 text-primary flex items-center gap-1">
+                          <Clock className="w-2.5 h-2.5"/>{(d as any).time}
+                        </span>
+                      )}
+                      {(d as any).mode === "online" ? (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-blue-500/20 text-blue-300 flex items-center gap-1">
+                          <Video className="w-2.5 h-2.5"/>Online
+                        </span>
+                      ) : (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-muted/40 text-muted-foreground flex items-center gap-1">
+                          <Building2 className="w-2.5 h-2.5"/>Physical
+                        </span>
+                      )}
                     </div>
                     <p className="font-semibold text-sm">{d.title}</p>
                     <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                       <Building2 className="w-3 h-3"/>
                       {d.court}
                     </p>
+                    {(d as any).mode === "online" && (d as any).meetingLink && (
+                      <a href={(d as any).meetingLink} target="_blank" rel="noopener noreferrer"
+                         className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition">
+                        <Video className="w-3 h-3"/> Join meeting →
+                      </a>
+                    )}
                     {(d as any).judge && (
                       <p className="text-xs text-primary/80 mt-1 flex items-center gap-1">
                         <User className="w-3 h-3"/>
@@ -399,11 +452,43 @@ export function Calendar({deadlines,matters,onAdd,onDelete}:Props) {
               </Select>
             </div>
 
-            {/* Date */}
-            <div className="space-y-1.5">
-              <Label>Date *</Label>
-              <Input type="date" value={form.date} onChange={e=>set("date",e.target.value)}/>
+            {/* Date + Time */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Date *</Label>
+                <Input type="date" value={form.date} onChange={e=>set("date",e.target.value)}/>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Time</Label>
+                <Input type="time" value={form.time} onChange={e=>set("time",e.target.value)}/>
+              </div>
             </div>
+
+            {/* Mode: Physical / Online */}
+            <div className="space-y-1.5">
+              <Label>Hearing Mode</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <button type="button" onClick={()=>set("mode","physical")}
+                  className={cn("flex items-center justify-center gap-2 p-3 rounded-lg border text-sm font-medium transition",
+                    form.mode==="physical"?"border-primary bg-primary/10 text-primary":"border-border text-muted-foreground hover:border-primary/40")}>
+                  <Building2 className="w-4 h-4"/> Physical Court
+                </button>
+                <button type="button" onClick={()=>set("mode","online")}
+                  className={cn("flex items-center justify-center gap-2 p-3 rounded-lg border text-sm font-medium transition",
+                    form.mode==="online"?"border-primary bg-primary/10 text-primary":"border-border text-muted-foreground hover:border-primary/40")}>
+                  <Video className="w-4 h-4"/> Online / Virtual
+                </button>
+              </div>
+            </div>
+
+            {/* Meeting Link (only when online) */}
+            {form.mode==="online" && (
+              <div className="space-y-1.5">
+                <Label className="flex items-center gap-1.5"><Link2 className="w-3.5 h-3.5"/> Meeting Link</Label>
+                <Input value={form.meetingLink} onChange={e=>set("meetingLink",e.target.value)}
+                  placeholder="https://zoom.us/j/... or Teams/Meet URL"/>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={()=>{setForm(BLANK);setOpen(false);}}>Cancel</Button>
