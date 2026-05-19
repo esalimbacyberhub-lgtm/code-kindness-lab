@@ -17,6 +17,7 @@ interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   onCreate: (m: Omit<Matter, "id" | "status">) => void;
+  matters?: any[];
   matterCount?: number;
 }
 
@@ -33,14 +34,20 @@ const MATTER_TYPES: { value: Matter["type"]; abbrev: string }[] = [
 
 function genFileNo(
   type: Matter["type"],
-  count: number,
+  matters: any[],
   customAbbrev?: string,
 ): string {
   const abbrev =
     customAbbrev ||
     MATTER_TYPES.find(t => t.value === type)?.abbrev ||
     "OTH";
-  return `OM/${abbrev}/${String(count + 1).padStart(3, "0")}`;
+  const year = new Date().getFullYear();
+  // Count only matters of THIS type filed THIS year — auto-reset every January
+  const yearTypeCount = matters.filter((m: any) => {
+    if (!m.fileNo) return false;
+    return m.fileNo.startsWith(`OM/${abbrev}/`) && m.fileNo.endsWith(`/${year}`);
+  }).length;
+  return `OM/${abbrev}/${String(yearTypeCount + 1).padStart(3, "0")}/${year}`;
 }
 
 // ── Blank form state ─────────────────────────────────────────────────────────
@@ -54,7 +61,7 @@ const BLANK = {
   partyB:     "",
 };
 
-export function NewMatterDialog({ open, onOpenChange, onCreate, matterCount = 0 }: Props) {
+export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], matterCount = 0 }: Props) {
   const [f, setF] = useState(BLANK);
   const set = (k: keyof typeof BLANK, v: string | boolean) =>
     setF(p => ({ ...p, [k]: v }));
@@ -62,7 +69,7 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matterCount = 0 
   // Live case number preview
   const fileNo = genFileNo(
     f.type,
-    matterCount,
+    matters,
     f.isCustom && f.customType.trim()
       ? f.customType.trim().toUpperCase().replace(/\s+/g, "").slice(0, 6)
       : undefined,
