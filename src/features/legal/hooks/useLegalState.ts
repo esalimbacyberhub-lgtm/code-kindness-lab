@@ -4,6 +4,7 @@ import { useSupabaseMatters } from "./useSupabaseMatters";
 import { useSupabaseDeadlines } from "./useSupabaseDeadlines";
 import { useSupabaseDocuments } from "./useSupabaseDocuments";
 import { useSupabaseInvoices } from "./useSupabaseInvoices";
+import { useSupabaseTasks } from "./useSupabaseTasks";
 import { useSupabaseMessages } from "./useSupabaseMessages";
 
 const STORAGE_KEY = "omuyomaLegalOs.v3";
@@ -32,6 +33,7 @@ export function useLegalState() {
   const sbDl = useSupabaseDeadlines(sb.matters);
   const sbDoc = useSupabaseDocuments(sb.matters);
   const sbInv = useSupabaseInvoices(sb.matters);
+  const sbTask = useSupabaseTasks(sb.matters);
   const sbMsg = useSupabaseMessages(sb.matters);
   const [state, setState] = useState<State>(() => {
     if (typeof window === "undefined") return defaults;
@@ -56,11 +58,9 @@ export function useLegalState() {
   const setRole = useCallback((r: Role) => setState(s => ({ ...s, role: r })), []);
   const toggleSidebar = useCallback(() => setState(s => ({ ...s, sidebarCollapsed: !s.sidebarCollapsed })), []);
 
-  const moveTask = useCallback((id: string, status: Task["status"]) =>
-    setState(s => ({ ...s, tasks: s.tasks.map(t => t.id === id ? { ...t, status } : t) })), []);
+  const moveTask = useCallback((id: string, status: Task["status"]) => { sbTask.moveTask(id, status); }, [sbTask]);
 
-  const addTask = useCallback((t: Omit<Task, "id">) =>
-    setState(s => ({ ...s, tasks: [...s.tasks, { ...t, id: `t${Date.now()}` }] })), []);
+  const addTask = useCallback((t: Omit<Task, "id">) => { sbTask.addTask(t); }, [sbTask]);
 
   const addMatter = useCallback((m: Omit<Matter, "id" | "status">) => {
     sb.addMatter({ ...m, openedDate: new Date().toISOString().slice(0, 10) });
@@ -97,7 +97,7 @@ export function useLegalState() {
   const updateWitnessStatus = useCallback((id: string, status: Witness["status"]) =>
     setState(s => ({ ...s, witnesses: s.witnesses.map(w => w.id === id ? { ...w, status } : w) })), []);
 
-  const stateWithSb = { ...state, matters: sb.matters, deadlines: sbDl.deadlines, documents: sbDoc.documents, messages: sbMsg.messages, financials: { ...(state as any).financials, invoices: sbInv.invoices } };
+  const stateWithSb = { ...state, matters: sb.matters, tasks: sbTask.tasks, deadlines: sbDl.deadlines, documents: sbDoc.documents, messages: sbMsg.messages, financials: { ...(state as any).financials, invoices: sbInv.invoices } };
   return {
     state: stateWithSb, setView, setRole, toggleSidebar, moveTask, addTask, addMatter, updateMatter: sb.updateMatter,
     addDeadline, deleteDeadline, addLedgerEntry, addStaff, removeStaff,
