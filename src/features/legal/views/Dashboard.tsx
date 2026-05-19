@@ -128,7 +128,7 @@ export function Dashboard({ tasks, deadlines = [], matters = [], invoices = [], 
         )}
       </div>
 
-      <TaskBoard tasks={tasks} matters={matters} onMove={onMoveTask} onAdd={onAddTask} onDelete={onDeleteTask} />
+      <TaskBoard tasks={tasks} matters={matters} deadlines={deadlines} invoices={invoices} onMove={onMoveTask} onAdd={onAddTask} onDelete={onDeleteTask} />
     </div>
   );
 }
