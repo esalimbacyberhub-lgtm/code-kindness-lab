@@ -20,7 +20,7 @@ import type { Role } from "@/features/legal/types";
 
 const Index = () => {
   const { user, profile, loading: authLoading, signOut } = useAuth();
-  const { state, setView, setRole, toggleSidebar, moveTask, addDeadline, deleteDeadline, addLedgerEntry, addStaff, removeStaff, addDocument, deleteDocument, addInvoice, addMessage, addMatter, updateMatter, assignMatter } = useLegalState();
+  const { state, setView, setRole, toggleSidebar, moveTask, addDeadline, deleteDeadline, addLedgerEntry, addStaff, removeStaff, addDocument, deleteDocument, addInvoice, addMessage, addMatter, updateMatter, assignMatter, addTask, deleteTask } = useLegalState();
   const [matterDialogOpen, setMatterDialogOpen] = useState(false);
   const handleLogout = () => { signOut(); };
   const renderView = () => {
