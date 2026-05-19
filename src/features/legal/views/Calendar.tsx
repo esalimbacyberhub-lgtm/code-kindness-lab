@@ -2,8 +2,7 @@ import { useState, useMemo } from "react";
 import {
   Plus, Trash2, Calendar as CalIcon, Scale, FileText,
   Gavel, AlertCircle, Building2, ChevronLeft, ChevronRight,
-  LayoutList, LayoutGrid, X, User, AlignLeft, Video, MapPin, ExternalLink,
-, Clock , Link2 , Bell } from "lucide-react";
+  LayoutList, LayoutGrid, X, User, AlignLeft, Video, MapPin, ExternalLink, Clock, Link2, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input }  from "@/components/ui/input";
