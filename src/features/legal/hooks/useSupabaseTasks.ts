@@ -5,16 +5,20 @@ interface MatterLike { id: string; fileNo?: string; title?: string }
 
 function rowToTask(row: any, matters: MatterLike[] = []): any {
   const matter = matters.find(m => m.id === row.matter_id);
+  const status = row.status === "in-progress" ? "inprogress" : (row.status || "todo");
+  const priority = row.priority === "normal" ? "medium" : (row.priority || "medium");
+  const due = row.due_date || "";
   return {
     id: row.id,
     title: row.title || "",
     description: row.description || "",
-    matter: matter ? (matter.fileNo || matter.title || "") : "",
+    matter: matter ? (matter.title || matter.fileNo || "") : "",
     matterId: row.matter_id || null,
     assignedTo: row.assigned_to || "",
-    status: row.status,
-    priority: row.priority || "normal",
-    dueDate: row.due_date || "",
+    status,
+    priority,
+    due,
+    dueDate: due,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -25,13 +29,17 @@ function taskToRow(t: any, matters: MatterLike[] = []): any {
   if (t.title !== undefined) row.title = t.title;
   if (t.description !== undefined) row.description = t.description;
   if (t.matterId !== undefined) row.matter_id = t.matterId || null;
-  if (t.matter && !t.matterId && matters.length) {
-    const m = matters.find(mm => mm.fileNo === t.matter || mm.title === t.matter);
-    if (m) row.matter_id = m.id;
+  if (t.matter !== undefined && !t.matterId) {
+    if (!t.matter) row.matter_id = null;
+    else if (matters.length) {
+      const m = matters.find(mm => mm.fileNo === t.matter || mm.title === t.matter);
+      if (m) row.matter_id = m.id;
+    }
   }
   if (t.assignedTo !== undefined) row.assigned_to = t.assignedTo || null;
-  if (t.status !== undefined) row.status = t.status;
-  if (t.priority !== undefined) row.priority = t.priority;
+  if (t.status !== undefined) row.status = t.status === "inprogress" ? "in-progress" : t.status;
+  if (t.priority !== undefined) row.priority = t.priority === "medium" ? "normal" : t.priority;
+  if (t.due !== undefined) row.due_date = t.due || null;
   if (t.dueDate !== undefined) row.due_date = t.dueDate || null;
   return row;
 }
@@ -78,7 +86,8 @@ export function useSupabaseTasks(matters: MatterLike[] = []) {
   }, [matters]);
 
   const moveTask = useCallback(async (id: string, status: string) => {
-    const { error } = await supabase.from("tasks").update({ status }).eq("id", id);
+    const dbStatus = status === "inprogress" ? "in-progress" : status;
+    const { error } = await supabase.from("tasks").update({ status: dbStatus }).eq("id", id);
     if (error) console.error("[moveTask]", error);
   }, []);
 

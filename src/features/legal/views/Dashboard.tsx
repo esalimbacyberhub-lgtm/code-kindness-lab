@@ -10,6 +10,8 @@ interface Props {
   matters?: any[];
   invoices?: any[];
   onMoveTask: (id: string, status: TaskStatus) => void;
+  onAddTask?: (t: Omit<Task, "id">) => void;
+  onDeleteTask?: (id: string) => void;
   onNewMatter: () => void;
   onGoToCalendar?: () => void;
   onGoToMatters?: () => void;
@@ -33,7 +35,7 @@ const TYPE_STYLE: Record<string, string> = {
   lsk:      "text-success bg-success/10 border-success/30",
 };
 
-export function Dashboard({ tasks, deadlines = [], matters = [], invoices = [], onMoveTask, onNewMatter, onGoToCalendar, onGoToMatters }: Props) {
+export function Dashboard({ tasks, deadlines = [], matters = [], invoices = [], onMoveTask, onAddTask, onDeleteTask, onNewMatter, onGoToCalendar, onGoToMatters }: Props) {
   const todayStr = new Date().toISOString().slice(0, 10);
   const upcoming = [...deadlines]
     .filter(d => d.date >= todayStr)
@@ -126,7 +128,7 @@ export function Dashboard({ tasks, deadlines = [], matters = [], invoices = [], 
         )}
       </div>
 
-      <TaskBoard tasks={tasks} onMove={onMoveTask} />
+      <TaskBoard tasks={tasks} matters={matters} onMove={onMoveTask} onAdd={onAddTask} onDelete={onDeleteTask} />
     </div>
   );
 }

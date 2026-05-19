@@ -61,6 +61,7 @@ export function useLegalState() {
   const moveTask = useCallback((id: string, status: Task["status"]) => { sbTask.moveTask(id, status); }, [sbTask]);
 
   const addTask = useCallback((t: Omit<Task, "id">) => { sbTask.addTask(t); }, [sbTask]);
+  const deleteTask = useCallback((id: string) => { sbTask.deleteTask(id); }, [sbTask]);
 
   const addMatter = useCallback((m: Omit<Matter, "id" | "status">) => {
     sb.addMatter({ ...m, openedDate: new Date().toISOString().slice(0, 10) });
@@ -99,7 +100,7 @@ export function useLegalState() {
 
   const stateWithSb = { ...state, matters: sb.matters, tasks: sbTask.tasks, deadlines: sbDl.deadlines, documents: sbDoc.documents, messages: sbMsg.messages, financials: { ...(state as any).financials, invoices: sbInv.invoices } };
   return {
-    state: stateWithSb, setView, setRole, toggleSidebar, moveTask, addTask, addMatter, updateMatter: sb.updateMatter,
+    state: stateWithSb, setView, setRole, toggleSidebar, moveTask, addTask, deleteTask, addMatter, updateMatter: sb.updateMatter,
     addDeadline, deleteDeadline, addLedgerEntry, addStaff, removeStaff,
     addDocument, deleteDocument, addInvoice, assignMatter, sendMessage, addWitness, updateWitnessStatus, log
   };
