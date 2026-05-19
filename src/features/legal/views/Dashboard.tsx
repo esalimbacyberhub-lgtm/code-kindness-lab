@@ -7,9 +7,12 @@ import type { Task, TaskStatus, Deadline } from "../types";
 interface Props {
   tasks: Task[];
   deadlines?: Deadline[];
+  matters?: any[];
+  invoices?: any[];
   onMoveTask: (id: string, status: TaskStatus) => void;
   onNewMatter: () => void;
   onGoToCalendar?: () => void;
+  onGoToMatters?: () => void;
 }
 
 const TYPE_ICON: Record<string, typeof Gavel> = {
@@ -30,7 +33,7 @@ const TYPE_STYLE: Record<string, string> = {
   lsk:      "text-success bg-success/10 border-success/30",
 };
 
-export function Dashboard({ tasks, deadlines = [], onMoveTask, onNewMatter, onGoToCalendar }: Props) {
+export function Dashboard({ tasks, deadlines = [], matters = [], invoices = [], onMoveTask, onNewMatter, onGoToCalendar, onGoToMatters }: Props) {
   const todayStr = new Date().toISOString().slice(0, 10);
   const upcoming = [...deadlines]
     .filter(d => d.date >= todayStr)
@@ -67,7 +70,7 @@ export function Dashboard({ tasks, deadlines = [], onMoveTask, onNewMatter, onGo
         </div>
       </div>
       <div className="gold-divider my-6" />
-      <PriorityWidgets tasks={tasks} />
+      <PriorityWidgets tasks={tasks} matters={matters} deadlines={deadlines} invoices={invoices} onGoToCalendar={onGoToCalendar} onGoToMatters={onGoToMatters} />
 
       {/* ── Upcoming Court Dates (auto-pulled from Calendar) ── */}
       <div className="glass-card rounded-2xl p-5 my-6">

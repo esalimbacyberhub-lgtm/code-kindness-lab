@@ -25,7 +25,7 @@ const Index = () => {
   const handleLogout = () => { signOut(); };
   const renderView = () => {
     switch (state.currentView) {
-      case "dashboard": return <Dashboard tasks={state.tasks} deadlines={state.deadlines||[]} onMoveTask={moveTask} onNewMatter={() => setMatterDialogOpen(true)} onGoToCalendar={() => setView("calendar")} />;
+      case "dashboard": return <Dashboard tasks={state.tasks} deadlines={state.deadlines||[]} matters={state.matters||[]} invoices={(state as any).financials?.invoices||[]} onMoveTask={moveTask} onNewMatter={() => setMatterDialogOpen(true)} onGoToCalendar={() => setView("calendar")} onGoToMatters={() => setView("matters")} />;
       case "matters": return <MatterHub onNewMatter={() => setMatterDialogOpen(true)} matters={state.matters} staff={state.staff} role={state.role} onAssign={assignMatter} documents={state.documents} onAddDocument={addDocument} onDeleteDocument={deleteDocument} onUpdateMatter={updateMatter} />
       case "finance": return <Finance ledger={state.ledger} matters={state.matters} onAdd={addLedgerEntry} />;
       case "calendar": return <Calendar deadlines={state.deadlines} matters={state.matters} onAdd={addDeadline} onDelete={deleteDeadline} />;
