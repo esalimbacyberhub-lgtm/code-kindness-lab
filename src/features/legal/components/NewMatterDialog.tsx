@@ -10,7 +10,7 @@ import {
   Select, SelectContent, SelectItem,
   SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { FileText, Users } from "lucide-react";
+import { FileText, Users, Plus, X } from "lucide-react";
 import type { Matter } from "../types";
 
 interface Props {
@@ -57,8 +57,8 @@ const BLANK = {
   type:       "Civil Litigation" as Matter["type"],
   customType: "",
   isCustom:   false,
-  partyA:     "",
-  partyB:     "",
+  plaintiffs: [""] as string[],
+  defendants: [""] as string[],
 };
 
 export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], matterCount = 0 }: Props) {
@@ -77,6 +77,23 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
 
   const reset = () => setF(BLANK);
 
+  // Multi-party helpers
+  const updateParty = (side: "plaintiffs" | "defendants", idx: number, value: string) =>
+    setF(p => {
+      const arr = [...(p as any)[side]];
+      arr[idx] = value;
+      return { ...p, [side]: arr };
+    });
+  const addParty = (side: "plaintiffs" | "defendants") =>
+    setF(p => ({ ...p, [side]: [...(p as any)[side], ""] }));
+  const removeParty = (side: "plaintiffs" | "defendants", idx: number) =>
+    setF(p => {
+      const arr = (p as any)[side].filter((_: any, i: number) => i !== idx);
+      return { ...p, [side]: arr.length ? arr : [""] };
+    });
+  const partyAPreview = f.plaintiffs.map((s: string) => s.trim()).filter(Boolean).join(" & ");
+  const partyBPreview = f.defendants.map((s: string) => s.trim()).filter(Boolean).join(" & ");
+
   const submit = () => {
     if (!f.client.trim() || !f.title.trim()) return;
     const effectiveType = (
@@ -87,8 +104,8 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
       client:      f.client.trim(),
       title:       f.title.trim(),
       type:        effectiveType,
-      partyA:      f.partyA.trim(),
-      partyB:      f.partyB.trim(),
+      partyA:      partyAPreview,
+      partyB:      partyBPreview,
       fileNo,
       openedDate:  new Date().toISOString().split("T")[0],
     });
@@ -192,35 +209,63 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
               </Label>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <p className="text-[11px] text-muted-foreground">
                   Plaintiff / Applicant / Petitioner
                 </p>
-                <Input
-                  value={f.partyA}
-                  onChange={e => set("partyA", e.target.value)}
-                  placeholder="Party A"
-                />
+                {f.plaintiffs.map((name: string, idx: number) => (
+                  <div key={idx} className="flex items-center gap-1.5">
+                    <Input
+                      value={name}
+                      onChange={e => updateParty("plaintiffs", idx, e.target.value)}
+                      placeholder={f.plaintiffs.length > 1 ? `Plaintiff ${idx + 1}` : "Party A"}
+                    />
+                    {f.plaintiffs.length > 1 && (
+                      <button type="button" onClick={() => removeParty("plaintiffs", idx)}
+                        className="text-muted-foreground hover:text-destructive shrink-0" title="Remove">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button type="button" onClick={() => addParty("plaintiffs")}
+                  className="text-[11px] text-primary hover:underline font-medium flex items-center gap-1">
+                  <Plus className="w-3 h-3" /> Add plaintiff
+                </button>
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <p className="text-[11px] text-muted-foreground">
                   Defendant / Respondent
                 </p>
-                <Input
-                  value={f.partyB}
-                  onChange={e => set("partyB", e.target.value)}
-                  placeholder="Party B"
-                />
+                {f.defendants.map((name: string, idx: number) => (
+                  <div key={idx} className="flex items-center gap-1.5">
+                    <Input
+                      value={name}
+                      onChange={e => updateParty("defendants", idx, e.target.value)}
+                      placeholder={f.defendants.length > 1 ? `Defendant ${idx + 1}` : "Party B"}
+                    />
+                    {f.defendants.length > 1 && (
+                      <button type="button" onClick={() => removeParty("defendants", idx)}
+                        className="text-muted-foreground hover:text-destructive shrink-0" title="Remove">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button type="button" onClick={() => addParty("defendants")}
+                  className="text-[11px] text-primary hover:underline font-medium flex items-center gap-1">
+                  <Plus className="w-3 h-3" /> Add defendant
+                </button>
               </div>
             </div>
 
             {/* Live party preview */}
-            {(f.partyA || f.partyB) && (
+            {(partyAPreview || partyBPreview) && (
               <div className="px-4 py-2.5 rounded-lg bg-muted/30 border border-border text-center">
                 <p className="text-sm font-serif italic text-foreground/90 leading-relaxed">
-                  <span className="font-semibold not-italic">{f.partyA || "—"}</span>
+                  <span className="font-semibold not-italic">{partyAPreview || "—"}</span>
                   <span className="text-primary font-sans font-bold not-italic mx-2">v.</span>
-                  <span className="font-semibold not-italic">{f.partyB || "—"}</span>
+                  <span className="font-semibold not-italic">{partyBPreview || "—"}</span>
                 </p>
                 <p className="text-[10px] text-muted-foreground font-mono mt-0.5">{fileNo}</p>
               </div>
