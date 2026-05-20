@@ -90,12 +90,13 @@ function firstDay(y:number,m:number){const d=new Date(y,m,1).getDay();return d==
 
 interface Props {
   deadlines: Deadline[];
+  onUpdate?: (id: string, updates: any) => void;
   matters:   Matter[];
   onAdd:     (d: Omit<Deadline,"id">) => void;
   onDelete:  (id: string) => void;
 }
 
-export function Calendar({deadlines,matters,onAdd,onDelete}:Props) {
+export function Calendar({deadlines,matters,onAdd,onDelete,onUpdate}:Props) {
   const [open,setOpen]     = useState(false);
   const [form,setForm]     = useState(BLANK);
   const [view,setView]     = useState<"grid"|"list">("grid");
@@ -106,6 +107,8 @@ export function Calendar({deadlines,matters,onAdd,onDelete}:Props) {
   const [cy,setCy] = useState(now.getFullYear());
   const [cm,setCm] = useState(now.getMonth());
   const [selDay,setSelDay] = useState<string|null>(null); // for popup
+  const [linkEditId,setLinkEditId] = useState<string|null>(null);
+  const [linkEditValue,setLinkEditValue] = useState("");
 
   const prev = ()=>{if(cm===0){setCy(y=>y-1);setCm(11);}else setCm(m=>m-1);};
   const next = ()=>{if(cm===11){setCy(y=>y+1);setCm(0);}else setCm(m=>m+1);};
@@ -321,6 +324,28 @@ export function Calendar({deadlines,matters,onAdd,onDelete}:Props) {
                           : <><Link2 className="w-3 h-3"/> Open link →</>}
                       </a>
                     )}
+                    {onUpdate && (linkEditId === d.id ? (
+                      <div className="mt-2 flex items-center gap-1.5">
+                        <input
+                          autoFocus
+                          value={linkEditValue}
+                          onChange={e=>setLinkEditValue(e.target.value)}
+                          placeholder="Paste court / meeting link…"
+                          className="flex-1 px-2 py-1 text-xs bg-background border border-border rounded outline-none focus:ring-1 focus:ring-primary"
+                        />
+                        <button
+                          onClick={()=>{ onUpdate(d.id,{meetingLink:linkEditValue.trim()}); setLinkEditId(null); }}
+                          className="text-xs px-2 py-1 rounded bg-primary text-white font-bold shrink-0">Save</button>
+                        <button onClick={()=>setLinkEditId(null)} className="text-muted-foreground hover:text-foreground shrink-0"><X className="w-3.5 h-3.5"/></button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={()=>{ setLinkEditId(d.id); setLinkEditValue((d as any).meetingLink||""); }}
+                        className="mt-2 text-[11px] text-primary hover:underline font-medium flex items-center gap-1"
+                      >
+                        <Link2 className="w-3 h-3"/> {(d as any).meetingLink ? "Edit link" : "Add link"}
+                      </button>
+                    ))}
                     {(d as any).judge && (
                       <p className="text-xs text-primary/80 mt-1 flex items-center gap-1">
                         <User className="w-3 h-3"/>

@@ -70,6 +70,7 @@ export function useLegalState() {
   const addDeadline = useCallback((d: any) => { sbDl.addDeadline(d); }, [sbDl]);
 
   const deleteDeadline = useCallback((id: string) => { sbDl.deleteDeadline(id); }, [sbDl]);
+  const updateDeadline = useCallback((id: string, updates: any) => { sbDl.updateDeadline(id, updates); }, [sbDl]);
 
   const addLedgerEntry = useCallback((e: Omit<LedgerEntry, "id">) =>
     setState(s => ({ ...s, ledger: [...s.ledger, { ...e, id: `l${Date.now()}` }] })), []);
@@ -101,7 +102,7 @@ export function useLegalState() {
   const stateWithSb = { ...state, matters: sb.matters, tasks: sbTask.tasks, deadlines: sbDl.deadlines, documents: sbDoc.documents, messages: sbMsg.messages, financials: { ...(state as any).financials, invoices: sbInv.invoices } };
   return {
     state: stateWithSb, setView, setRole, toggleSidebar, moveTask, addTask, deleteTask, addMatter, updateMatter: sb.updateMatter,
-    addDeadline, deleteDeadline, addLedgerEntry, addStaff, removeStaff,
+    addDeadline, deleteDeadline, updateDeadline, addLedgerEntry, addStaff, removeStaff,
     addDocument, deleteDocument, addInvoice, assignMatter, sendMessage, addWitness, updateWitnessStatus, log
   };
 }

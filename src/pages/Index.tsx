@@ -20,7 +20,7 @@ import type { Role } from "@/features/legal/types";
 
 const Index = () => {
   const { user, profile, loading: authLoading, signOut } = useAuth();
-  const { state, setView, setRole, toggleSidebar, moveTask, addDeadline, deleteDeadline, addLedgerEntry, addStaff, removeStaff, addDocument, deleteDocument, addInvoice, addMessage, addMatter, updateMatter, assignMatter, addTask, deleteTask } = useLegalState();
+  const { state, setView, setRole, toggleSidebar, moveTask, addDeadline, deleteDeadline, updateDeadline, addLedgerEntry, addStaff, removeStaff, addDocument, deleteDocument, addInvoice, addMessage, addMatter, updateMatter, assignMatter, addTask, deleteTask } = useLegalState();
   const [matterDialogOpen, setMatterDialogOpen] = useState(false);
   const handleLogout = () => { signOut(); };
   const renderView = () => {
@@ -28,7 +28,7 @@ const Index = () => {
       case "dashboard": return <Dashboard tasks={state.tasks} deadlines={state.deadlines||[]} matters={state.matters||[]} invoices={(state as any).financials?.invoices||[]} onMoveTask={moveTask} onAddTask={addTask} onDeleteTask={deleteTask} onNewMatter={() => setMatterDialogOpen(true)} onGoToCalendar={() => setView("calendar")} onGoToMatters={() => setView("matters")} />;
       case "matters": return <MatterHub onNewMatter={() => setMatterDialogOpen(true)} matters={state.matters} staff={state.staff} role={state.role} onAssign={assignMatter} documents={state.documents} onAddDocument={addDocument} onDeleteDocument={deleteDocument} onUpdateMatter={updateMatter} />
       case "finance": return <Finance ledger={state.ledger} matters={state.matters} onAdd={addLedgerEntry} />;
-      case "calendar": return <Calendar deadlines={state.deadlines} matters={state.matters} onAdd={addDeadline} onDelete={deleteDeadline} />;
+      case "calendar": return <Calendar deadlines={state.deadlines} matters={state.matters} onAdd={addDeadline} onDelete={deleteDeadline} onUpdate={updateDeadline} />;
       case "vault": return <DocumentVault documents={state.documents} matters={state.matters} onAdd={addDocument} onDelete={deleteDocument} />;
       case "directory": return <FirmDirectory staff={state.staff} currentRole={state.role} onAdd={addStaff} onRemove={removeStaff} />;
       case "invoices": return null; // Financials moved to Admin & Audit

@@ -95,5 +95,11 @@ export function useSupabaseDeadlines(matters: any[]) {
     if (error) console.error("deleteDeadline:", error);
   }, []);
 
-  return { deadlines, loading, addDeadline, deleteDeadline };
+  const updateDeadline = useCallback(async (id: string, updates: any) => {
+    const row = deadlineToRow(updates, matters);
+    const { error } = await supabase.from("deadlines").update(row).eq("id", id);
+    if (error) { console.error("updateDeadline:", error); alert("Could not update: " + error.message); }
+  }, [matters]);
+
+  return { deadlines, loading, addDeadline, deleteDeadline, updateDeadline };
 }
