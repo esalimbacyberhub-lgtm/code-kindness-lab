@@ -141,7 +141,7 @@ export function Calendar({deadlines,matters,onAdd,onDelete}:Props) {
       ...(form.time && {time:form.time}),
       ...(form.judge && {judge:form.judge}),
       ...(form.summary && {summary:form.summary}),
-      ...(form.mode==="online" && form.meetingLink && {meetingLink:form.meetingLink}),
+      ...(form.meetingLink && {meetingLink:form.meetingLink}),
     } as Omit<Deadline,"id">);
     setForm(BLANK); setOpen(false);
   };
@@ -167,13 +167,15 @@ export function Calendar({deadlines,matters,onAdd,onDelete}:Props) {
                   <span className="font-medium truncate">{d.title}</span>
                   <span className="text-muted-foreground truncate hidden sm:inline">— {d.court}</span>
                 </div>
-                {(d as any).mode === "online" && (d as any).meetingLink ? (
+                {(d as any).meetingLink ? (
                   <a href={(d as any).meetingLink} target="_blank" rel="noopener noreferrer"
                      className="px-2.5 py-1 rounded-md bg-primary text-white text-[10px] font-bold hover:bg-primary/90 transition flex items-center gap-1 shrink-0">
-                    <Video className="w-3 h-3"/> Join
+                    {(d as any).mode === "online"
+                      ? <><Video className="w-3 h-3"/> Join</>
+                      : <><Link2 className="w-3 h-3"/> Link</>}
                   </a>
                 ) : (
-                  <span className="text-[10px] text-muted-foreground shrink-0">📍 Physical</span>
+                  <span className="text-[10px] text-muted-foreground shrink-0">{(d as any).mode === "online" ? "💻 Online" : "📍 Physical"}</span>
                 )}
               </div>
             ))}
@@ -311,10 +313,12 @@ export function Calendar({deadlines,matters,onAdd,onDelete}:Props) {
                       <Building2 className="w-3 h-3"/>
                       {d.court}
                     </p>
-                    {(d as any).mode === "online" && (d as any).meetingLink && (
+                    {(d as any).meetingLink && (
                       <a href={(d as any).meetingLink} target="_blank" rel="noopener noreferrer"
                          className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:bg-primary/90 transition">
-                        <Video className="w-3 h-3"/> Join meeting →
+                        {(d as any).mode === "online"
+                          ? <><Video className="w-3 h-3"/> Join meeting →</>
+                          : <><Link2 className="w-3 h-3"/> Open link →</>}
                       </a>
                     )}
                     {(d as any).judge && (
@@ -480,14 +484,13 @@ export function Calendar({deadlines,matters,onAdd,onDelete}:Props) {
               </div>
             </div>
 
-            {/* Meeting Link (only when online) */}
-            {form.mode==="online" && (
-              <div className="space-y-1.5">
-                <Label className="flex items-center gap-1.5"><Link2 className="w-3.5 h-3.5"/> Meeting Link</Label>
-                <Input value={form.meetingLink} onChange={e=>set("meetingLink",e.target.value)}
-                  placeholder="https://zoom.us/j/... or Teams/Meet URL"/>
-              </div>
-            )}
+            {/* Link — meeting, court portal, e-filing, cause list, any URL */}
+            <div className="space-y-1.5">
+              <Label className="flex items-center gap-1.5"><Link2 className="w-3.5 h-3.5"/> Link (optional)</Label>
+              <Input value={form.meetingLink} onChange={e=>set("meetingLink",e.target.value)}
+                placeholder={form.mode==="online" ? "https://zoom.us/j/... meeting link" : "Court portal, e-filing, cause list, or any URL"}/>
+              <p className="text-[10px] text-muted-foreground">Paste a Zoom/Teams link, court portal, e-filing URL, or any reference link.</p>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={()=>{setForm(BLANK);setOpen(false);}}>Cancel</Button>
