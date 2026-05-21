@@ -21,6 +21,7 @@ function rowToMatter(row: any): Matter {
     result: row.result || undefined,
     resultNote: row.result_note || undefined,
     resultDate: row.result_date || undefined,
+    notes: row.notes || undefined,
     assignedTo: row.assigned_to || undefined,
   } as any;
 }
@@ -43,6 +44,7 @@ function matterToRow(matter: any): any {
   if (matter.result !== undefined) row.result = matter.result;
   if (matter.resultNote !== undefined) row.result_note = matter.resultNote;
   if (matter.resultDate !== undefined) row.result_date = matter.resultDate;
+  if (matter.notes !== undefined) row.notes = matter.notes;
   if (matter.assignedTo !== undefined) row.assigned_to = matter.assignedTo;
   return row;
 }

@@ -21,6 +21,7 @@ export function CaseStatusDialog({ matter, open, onClose, onSave }: Props) {
   const [result, setResult] = useState<"won" | "lost" | "settled" | "withdrawn" | "dismissed" | "">("");
   const [resultNote, setResultNote] = useState("");
   const [resultDate, setResultDate] = useState("");
+  const [notes, setNotes] = useState("");
 
   useEffect(() => {
     if (matter) {
@@ -29,13 +30,14 @@ export function CaseStatusDialog({ matter, open, onClose, onSave }: Props) {
       setResult((matter.result as any) || "");
       setResultNote(matter.resultNote || "");
       setResultDate(matter.resultDate || "");
+      setNotes(matter.notes || "");
     }
   }, [matter]);
 
   if (!matter) return null;
 
   const save = () => {
-    const updates: Partial<Matter> = { caseStatus };
+    const updates: Partial<Matter> = { caseStatus, notes };
     if (caseStatus === "hearing-scheduled") updates.nextHearingDate = nextHearingDate;
     if (caseStatus === "completed") {
       updates.result = (result as any) || undefined;
@@ -67,6 +69,13 @@ export function CaseStatusDialog({ matter, open, onClose, onSave }: Props) {
                 {s.label}
               </button>
             ))}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Notes / Remarks</Label>
+            <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3}
+              placeholder="Type an update manually — e.g. Adjourned to 12 June, awaiting filing of defence."
+              className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg outline-none focus:ring-1 focus:ring-primary resize-none" />
           </div>
 
           {caseStatus === "hearing-scheduled" && (
