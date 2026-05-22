@@ -69,5 +69,10 @@ export function useSupabaseInvoices(matters: any[]) {
     if (error) console.error("updateInvoice:", error);
   }, [matters]);
 
-  return { invoices, addInvoice, updateInvoice };
+  const deleteInvoice = useCallback(async (id: string) => {
+    const { error } = await supabase.from("invoices").delete().eq("id", id);
+    if (error) console.error("deleteInvoice:", error);
+  }, []);
+
+  return { invoices, addInvoice, updateInvoice, deleteInvoice };
 }

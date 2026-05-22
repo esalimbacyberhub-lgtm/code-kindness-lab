@@ -3,6 +3,7 @@ import { FirmLetterhead, FirmFooter, FIRM } from "./FirmLetterhead"
 import { FinancialsOverview } from "./FinancialsOverview";
 import { FinancialNotes } from "./FinancialNotes";
 import { FeeNotesTab } from "./FeeNotesTab"
+import { useSupabaseInvoices } from "@/features/legal/hooks/useSupabaseInvoices"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS & UTILITIES
@@ -324,7 +325,8 @@ const TABS = [
 
 export default function FinancialsModule() {
   const [tab, setTab]           = useState("invoices")
-  const [invoices, setInvoices] = useState([])
+  const { invoices: dbInvoices, addInvoice: sbAddInvoice, updateInvoice: sbUpdateInvoice, deleteInvoice: sbDeleteInvoice } = useSupabaseInvoices([])
+  const invoices = dbInvoices.map((i) => ({ ...i, total: i.totalAmount, number: i.invoiceNo }))
   const [trustTxns, setTrustTxns] = useState([])
   const [showInvoiceForm, setShowInvoiceForm] = useState(false)
   const [showTrustForm, setShowTrustForm]     = useState(false)
@@ -336,14 +338,13 @@ export default function FinancialsModule() {
   useEffect(() => {
     try {
       const d = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}")
-      if (d.invoices)  setInvoices(d.invoices)
       if (d.trustTxns) setTrustTxns(d.trustTxns)
     } catch {}
   }, [])
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ invoices, trustTxns }))
-  }, [invoices, trustTxns])
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ trustTxns }))
+  }, [trustTxns])
 
   // ── Derived state — all auto-computed from invoices + trustTxns ──────────
   const gl       = useMemo(() => buildGL(invoices, trustTxns), [invoices, trustTxns])
@@ -351,9 +352,9 @@ export default function FinancialsModule() {
   const aged     = useMemo(() => buildAgedDebtors(invoices), [invoices])
 
   // ── Actions ──────────────────────────────────────────────────────────────
-  const addInvoice  = (inv) => setInvoices((p) => [...p, inv])
-  const markPaid    = (id)  => setInvoices((p) => p.map((i) => i.id === id ? { ...i, status: "paid", paidDate: isoToday() } : i))
-  const deleteInv   = (id)  => { if (confirm("Delete this invoice?")) setInvoices((p) => p.filter((i) => i.id !== id)) }
+  const addInvoice  = (inv) => sbAddInvoice({ ...inv, totalAmount: inv.total ?? inv.totalAmount, invoiceNo: inv.number ?? inv.invoiceNo })
+  const markPaid    = (id)  => sbUpdateInvoice(id, { status: "paid", paidDate: isoToday() })
+  const deleteInv   = (id)  => { if (confirm("Delete this invoice?")) sbDeleteInvoice(id) }
 
   const saveTrust = () => {
     if (!trustForm.client.trim() || !trustForm.amount) return alert("Client and amount are required.")
