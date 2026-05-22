@@ -9,7 +9,7 @@ function rowToDoc(row: any, matters: any[]): any {
     id: row.id,
     name: row.name || "",
     folder: row.folder || "",
-    uploadedBy: row.uploaded_by || "",
+    uploadedBy: row.uploaded_by_name || row.uploaded_by || "",
     date: row.date,
     sizeKb: row.size_kb || 0,
     url: row.url || "",
@@ -83,7 +83,11 @@ export function useSupabaseDocuments(matters: any[]) {
     }
 
     const row = docToRow({ ...d, sizeKb, storagePath }, matters);
-    if (session) row.uploaded_by = session.user.id;
+    if (session) {
+      row.uploaded_by = session.user.id;
+      const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", session.user.id).single();
+      row.uploaded_by_name = prof?.full_name || session.user.email || "";
+    }
     const { error } = await supabase.from("documents").insert([row]);
     if (error) {
       console.error("addDocument:", error);

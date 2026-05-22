@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { CaseStatusDialog } from "../components/CaseStatusDialog";
 import {
-  Briefcase, Upload, Trash2, FileText, Link as LinkIcon,
+  Briefcase, Upload, Trash2, FileText, Link as LinkIcon, Download,
   ArrowLeft, FolderOpen, Folder, Plus, Edit3, Users, Receipt,
   ClipboardList, ChevronRight, Search, Filter,
 } from "lucide-react";
 import type { Matter, StaffMember, Role, VaultDocument } from "../types";
+import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -153,21 +154,26 @@ export const Matters = ({
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>, matter: Matter) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const docId = Math.random().toString(36).slice(2, 9).toUpperCase();
     onAddDocument({
-      name: file.name, matter: matter.id,
+      file,
+      name: file.name,
+      matter: "",
+      matterId: matter.id,
+      folder: activeFolder === "All" ? "Uncategorised" : activeFolder,
       fileType: file.type || "application/octet-stream",
       date: new Date().toISOString().split("T")[0],
       uploadedBy: role,
     });
-    // Assign to active folder after a tick (doc will have been added)
-    setTimeout(() => {
-      const folder = activeFolder === "All" ? "Uncategorised" : activeFolder;
-      // We assign by name since we don't have the new id — find by name
-      const newDoc = documents.find(d => d.matter === matter.id && d.name === file.name);
-      if (newDoc) setDocFolder(matter.id, newDoc.id, folder);
-    }, 100);
     e.target.value = "";
+  };
+
+  const handleDownload = async (doc: any) => {
+    if (!doc.storagePath) { alert("No file is attached to this document yet."); return; }
+    const { data, error } = await supabase.storage
+      .from("matter-documents")
+      .createSignedUrl(doc.storagePath, 3600);
+    if (error || !data?.signedUrl) { alert("Could not open the file. Please try again."); return; }
+    window.open(data.signedUrl, "_blank");
   };
 
   // ── Client secure link ────────────────────────────────────────────────────
@@ -190,7 +196,7 @@ export const Matters = ({
 
   // ── Matter detail view ───────────────────────────────────────────────────
   if (selected) {
-    const allMatterDocs = documents.filter(d => d.matter === selected.id);
+    const allMatterDocs = documents.filter(d => d.matterId === selected.id);
     const folders       = getMatterFolders(selected.id);
 
     const filteredDocs = activeFolder === "All"
@@ -478,6 +484,13 @@ export const Matters = ({
                           {folders.map(f => <option key={f} value={f}>{f}</option>)}
                         </select>
                         <button
+                          onClick={() => handleDownload(d)}
+                          className="text-muted-foreground hover:text-brand-gold transition-colors"
+                          title="Download"
+                        >
+                          <Download className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={() => onDeleteDocument(d.id)}
                           className="text-muted-foreground hover:text-destructive transition-colors"
                         >
@@ -555,7 +568,7 @@ export const Matters = ({
       ) : (
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           {filteredMatters.map(m => {
-            const docCount = documents.filter(d => d.matter === m.id).length;
+            const docCount = documents.filter(d => d.matterId === m.id).length;
             return (
               <button
                 key={m.id}
