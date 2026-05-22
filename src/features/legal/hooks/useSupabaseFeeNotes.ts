@@ -47,7 +47,7 @@ export function useSupabaseFeeNotes(matters: any[] = []) {
       if (mounted) setFeeNotes((data || []).map((r: any) => rowToFn(r, matters)));
     };
     load();
-    const ch = supabase.channel("fee_notes_changes")
+    const ch = supabase.channel("fee_notes_changes_" + Math.random().toString(36).slice(2))
       .on("postgres_changes", { event: "*", schema: "public", table: "fee_notes" }, () => load())
       .subscribe();
     const { data: authSub } = supabase.auth.onAuthStateChange((event) => {

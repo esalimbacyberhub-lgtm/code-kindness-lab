@@ -49,7 +49,7 @@ export function useSupabaseDocuments(matters: any[]) {
       if (mounted) setDocuments((data || []).map((r: any) => rowToDoc(r, matters)));
     };
     load();
-    const ch = supabase.channel("documents_changes")
+    const ch = supabase.channel("documents_changes_" + Math.random().toString(36).slice(2))
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "documents" }, (p: any) => setDocuments(prev => prev.find(d => d.id === p.new.id) ? prev : [rowToDoc(p.new, matters), ...prev]))
       .on("postgres_changes", { event: "DELETE", schema: "public", table: "documents" }, (p: any) => setDocuments(prev => prev.filter(d => d.id !== p.old.id)))
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "documents" }, (p: any) => setDocuments(prev => prev.map(d => d.id === p.new.id ? rowToDoc(p.new, matters) : d)))

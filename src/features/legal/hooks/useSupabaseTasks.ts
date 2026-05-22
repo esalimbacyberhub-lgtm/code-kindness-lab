@@ -58,7 +58,7 @@ export function useSupabaseTasks(matters: MatterLike[] = []) {
   }, [matters.length]);
 
   useEffect(() => {
-    const chan = supabase.channel("tasks-changes")
+    const chan = supabase.channel("tasks-changes-" + Math.random().toString(36).slice(2))
       .on("postgres_changes", { event: "*", schema: "public", table: "tasks" }, (payload: any) => {
         if (payload.eventType === "INSERT") {
           setTasks(prev => prev.some(t => t.id === payload.new.id) ? prev : [rowToTask(payload.new, matters), ...prev]);

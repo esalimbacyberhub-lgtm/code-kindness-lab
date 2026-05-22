@@ -25,7 +25,7 @@ export function useSupabaseMessages(matters: any[]) {
       if (mounted) setMessages((data || []).map((r: any) => rowToMessage(r, matters)));
     };
     load();
-    const ch = supabase.channel("messages_changes")
+    const ch = supabase.channel("messages_changes_" + Math.random().toString(36).slice(2))
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (p: any) => {
         setMessages(prev => prev.find(m => m.id === p.new.id) ? prev : [...prev, rowToMessage(p.new, matters)]);
       })

@@ -28,7 +28,7 @@ export function useSupabaseUsers() {
     };
     load();
 
-    const ch = supabase.channel("profiles_changes")
+    const ch = supabase.channel("profiles_changes_" + Math.random().toString(36).slice(2))
       .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => load())
       .subscribe();
     const { data: authSub } = supabase.auth.onAuthStateChange((event) => {

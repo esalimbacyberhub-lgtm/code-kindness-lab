@@ -35,7 +35,7 @@ export function useSupabaseFinancialNotes() {
       if (mounted) setNotes((data || []).map(rowToNote));
     };
     load();
-    const ch = supabase.channel("financial_notes_changes")
+    const ch = supabase.channel("financial_notes_changes_" + Math.random().toString(36).slice(2))
       .on("postgres_changes", { event: "*", schema: "public", table: "financial_notes" }, () => load())
       .subscribe();
     const { data: authSub } = supabase.auth.onAuthStateChange((event) => {
