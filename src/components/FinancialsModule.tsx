@@ -322,6 +322,7 @@ const TABS = [
   { id: "trust",    label: "Trust Account" },
   { id: "aged",     label: "Aged Debtors" },
   { id: "feenotes", label: "Fee Notes" },
+  { id: "statements", label: "Statements" },
 ]
 
 export default function FinancialsModule() {
@@ -331,6 +332,7 @@ export default function FinancialsModule() {
   const { payments, addPayment, paidFor } = useSupabasePayments()
   const [payFor, setPayFor] = useState(null)
   const [payForm, setPayForm] = useState({ amount: "", date: isoToday(), method: "M-Pesa", note: "" })
+  const [stmtClient, setStmtClient] = useState("")
   const [trustTxns, setTrustTxns] = useState([])
   const [showInvoiceForm, setShowInvoiceForm] = useState(false)
   const [showTrustForm, setShowTrustForm]     = useState(false)
@@ -857,6 +859,101 @@ export default function FinancialsModule() {
             </div>
           </>
         )}
+
+        {tab === "feenotes" && (
+          <FeeNotesTab />
+        )}
+
+        {tab === "statements" && (() => {
+          const clients = Array.from(new Set(invoices.map((i) => i.client).filter(Boolean))).sort()
+          const cInvoices = invoices.filter((i) => i.client === stmtClient)
+          const cInvIds = new Set(cInvoices.map((i) => i.id))
+          const cPayments = payments.filter((p) => cInvIds.has(p.invoiceId))
+          const billed = cInvoices.reduce((s, i) => s + (i.total || 0), 0)
+          const received = cPayments.reduce((s, p) => s + p.amount, 0)
+          const outstanding = billed - received
+
+          // build a dated, running-balance ledger
+          const rows = [
+            ...cInvoices.map((i) => ({ date: i.date, kind: "invoice", ref: i.number, desc: `Invoice — ${i.matter || ""}`, debit: i.total || 0, credit: 0 })),
+            ...cPayments.map((p) => {
+              const inv = cInvoices.find((i) => i.id === p.invoiceId)
+              return { date: p.date, kind: "payment", ref: inv ? inv.number : "", desc: `Payment received (${p.method})${p.note ? " — " + p.note : ""}`, debit: 0, credit: p.amount }
+            }),
+          ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+          let run = 0
+          const ledger = rows.map((r) => { run += r.debit - r.credit; return { ...r, balance: run } })
+
+          return (
+            <div style={s.card}>
+              <div style={{ display: "flex", gap: 12, alignItems: "flex-end", marginBottom: 18, flexWrap: "wrap" }}>
+                <div>
+                  <label style={{ display: "block", marginBottom: 5, fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: C.muted }}>Select Client</label>
+                  <select value={stmtClient} onChange={(e) => setStmtClient(e.target.value)} style={{ background: "#080f1c", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "9px 12px", color: "#e8eaf0", fontSize: 13, minWidth: 260, outline: "none" }}>
+                    <option value="">— Choose a client —</option>
+                    {clients.map((cl) => <option key={cl} value={cl}>{cl}</option>)}
+                  </select>
+                </div>
+                {stmtClient && (
+                  <button onClick={() => window.print()} style={{ padding: "9px 22px", background: "#c9a84c", border: "none", color: "#0d1424", borderRadius: 8, fontSize: 13, fontWeight: 900, cursor: "pointer" }}>⬇ Download / Print Statement</button>
+                )}
+              </div>
+
+              {!stmtClient ? (
+                <EmptyState icon="📑" title="Statement of Account" sub="Choose a client to see every invoice, every payment, and the running balance." />
+              ) : (
+                <div id="client-statement" style={{ background: "#fff", color: "#1a1a1a", borderRadius: 10, padding: 32 }}>
+                  <FirmLetterhead docRef={`STATEMENT — ${stmtClient}`} docDate={isoToday()} docTitle="STATEMENT OF ACCOUNT" />
+                  <div style={{ display: "flex", gap: 16, margin: "18px 0" }}>
+                    <div style={{ flex: 1, border: "1px solid #ddd", borderRadius: 8, padding: "12px 14px" }}>
+                      <div style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", color: "#888" }}>Total Billed</div>
+                      <div style={{ fontSize: 17, fontWeight: 900 }}>{kes(billed)}</div>
+                    </div>
+                    <div style={{ flex: 1, border: "1px solid #ddd", borderRadius: 8, padding: "12px 14px" }}>
+                      <div style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", color: "#888" }}>Payments Received</div>
+                      <div style={{ fontSize: 17, fontWeight: 900, color: "#138a36" }}>{kes(received)}</div>
+                    </div>
+                    <div style={{ flex: 1, border: "1px solid #ddd", borderRadius: 8, padding: "12px 14px" }}>
+                      <div style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", color: "#888" }}>Balance Outstanding</div>
+                      <div style={{ fontSize: 17, fontWeight: 900, color: outstanding > 0 ? "#c0392b" : "#138a36" }}>{kes(outstanding)}</div>
+                    </div>
+                  </div>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                    <thead>
+                      <tr style={{ borderBottom: "2px solid #1a1a1a" }}>
+                        {["Date","Reference","Description","Billed","Paid","Balance"].map((h) => (
+                          <th key={h} style={{ textAlign: h === "Date" || h === "Reference" || h === "Description" ? "left" : "right", padding: "8px 10px", fontSize: 10, fontWeight: 800, textTransform: "uppercase" }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ledger.length === 0 ? (
+                        <tr><td colSpan={6} style={{ padding: 20, textAlign: "center", color: "#888" }}>No invoices or payments for this client yet.</td></tr>
+                      ) : ledger.map((r, idx) => (
+                        <tr key={idx} style={{ borderBottom: "1px solid #eee" }}>
+                          <td style={{ padding: "7px 10px" }}>{fmtDate(r.date)}</td>
+                          <td style={{ padding: "7px 10px", fontWeight: 700 }}>{r.ref}</td>
+                          <td style={{ padding: "7px 10px" }}>{r.desc}</td>
+                          <td style={{ padding: "7px 10px", textAlign: "right" }}>{r.debit ? kes(r.debit) : "—"}</td>
+                          <td style={{ padding: "7px 10px", textAlign: "right", color: "#138a36" }}>{r.credit ? kes(r.credit) : "—"}</td>
+                          <td style={{ padding: "7px 10px", textAlign: "right", fontWeight: 800 }}>{kes(r.balance)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr style={{ borderTop: "2px solid #1a1a1a" }}>
+                        <td colSpan={5} style={{ padding: "9px 10px", fontWeight: 900, textTransform: "uppercase", fontSize: 11 }}>Balance Due</td>
+                        <td style={{ padding: "9px 10px", textAlign: "right", fontWeight: 900, fontSize: 14, color: outstanding > 0 ? "#c0392b" : "#138a36" }}>{kes(outstanding)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                  <p style={{ fontSize: 11, color: "#666", marginTop: 16 }}>This statement reflects all invoices and payments recorded as at {fmtDate(isoToday())}. Please settle any outstanding balance at your earliest convenience.</p>
+                  <FirmFooter />
+                </div>
+              )}
+            </div>
+          )
+        })()}
 
       </div>
 
