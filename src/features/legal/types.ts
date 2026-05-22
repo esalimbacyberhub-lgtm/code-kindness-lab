@@ -36,6 +36,8 @@ export interface VaultDocument {
   id: string; name: string; matter: string;
   fileType?: string; date?: string; uploadedBy?: string;
   uploadedAt?: string; size?: number; mime?: string; data?: string;
+  matterId?: string; folder?: string; sizeKb?: number;
+  storagePath?: string; url?: string; file?: File;
 }
 export interface Message {
   id: string; from: string; content: string; timestamp: string; direction: "sent"|"received"; matter?: string;
