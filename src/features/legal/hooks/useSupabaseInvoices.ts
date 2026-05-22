@@ -13,6 +13,7 @@ function rowToInvoice(row: any, matters: any[]): any {
     matter: matter?.fileNo || "",
     totalAmount: parseFloat(row.total_amount) || 0,
     status: row.status || "draft",
+    sourceFeeNoteId: row.source_fee_note_id || null,
     lineItems: row.line_items || [],
   };
 }
@@ -27,6 +28,7 @@ function invoiceToRow(i: any, matters: any[]): any {
   if (i.totalAmount !== undefined) row.total_amount = i.totalAmount;
   if (i.status !== undefined) row.status = i.status;
   if (i.lineItems !== undefined) row.line_items = i.lineItems;
+  if (i.sourceFeeNoteId !== undefined) row.source_fee_note_id = i.sourceFeeNoteId;
   if (i.matter !== undefined) {
     const m = matters.find((mm: any) => mm.fileNo === i.matter);
     if (m) row.matter_id = m.id;

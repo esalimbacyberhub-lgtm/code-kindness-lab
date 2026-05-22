@@ -357,6 +357,33 @@ function FeeNoteForm({ onSave, onClose, count }: { onSave: (fn: FeeNote) => void
 // ─────────────────────────────────────────────────────────────────────────────
 export function FeeNotesTab() {
   const { feeNotes, addFeeNote, updateFeeNote, deleteFeeNote } = useSupabaseFeeNotes()
+  const { invoices, addInvoice } = useSupabaseInvoices([])
+
+  const genInvoiceNo = () => `INV/${new Date().getFullYear()}/${String(invoices.length + 1).padStart(3, "0")}`
+
+  const generateInvoice = async (fn: FeeNote) => {
+    if (invoices.some(inv => inv.sourceFeeNoteId === fn.id)) {
+      return alert("An invoice has already been generated from this fee note.")
+    }
+    if (!confirm(`Generate an invoice from fee note ${fn.feeNoteNo}?`)) return
+    const items = [
+      ...((fn.items || []).map(it => ({ id: it.id, description: it.description, quantity: it.hours, rate: it.rate, amount: it.hours * it.rate }))),
+      ...((fn.disbursements || []).map(dd => ({ id: dd.id, description: dd.description, quantity: 1, rate: dd.rate, amount: dd.rate }))),
+    ]
+    await addInvoice({
+      invoiceNo: genInvoiceNo(),
+      date: isoToday(),
+      dueDate: fn.dueDate || "",
+      client: fn.client,
+      matter: fn.matterRef,
+      totalAmount: fn.total,
+      status: "draft",
+      lineItems: items,
+      sourceFeeNoteId: fn.id,
+    })
+    await updateFeeNote(fn.id, { status: "settled" })
+    alert(`Invoice ${genInvoiceNo()} generated. Find it in the Invoices tab.`)
+  }
   const [showForm, setShowForm]   = useState(false)
   const [viewing, setViewing]     = useState<FeeNote | null>(null)
 
@@ -439,6 +466,8 @@ export function FeeNotesTab() {
                       <div style={{ display: "flex", gap: 6 }}>
                         <button onClick={() => setViewing(fn)} style={{ padding: "5px 12px", background: "rgba(65,105,225,0.12)", border: "1px solid rgba(65,105,225,0.25)", color: "#93c5fd", borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>View</button>
                         {fn.status === "draft" && <button onClick={() => markIssued(fn.id)} style={{ padding: "5px 12px", background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)", color: "#22c55e", borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Issue</button>}
+                        {fn.status !== "draft" && !invoices.some(inv => inv.sourceFeeNoteId === fn.id) && <button onClick={() => generateInvoice(fn)} style={{ padding: "5px 12px", background: "rgba(201,168,76,0.14)", border: "1px solid rgba(201,168,76,0.3)", color: "#C9A84C", borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Generate Invoice</button>}
+                        {invoices.some(inv => inv.sourceFeeNoteId === fn.id) && <span style={{ padding: "5px 10px", fontSize: 10, fontWeight: 800, color: "#22c55e" }}>✓ Invoiced</span>}
                         <button onClick={() => deleteFN(fn.id)} style={{ padding: "5px 12px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "#ef4444", borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Del</button>
                       </div>
                     </td>
