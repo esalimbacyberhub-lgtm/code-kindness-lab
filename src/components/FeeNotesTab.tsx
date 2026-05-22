@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react"
 import { FirmLetterhead, FirmFooter, FIRM } from "./FirmLetterhead"
 import { useSupabaseFeeNotes } from "@/features/legal/hooks/useSupabaseFeeNotes"
-import { useSupabaseInvoices } from "@/features/legal/hooks/useSupabaseInvoices"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -357,9 +356,8 @@ function FeeNoteForm({ onSave, onClose, count }: { onSave: (fn: FeeNote) => void
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN EXPORT — drop this as the 7th tab inside FinancialsModule
 // ─────────────────────────────────────────────────────────────────────────────
-export function FeeNotesTab() {
+export function FeeNotesTab({ invoices = [], addInvoice }: { invoices?: any[]; addInvoice?: (inv: any) => void } = {}) {
   const { feeNotes, addFeeNote, updateFeeNote, deleteFeeNote } = useSupabaseFeeNotes()
-  const { invoices, addInvoice } = useSupabaseInvoices([])
 
   const genInvoiceNo = () => `INV/${new Date().getFullYear()}/${String(invoices.length + 1).padStart(3, "0")}`
 
@@ -372,6 +370,7 @@ export function FeeNotesTab() {
       ...((fn.items || []).map(it => ({ id: it.id, description: it.description, quantity: it.hours, rate: it.rate, amount: it.hours * it.rate }))),
       ...((fn.disbursements || []).map(dd => ({ id: dd.id, description: dd.description, quantity: 1, rate: dd.rate, amount: dd.rate }))),
     ]
+    if (!addInvoice) { alert("Invoicing is unavailable here."); return; }
     await addInvoice({
       invoiceNo: genInvoiceNo(),
       date: isoToday(),

@@ -861,7 +861,7 @@ export default function FinancialsModule() {
         )}
 
         {tab === "feenotes" && (
-          <FeeNotesTab />
+          <FeeNotesTab invoices={invoices} addInvoice={addInvoice} />
         )}
 
         {tab === "statements" && (() => {
