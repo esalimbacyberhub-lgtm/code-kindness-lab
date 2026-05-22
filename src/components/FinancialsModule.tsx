@@ -4,6 +4,7 @@ import { FinancialsOverview } from "./FinancialsOverview";
 import { FinancialNotes } from "./FinancialNotes";
 import { FeeNotesTab } from "./FeeNotesTab"
 import { useSupabaseInvoices } from "@/features/legal/hooks/useSupabaseInvoices"
+import { useSupabasePayments } from "@/features/legal/hooks/useSupabasePayments"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS & UTILITIES
@@ -327,6 +328,9 @@ export default function FinancialsModule() {
   const [tab, setTab]           = useState("invoices")
   const { invoices: dbInvoices, addInvoice: sbAddInvoice, updateInvoice: sbUpdateInvoice, deleteInvoice: sbDeleteInvoice } = useSupabaseInvoices([])
   const invoices = dbInvoices.map((i) => ({ ...i, total: i.totalAmount, number: i.invoiceNo }))
+  const { payments, addPayment, paidFor } = useSupabasePayments()
+  const [payFor, setPayFor] = useState(null)
+  const [payForm, setPayForm] = useState({ amount: "", date: isoToday(), method: "M-Pesa", note: "" })
   const [trustTxns, setTrustTxns] = useState([])
   const [showInvoiceForm, setShowInvoiceForm] = useState(false)
   const [showTrustForm, setShowTrustForm]     = useState(false)
@@ -353,6 +357,17 @@ export default function FinancialsModule() {
 
   // ── Actions ──────────────────────────────────────────────────────────────
   const addInvoice  = (inv) => sbAddInvoice({ ...inv, totalAmount: inv.total ?? inv.totalAmount, invoiceNo: inv.number ?? inv.invoiceNo })
+  const recordPayment = async (inv) => {
+    const amt = parseFloat(payForm.amount)
+    if (!amt || amt <= 0) return alert("Enter a valid payment amount.")
+    await addPayment({ invoiceId: inv.id, amount: amt, date: payForm.date, method: payForm.method, note: payForm.note })
+    const newPaid = paidFor(inv.id) + amt
+    if (newPaid >= (inv.total || 0)) {
+      await sbUpdateInvoice(inv.id, { status: "paid", paidDate: payForm.date })
+    }
+    setPayFor(null)
+    setPayForm({ amount: "", date: isoToday(), method: "M-Pesa", note: "" })
+  }
   const markPaid    = (id)  => sbUpdateInvoice(id, { status: "paid", paidDate: isoToday() })
   const deleteInv   = (id)  => { if (confirm("Delete this invoice?")) sbDeleteInvoice(id) }
 
@@ -526,7 +541,7 @@ export default function FinancialsModule() {
                 <table style={s.tbl}>
                   <thead>
                     <tr>
-                      {["Invoice #","Client","Matter","Date","Due Date","Amount","Status",""].map((h) => (
+                      {["Invoice #","Client","Matter","Date","Due Date","Amount","Paid","Balance","Status",""].map((h) => (
                         <th key={h} style={s.th}>{h}</th>
                       ))}
                     </tr>
@@ -540,11 +555,13 @@ export default function FinancialsModule() {
                         <td style={{ ...s.td, color: C.muted }}>{fmtDate(inv.date)}</td>
                         <td style={{ ...s.td, color: inv.ds === "overdue" ? "#ef4444" : C.muted }}>{fmtDate(inv.dueDate)}</td>
                         <td style={{ ...s.td, fontWeight: 800 }}>{kes(inv.total)}</td>
+                        <td style={{ ...s.td, color: "#22c55e" }}>{kes(paidFor(inv.id))}</td>
+                        <td style={{ ...s.td, fontWeight: 800, color: (inv.total || 0) - paidFor(inv.id) <= 0 ? "#22c55e" : "#f59e0b" }}>{kes(Math.max(0, (inv.total || 0) - paidFor(inv.id)))}</td>
                         <td style={s.td}><Badge status={inv.ds} /></td>
                         <td style={s.td}>
-                          <div style={{ display: "flex", gap: 6 }}>
-                            {inv.status !== "paid" && (
-                              <button style={s.paidBtn} onClick={() => markPaid(inv.id)}>✓ Mark Paid</button>
+                          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                            {(inv.total || 0) - paidFor(inv.id) > 0 && (
+                              <button style={s.paidBtn} onClick={() => { setPayFor(inv); setPayForm({ amount: "", date: isoToday(), method: "M-Pesa", note: "" }); }}>+ Record Payment</button>
                             )}
                             <button style={s.delBtn} onClick={() => deleteInv(inv.id)}>Delete</button>
                           </div>
@@ -846,6 +863,39 @@ export default function FinancialsModule() {
       {/* ── Modals ── */}
       {showInvoiceForm && (
         <InvoiceForm onSave={addInvoice} onClose={() => setShowInvoiceForm(false)} count={invoices.length} />
+      )}
+      {payFor && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onClick={() => setPayFor(null)}>
+          <div style={{ background: "#0c1527", border: "1px solid rgba(201,168,76,0.3)", borderRadius: 14, width: "min(440px, 96vw)", padding: 26 }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase", color: "#c9a84c", marginBottom: 4 }}>RECORD PAYMENT</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: "#e8eaf0", marginBottom: 2 }}>{payFor.number} — {payFor.client}</div>
+            <div style={{ fontSize: 12, color: "#6b7fa3", marginBottom: 16 }}>Outstanding balance: {kes(Math.max(0, (payFor.total || 0) - paidFor(payFor.id)))}</div>
+            <div style={{ display: "grid", gap: 12 }}>
+              <div>
+                <label style={{ display: "block", marginBottom: 5, fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b7fa3" }}>Amount Received (KES)</label>
+                <input type="number" min={0} value={payForm.amount} onChange={(e) => setPayForm({ ...payForm, amount: e.target.value })} placeholder="e.g. 25000" style={{ background: "#080f1c", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "9px 12px", color: "#e8eaf0", fontSize: 13, width: "100%", boxSizing: "border-box", outline: "none" }} />
+              </div>
+              <div>
+                <label style={{ display: "block", marginBottom: 5, fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b7fa3" }}>Date Received</label>
+                <input type="date" value={payForm.date} onChange={(e) => setPayForm({ ...payForm, date: e.target.value })} style={{ background: "#080f1c", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "9px 12px", color: "#e8eaf0", fontSize: 13, width: "100%", boxSizing: "border-box", outline: "none" }} />
+              </div>
+              <div>
+                <label style={{ display: "block", marginBottom: 5, fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b7fa3" }}>Method</label>
+                <select value={payForm.method} onChange={(e) => setPayForm({ ...payForm, method: e.target.value })} style={{ background: "#080f1c", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "9px 12px", color: "#e8eaf0", fontSize: 13, width: "100%", boxSizing: "border-box", outline: "none" }}>
+                  {["M-Pesa","Bank Transfer","Cheque","Cash"].map((m) => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: "block", marginBottom: 5, fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b7fa3" }}>Reference / Note (optional)</label>
+                <input value={payForm.note} onChange={(e) => setPayForm({ ...payForm, note: e.target.value })} placeholder="e.g. M-Pesa code, cheque no." style={{ background: "#080f1c", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "9px 12px", color: "#e8eaf0", fontSize: 13, width: "100%", boxSizing: "border-box", outline: "none" }} />
+              </div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 18 }}>
+              <button onClick={() => setPayFor(null)} style={{ padding: "9px 18px", background: "transparent", border: "1px solid rgba(255,255,255,0.15)", color: "#94a3b8", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Cancel</button>
+              <button onClick={() => recordPayment(payFor)} style={{ padding: "9px 22px", background: "#c9a84c", border: "none", color: "#0d1424", borderRadius: 8, fontSize: 13, fontWeight: 900, cursor: "pointer" }}>Save Payment</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
