@@ -333,7 +333,6 @@ export default function FinancialsModule() {
   const [payFor, setPayFor] = useState(null)
   const [stmtClient, setStmtClient] = useState("")
   const [payForm, setPayForm] = useState({ amount: "", date: isoToday(), method: "M-Pesa", note: "" })
-  const [stmtClient, setStmtClient] = useState("")
   const [trustTxns, setTrustTxns] = useState([])
   const [showInvoiceForm, setShowInvoiceForm] = useState(false)
   const [showTrustForm, setShowTrustForm]     = useState(false)
