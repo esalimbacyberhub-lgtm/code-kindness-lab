@@ -7,6 +7,7 @@ function rowToFn(row: any, matters: any[]): any {
     id: row.id,
     feeNoteNo: row.fee_note_no,
     date: row.date,
+    dueDate: row.due_date || "",
     client: row.client_name || "",
     matter: matter?.fileNo || "",
     totalAmount: parseFloat(row.total_amount) || 0,
@@ -20,6 +21,7 @@ function fnToRow(fn: any, matters: any[]): any {
   const row: any = {};
   if (fn.feeNoteNo !== undefined) row.fee_note_no = fn.feeNoteNo;
   if (fn.date !== undefined) row.date = fn.date;
+  if (fn.dueDate !== undefined && fn.dueDate !== "") row.due_date = fn.dueDate;
   if (fn.client !== undefined) row.client_name = fn.client;
   if (fn.totalAmount !== undefined) row.total_amount = fn.totalAmount;
   if (fn.total !== undefined) row.total_amount = fn.total;

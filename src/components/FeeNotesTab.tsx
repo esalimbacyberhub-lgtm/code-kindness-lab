@@ -21,6 +21,7 @@ interface FeeNote {
   partyA:      string
   partyB:      string
   date:        string
+  dueDate:     string
   items:       FeeItem[]
   disbursements: FeeItem[]
   vatEnabled:  boolean
@@ -223,7 +224,7 @@ function FeeNoteDocument({ fn, onClose }: { fn: FeeNote; onClose: () => void }) 
 function FeeNoteForm({ onSave, onClose, count }: { onSave: (fn: FeeNote) => void; onClose: () => void; count: number }) {
   const [f, setF] = useState({
     client: "", clientAddr: "", matterRef: "", matterTitle: "",
-    partyA: "", partyB: "", date: isoToday(), notes: "", vatEnabled: true,
+    partyA: "", partyB: "", date: isoToday(), dueDate: "", notes: "", vatEnabled: true,
     items: [BLANK_ITEM()], disbursements: [] as FeeItem[],
   })
   const set = (k: string, v: unknown) => setF(p => ({ ...p, [k]: v }))
@@ -270,6 +271,7 @@ function FeeNoteForm({ onSave, onClose, count }: { onSave: (fn: FeeNote) => void
           <div><label style={lbl}>Plaintiff / Applicant</label><input style={inp} value={f.partyA} onChange={e => set("partyA", e.target.value)} placeholder="Party A" /></div>
           <div><label style={lbl}>Defendant / Respondent</label><input style={inp} value={f.partyB} onChange={e => set("partyB", e.target.value)} placeholder="Party B" /></div>
           <div><label style={lbl}>Fee Note Date</label><input type="date" style={inp} value={f.date} onChange={e => set("date", e.target.value)} /></div>
+          <div><label style={lbl}>Payment Due Date</label><input type="date" style={inp} value={f.dueDate} onChange={e => set("dueDate", e.target.value)} /></div>
         </div>
 
         {/* Professional Fee Items */}
