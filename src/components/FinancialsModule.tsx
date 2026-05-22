@@ -331,6 +331,7 @@ export default function FinancialsModule() {
   const invoices = dbInvoices.map((i) => ({ ...i, total: i.totalAmount, number: i.invoiceNo }))
   const { payments, addPayment, paidFor } = useSupabasePayments()
   const [payFor, setPayFor] = useState(null)
+  const [stmtClient, setStmtClient] = useState("")
   const [payForm, setPayForm] = useState({ amount: "", date: isoToday(), method: "M-Pesa", note: "" })
   const [stmtClient, setStmtClient] = useState("")
   const [trustTxns, setTrustTxns] = useState([])
