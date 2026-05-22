@@ -22,6 +22,7 @@ function fnToRow(fn: any, matters: any[]): any {
   if (fn.feeNoteNo !== undefined) row.fee_note_no = fn.feeNoteNo;
   if (fn.date !== undefined) row.date = fn.date;
   if (fn.dueDate !== undefined && fn.dueDate !== "") row.due_date = fn.dueDate;
+  if (fn.dueDate !== undefined && fn.dueDate !== "") row.due_date = fn.dueDate;
   if (fn.client !== undefined) row.client_name = fn.client;
   if (fn.totalAmount !== undefined) row.total_amount = fn.totalAmount;
   if (fn.total !== undefined) row.total_amount = fn.total;

@@ -272,6 +272,7 @@ function FeeNoteForm({ onSave, onClose, count }: { onSave: (fn: FeeNote) => void
           <div><label style={lbl}>Defendant / Respondent</label><input style={inp} value={f.partyB} onChange={e => set("partyB", e.target.value)} placeholder="Party B" /></div>
           <div><label style={lbl}>Fee Note Date</label><input type="date" style={inp} value={f.date} onChange={e => set("date", e.target.value)} /></div>
           <div><label style={lbl}>Payment Due Date</label><input type="date" style={inp} value={f.dueDate} onChange={e => set("dueDate", e.target.value)} /></div>
+          <div><label style={lbl}>Payment Due Date</label><input type="date" style={inp} value={f.dueDate} onChange={e => set("dueDate", e.target.value)} /></div>
         </div>
 
         {/* Professional Fee Items */}
