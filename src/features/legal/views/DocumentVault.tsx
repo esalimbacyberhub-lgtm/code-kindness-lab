@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Plus, Trash2, Download, FolderOpen, FileText, File } from "lucide-react";
+import { Plus, Trash2, Download, FolderOpen, Folder, ChevronRight, ChevronDown, File as FileIcon } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -7,32 +8,96 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { VaultDocument, Matter } from "../types";
 
-const FILE_ICON: Record<string, string> = { pdf: "text-red-400", doc: "text-blue-400", docx: "text-blue-400", xlsx: "text-green-400", jpg: "text-yellow-400", png: "text-yellow-400" };
+const FILE_ICON: Record<string, string> = {
+  pdf: "text-red-400", doc: "text-blue-400", docx: "text-blue-400",
+  xlsx: "text-green-400", xls: "text-green-400",
+  jpg: "text-yellow-400", jpeg: "text-yellow-400", png: "text-yellow-400",
+};
+const extOf = (name: string) => (name.split(".").pop() || "").toLowerCase();
 
-interface Props { documents: VaultDocument[]; matters: Matter[]; onAdd: (d: Omit<VaultDocument,"id">) => void; onDelete: (id:string) => void; }
+function DocRow({ d, onDownload, onDelete }: {
+  d: VaultDocument;
+  onDownload: (d: VaultDocument) => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 px-5 py-3 items-center border-b border-border/40 hover:bg-secondary/20 text-sm">
+      <FileIcon className={`w-4 h-4 ${FILE_ICON[extOf(d.name)] || "text-muted-foreground"}`} />
+      <span className="font-medium truncate">{d.name}</span>
+      <span className="text-muted-foreground text-xs truncate">{d.uploadedBy}</span>
+      <span className="text-muted-foreground text-xs">{d.date}</span>
+      <div className="flex gap-1">
+        <button onClick={() => onDownload(d)} className="p-1 hover:text-brand-gold text-muted-foreground" title="Download"><Download className="w-3.5 h-3.5" /></button>
+        <button onClick={() => onDelete(d.id)} className="p-1 hover:text-destructive text-muted-foreground" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
+      </div>
+    </div>
+  );
+}
+
+interface Props {
+  documents: VaultDocument[];
+  matters: Matter[];
+  onAdd: (d: Omit<VaultDocument, "id">) => void;
+  onDelete: (id: string) => void;
+}
 
 export function DocumentVault({ documents, matters, onAdd, onDelete }: Props) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [form, setForm] = useState({ name: "", matter: "", fileType: "pdf", date: new Date().toISOString().slice(0,10), uploadedBy: "Omuyoma & Co." });
+  const [file, setFile] = useState<File | null>(null);
+  const [matterId, setMatterId] = useState("general");
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+
+  const searching = search.trim().length > 0;
+  const q = search.toLowerCase();
 
   const filtered = documents.filter(d =>
-    d.name.toLowerCase().includes(search.toLowerCase()) ||
-    d.matter.toLowerCase().includes(search.toLowerCase())
+    d.name.toLowerCase().includes(q) ||
+    (d.matter || "").toLowerCase().includes(q) ||
+    (d.folder || "").toLowerCase().includes(q)
   );
 
-  const byMatter = filtered.reduce<Record<string, VaultDocument[]>>((acc, d) => {
-    const key = d.matter || "General";
-    acc[key] = [...(acc[key] || []), d];
-    return acc;
-  }, {});
+  type Group = { id: string; name: string; folders: string[]; docs: VaultDocument[] };
+  const groups: Record<string, Group> = {};
+  for (const d of filtered) {
+    const key = d.matterId || "general";
+    if (!groups[key]) {
+      const m = matters.find(mm => mm.id === d.matterId);
+      groups[key] = {
+        id: key,
+        name: m ? (m.fileNo ? `${m.fileNo} — ${m.title}` : m.title) : "General",
+        folders: m?.folders || [],
+        docs: [],
+      };
+    }
+    groups[key].docs.push(d);
+  }
+  const groupList = Object.values(groups).sort((a, b) => a.name.localeCompare(b.name));
 
   const submit = () => {
-    if (!form.name) return;
-    onAdd(form);
-    setForm({ name: "", matter: "", fileType: "pdf", date: new Date().toISOString().slice(0,10), uploadedBy: "Omuyoma & Co." });
+    if (!file) return;
+    onAdd({
+      file,
+      name: file.name,
+      matter: "",
+      matterId: matterId === "general" ? undefined : matterId,
+      date: new Date().toISOString().slice(0, 10),
+    });
+    setFile(null);
+    setMatterId("general");
     setOpen(false);
   };
+
+  const download = async (d: VaultDocument) => {
+    if (!d.storagePath) { alert("No file is attached to this document yet."); return; }
+    const { data, error } = await supabase.storage
+      .from("matter-documents")
+      .createSignedUrl(d.storagePath, 3600);
+    if (error || !data?.signedUrl) { alert("Could not open the file. Please try again."); return; }
+    window.open(data.signedUrl, "_blank");
+  };
+
+  const toggle = (id: string) => setExpanded(p => ({ ...p, [id]: !p[id] }));
 
   return (
     <div>
@@ -46,67 +111,96 @@ export function DocumentVault({ documents, matters, onAdd, onDelete }: Props) {
       <div className="gold-divider mb-6" />
 
       <div className="mb-4">
-        <Input placeholder="Search by name or matter..." value={search} onChange={e => setSearch(e.target.value)} className="max-w-md" />
+        <Input placeholder="Search by name, matter or folder..." value={search} onChange={e => setSearch(e.target.value)} className="max-w-md" />
       </div>
 
-      {documents.length === 0 ? (
+      {groupList.length === 0 ? (
         <div className="glass-card rounded-2xl p-10 text-center text-sm text-muted-foreground">
-          No documents yet. Add your first document to the vault.
+          {searching ? "No documents match your search." : "No documents yet. Add your first document to the vault."}
         </div>
-      ) : Object.entries(byMatter).map(([matter, docs]) => (
-        <div key={matter} className="mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <FolderOpen className="w-4 h-4 text-brand-gold" />
-            <h3 className="text-sm font-semibold text-brand-gold">{matter}</h3>
-            <span className="text-xs text-muted-foreground">({docs.length})</span>
-          </div>
-          <div className="glass-card rounded-2xl overflow-hidden">
-            <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 px-5 py-3 text-[11px] uppercase tracking-wider text-muted-foreground border-b border-border">
-              <span>Type</span><span>Document Name</span><span>Uploaded By</span><span>Date</span><span></span>
-            </div>
-            {docs.map(d => (
-              <div key={d.id} className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 px-5 py-3 items-center border-b border-border/40 hover:bg-secondary/20 text-sm">
-                <File className={`w-4 h-4 ${FILE_ICON[d.fileType] || "text-muted-foreground"}`} />
-                <span className="font-medium truncate">{d.name}</span>
-                <span className="text-muted-foreground text-xs">{d.uploadedBy}</span>
-                <span className="text-muted-foreground text-xs">{d.date}</span>
-                <div className="flex gap-1">
-                  <button className="p-1 hover:text-brand-gold text-muted-foreground"><Download className="w-3.5 h-3.5" /></button>
-                  <button onClick={() => onDelete(d.id)} className="p-1 hover:text-destructive text-muted-foreground"><Trash2 className="w-3.5 h-3.5" /></button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
+      ) : groupList.map(g => {
+        const isOpen = searching || !!expanded[g.id];
+        const buckets: Record<string, VaultDocument[]> = {};
+        for (const f of g.folders) buckets[f] = [];
+        const uncat: VaultDocument[] = [];
+        for (const d of g.docs) {
+          const f = d.folder || "";
+          if (f && g.folders.includes(f)) buckets[f].push(d);
+          else uncat.push(d);
+        }
+        return (
+          <div key={g.id} className="mb-4 glass-card rounded-2xl overflow-hidden">
+            <button
+              onClick={() => toggle(g.id)}
+              className="w-full flex items-center gap-2 px-5 py-3.5 hover:bg-secondary/20 transition text-left"
+            >
+              {isOpen
+                ? <ChevronDown className="w-4 h-4 text-brand-gold shrink-0" />
+                : <ChevronRight className="w-4 h-4 text-brand-gold shrink-0" />}
+              <FolderOpen className="w-4 h-4 text-brand-gold shrink-0" />
+              <span className="text-sm font-semibold text-brand-gold flex-1 truncate">{g.name}</span>
+              <span className="text-xs text-muted-foreground shrink-0">
+                {g.docs.length} {g.docs.length === 1 ? "file" : "files"}
+              </span>
+            </button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+            {isOpen && (
+              <div className="border-t border-border">
+                {g.folders.map(f => (
+                  <div key={f}>
+                    <div className="flex items-center gap-2 px-5 py-2 bg-secondary/15 border-b border-border/40">
+                      <Folder className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span className="text-xs font-semibold text-muted-foreground">{f}</span>
+                      <span className="text-[10px] text-muted-foreground">({buckets[f].length})</span>
+                    </div>
+                    {buckets[f].length === 0
+                      ? <div className="px-5 py-3 text-xs text-muted-foreground/60 italic border-b border-border/40">No documents in this folder.</div>
+                      : buckets[f].map(d => <DocRow key={d.id} d={d} onDownload={download} onDelete={onDelete} />)}
+                  </div>
+                ))}
+                {uncat.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 px-5 py-2 bg-secondary/15 border-b border-border/40">
+                      <Folder className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span className="text-xs font-semibold text-muted-foreground">Uncategorised</span>
+                      <span className="text-[10px] text-muted-foreground">({uncat.length})</span>
+                    </div>
+                    {uncat.map(d => <DocRow key={d.id} d={d} onDownload={download} onDelete={onDelete} />)}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      <Dialog open={open} onOpenChange={o => { setOpen(o); if (!o) { setFile(null); setMatterId("general"); } }}>
         <DialogContent className="glass-card border-border">
           <DialogHeader><DialogTitle className="font-serif text-2xl">Add Document</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="space-y-2"><Label>Document Name</Label>
-              <Input value={form.name} onChange={e => setForm(f=>({...f,name:e.target.value}))} placeholder="e.g. Plaint — Kamau v Njeri.pdf" /></div>
-            <div className="space-y-2"><Label>File Type</Label>
-              <Select value={form.fileType} onValueChange={v => setForm(f=>({...f,fileType:v}))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{["pdf","docx","doc","xlsx","jpg","png"].map(t=><SelectItem key={t} value={t}>.{t.toUpperCase()}</SelectItem>)}</SelectContent>
-              </Select></div>
-            <div className="space-y-2"><Label>Matter</Label>
-              <Select value={form.matter} onValueChange={v => setForm(f=>({...f,matter:v}))}>
-                <SelectTrigger><SelectValue placeholder="Link to matter..." /></SelectTrigger>
+            <div className="space-y-2">
+              <Label>Choose File</Label>
+              <input
+                type="file"
+                onChange={e => setFile(e.target.files?.[0] || null)}
+                className="block w-full text-sm text-muted-foreground file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-brand-gold file:text-primary-foreground file:font-semibold file:cursor-pointer cursor-pointer"
+              />
+              {file && <p className="text-xs text-muted-foreground">Selected: {file.name} ({Math.max(1, Math.round(file.size / 1024))} KB)</p>}
+            </div>
+            <div className="space-y-2">
+              <Label>Matter / Case</Label>
+              <Select value={matterId} onValueChange={setMatterId}>
+                <SelectTrigger><SelectValue placeholder="Link to a case..." /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="General">General</SelectItem>
-                  {matters.map(m=><SelectItem key={m.id} value={m.title}>{m.title}</SelectItem>)}
+                  <SelectItem value="general">General (no specific case)</SelectItem>
+                  {matters.map(m => <SelectItem key={m.id} value={m.id}>{m.fileNo ? `${m.fileNo} — ${m.title}` : m.title}</SelectItem>)}
                 </SelectContent>
-              </Select></div>
-            <div className="space-y-2"><Label>Uploaded By</Label>
-              <Input value={form.uploadedBy} onChange={e => setForm(f=>({...f,uploadedBy:e.target.value}))} /></div>
-            <div className="space-y-2"><Label>Date</Label>
-              <Input type="date" value={form.date} onChange={e => setForm(f=>({...f,date:e.target.value}))} /></div>
+              </Select>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={submit} className="bg-brand-gold text-primary-foreground">Add to Vault</Button>
+            <Button onClick={submit} disabled={!file} className="bg-brand-gold text-primary-foreground">Add to Vault</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
