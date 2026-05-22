@@ -13,7 +13,7 @@ export interface Matter {
   nextHearingDate?: string;
   result?: "won" | "lost" | "settled" | "withdrawn" | "dismissed";
   resultNote?: string;
-  resultDate?: string; court?: string; fileNo?: string; openedDate?: string; notes?: string; partyA?: string; partyB?: string; assignedTo?: string;
+  resultDate?: string; court?: string; fileNo?: string; openedDate?: string; notes?: string; folders?: string[]; partyA?: string; partyB?: string; assignedTo?: string;
 }
 export interface Deadline {
   id: string; title: string; matter: string; court: string; date: string;

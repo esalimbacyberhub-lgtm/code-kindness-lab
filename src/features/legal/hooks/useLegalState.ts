@@ -90,6 +90,7 @@ export function useLegalState() {
   const addDocument = useCallback((d: any) => { sbDoc.addDocument(d); }, [sbDoc]);
 
   const deleteDocument = useCallback((id: string) => { sbDoc.deleteDocument(id); }, [sbDoc]);
+  const updateDocument = useCallback((id: string, updates: any) => { sbDoc.updateDocument(id, updates); }, [sbDoc]);
 
   const sendMessage = useCallback((msg: any) => { sbMsg.sendMessage(msg); }, [sbMsg]);
 
@@ -103,6 +104,6 @@ export function useLegalState() {
   return {
     state: stateWithSb, setView, setRole, toggleSidebar, moveTask, addTask, deleteTask, addMatter, updateMatter: sb.updateMatter,
     addDeadline, deleteDeadline, updateDeadline, addLedgerEntry, addStaff, removeStaff,
-    addDocument, deleteDocument, addInvoice, assignMatter, sendMessage, addWitness, updateWitnessStatus, log
+    addDocument, deleteDocument, updateDocument, addInvoice, assignMatter, sendMessage, addWitness, updateWitnessStatus, log
   };
 }

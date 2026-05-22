@@ -52,6 +52,7 @@ export function useSupabaseDocuments(matters: any[]) {
     const ch = supabase.channel("documents_changes")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "documents" }, (p: any) => setDocuments(prev => prev.find(d => d.id === p.new.id) ? prev : [rowToDoc(p.new, matters), ...prev]))
       .on("postgres_changes", { event: "DELETE", schema: "public", table: "documents" }, (p: any) => setDocuments(prev => prev.filter(d => d.id !== p.old.id)))
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "documents" }, (p: any) => setDocuments(prev => prev.map(d => d.id === p.new.id ? rowToDoc(p.new, matters) : d)))
       .subscribe();
     const { data: authSub } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN") load();
@@ -114,5 +115,11 @@ export function useSupabaseDocuments(matters: any[]) {
     return data?.signedUrl || null;
   }, []);
 
-  return { documents, addDocument, deleteDocument, getDownloadUrl };
+  const updateDocument = useCallback(async (id: string, updates: any) => {
+    const row = docToRow(updates, matters);
+    const { error } = await supabase.from("documents").update(row).eq("id", id);
+    if (error) console.error("updateDocument:", error);
+  }, [matters]);
+
+  return { documents, addDocument, deleteDocument, updateDocument, getDownloadUrl };
 }
