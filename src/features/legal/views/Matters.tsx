@@ -18,10 +18,6 @@ interface SubfolderStore {
 }
 
 // ── Constants ────────────────────────────────────────────────────────────────
-const DEFAULT_FOLDERS: string[] = [];
-
-const SUBFOLDER_STORAGE = "omuyoma_subfolders_v1";
-
 const TYPE_TONE: Record<string, string> = {
   "Civil Litigation":        "bg-primary/15 text-primary border-primary/30",
   "Commercial":              "bg-info/15 text-info border-info/30",
@@ -77,12 +73,13 @@ interface Props {
   onAddDocument:    (d: Omit<VaultDocument, "id">) => void;
   onDeleteDocument: (id: string) => void;
   onUpdateMatter?: (id: string, updates: Partial<Matter>) => void;
+  onUpdateDocument?: (id: string, updates: any) => void;
 }
 
 // ════════════════════════════════════════════════════════════════════════════
 export const Matters = ({
   onNewMatter, matters, staff, role, onAssign,
-  documents, onAddDocument, onDeleteDocument, onUpdateMatter,
+  documents, onAddDocument, onDeleteDocument, onUpdateMatter, onUpdateDocument,
 }: Props) => {
   const [selected,    setSelected]    = useState<Matter | null>(null);
   const [statusEdit,  setStatusEdit]  = useState<Matter | null>(null);
@@ -91,62 +88,39 @@ export const Matters = ({
   const [newFolderMode,setNewFolderMode] = useState(false);
   const [newFolderName,setNewFolderName] = useState("");
   const [search,      setSearch]      = useState("");
-  const [subfolders,  setSubfolders]  = useState<SubfolderStore>(() => {
-    try { return JSON.parse(localStorage.getItem(SUBFOLDER_STORAGE) || "{}"); } catch { return {}; }
-  });
-
-  // Persist subfolders
-  useEffect(() => {
-    localStorage.setItem(SUBFOLDER_STORAGE, JSON.stringify(subfolders));
-  }, [subfolders]);
-
   // Reset folder view when switching matters
   useEffect(() => { setActiveFolder("All"); }, [selected]);
 
   // ── Subfolder helpers ──────────────────────────────────────────────────────
   const getMatterFolders = (matterId: string): string[] =>
-    subfolders[matterId]?.folders ?? [];
+    matters.find(m => m.id === matterId)?.folders ?? [];
 
-  const getDocFolder = (matterId: string, docId: string): string =>
-    subfolders[matterId]?.docFolders?.[docId] ?? "Uncategorised";
+  const getDocFolder = (_matterId: string, docId: string): string =>
+    documents.find(d => d.id === docId)?.folder || "Uncategorised";
 
-  const setDocFolder = (matterId: string, docId: string, folder: string) => {
-    setSubfolders(prev => ({
-      ...prev,
-      [matterId]: {
-        folders:    prev[matterId]?.folders    ?? DEFAULT_FOLDERS,
-        docFolders: { ...(prev[matterId]?.docFolders ?? {}), [docId]: folder },
-      },
-    }));
+  const setDocFolder = (_matterId: string, docId: string, folder: string) => {
+    onUpdateDocument?.(docId, { folder });
   };
 
   const addFolder = (matterId: string, name: string) => {
-    if (!name.trim()) return;
-    setSubfolders(prev => ({
-      ...prev,
-      [matterId]: {
-        folders:    [...(prev[matterId]?.folders ?? []), name.trim()],
-        docFolders: prev[matterId]?.docFolders ?? {},
-      },
-    }));
+    const clean = name.trim();
+    if (!clean) return;
+    const current = matters.find(m => m.id === matterId)?.folders ?? [];
+    if (!current.includes(clean)) {
+      onUpdateMatter?.(matterId, { folders: [...current, clean] });
+    }
     setNewFolderName("");
     setNewFolderMode(false);
-    setActiveFolder(name.trim());
+    setActiveFolder(clean);
   };
 
   const deleteFolder = (matterId: string, folder: string) => {
     if (!confirm(`Delete folder "${folder}"? Documents inside will move to Uncategorised.`)) return;
-    setSubfolders(prev => {
-      const updated = { ...prev[matterId] };
-      updated.folders = (updated.folders ?? []).filter(f => f !== folder);
-      // Move docs to uncategorised
-      const newDocFolders = { ...updated.docFolders };
-      Object.keys(newDocFolders).forEach(docId => {
-        if (newDocFolders[docId] === folder) newDocFolders[docId] = "Uncategorised";
-      });
-      updated.docFolders = newDocFolders;
-      return { ...prev, [matterId]: updated };
-    });
+    const current = matters.find(m => m.id === matterId)?.folders ?? [];
+    onUpdateMatter?.(matterId, { folders: current.filter(f => f !== folder) });
+    documents
+      .filter(d => d.matterId === matterId && d.folder === folder)
+      .forEach(d => onUpdateDocument?.(d.id, { folder: "" }));
     setActiveFolder("All");
   };
 
