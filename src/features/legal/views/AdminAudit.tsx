@@ -37,9 +37,11 @@ const kes = (n: number) =>
   `KES ${n.toLocaleString("en-KE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const TABS = [
-  { id: "overview", label: "Overview",         icon: BarChart3  },
-  { id: "ledger",   label: "Financial Ledger", icon: BookOpen   },
-  { id: "audit",    label: "Activity Log",     icon: Activity   },
+  { id: "overview",   label: "Overview",         icon: BarChart3  },
+  { id: "financials", label: "Financials",       icon: TrendingUp },
+  { id: "ledger",     label: "Financial Ledger", icon: BookOpen   },
+  { id: "courts",     label: "Court Stations",   icon: Building2  },
+  { id: "audit",      label: "Activity Log",     icon: Activity   },
 ] as const;
 
 type Tab = (typeof TABS)[number]["id"];
