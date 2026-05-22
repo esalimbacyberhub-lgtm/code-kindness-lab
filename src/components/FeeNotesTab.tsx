@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react"
 import { FirmLetterhead, FirmFooter, FIRM } from "./FirmLetterhead"
 import { useSupabaseFeeNotes } from "@/features/legal/hooks/useSupabaseFeeNotes"
+import { useSupabaseInvoices } from "@/features/legal/hooks/useSupabaseInvoices"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
