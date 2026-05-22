@@ -48,7 +48,7 @@ export function useSupabaseInvoices(matters: any[]) {
       if (mounted) setInvoices((data || []).map((r: any) => rowToInvoice(r, matters)));
     };
     load();
-    const ch = supabase.channel("invoices_changes")
+    const ch = supabase.channel("invoices_changes_" + Math.random().toString(36).slice(2))
       .on("postgres_changes", { event: "*", schema: "public", table: "invoices" }, () => load())
       .subscribe();
     const { data: authSub } = supabase.auth.onAuthStateChange((event) => {
