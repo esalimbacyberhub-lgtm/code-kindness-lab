@@ -13,6 +13,7 @@ interface Props {
   documents: VaultDocument[];
   invoices: Invoice[];
   onSend: (content: string, from: string, dir: Message["direction"]) => void;
+  clientUserId?: string;
 }
 
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString("en-KE", { day: "2-digit", month: "short", year: "numeric" }) : "—";
@@ -26,19 +27,23 @@ const PORTAL_TABS = [
 ] as const;
 type PortalTab = (typeof PORTAL_TABS)[number]["id"];
 
-export function ClientPortal({ messages, matters, role, documents, invoices, onSend }: Props) {
+export function ClientPortal({ messages, matters, role, documents, invoices, onSend, clientUserId }: Props) {
   const [tab, setTab] = useState<PortalTab>("case");
   const [text, setText] = useState("");
   const [selectedMatter, setSelectedMatter] = useState<Matter | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  const myMatters = clientUserId
+    ? matters.filter((m: any) => m.clientUserId === clientUserId)
+    : matters;
+
   useEffect(() => {
     if (!selectedMatter) {
-      const first = matters.find(m => m.status === "active") || matters[0];
+      const first = myMatters.find(m => m.status === "active") || myMatters[0];
       if (first) setSelectedMatter(first);
     }
-  }, [matters]);
+  }, [matters, clientUserId]);
 
   const send = () => {
     if (!text.trim()) return;
@@ -64,10 +69,10 @@ export function ClientPortal({ messages, matters, role, documents, invoices, onS
       </div>
       <div className="blue-divider mb-6" />
 
-      {matters.length > 1 && (
+      {myMatters.length > 1 && (
         <div className="flex items-center gap-2 mb-5 flex-wrap">
           <span className="text-xs text-muted-foreground font-mono">MATTER:</span>
-          {matters.map(m => (
+          {myMatters.map(m => (
             <button key={m.id} onClick={() => setSelectedMatter(m)}
               className={cn("flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border font-medium transition-all",
                 selectedMatter?.id === m.id ? "bg-primary text-white border-primary" : "border-border text-muted-foreground hover:border-primary/40")}>

@@ -46,6 +46,27 @@ const Index = () => {
     return <Login />;
   }
 
+  // ── Client accounts are locked to the Client Portal only ──
+  if (profile?.role === "client") {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <div className="mesh-bg" aria-hidden />
+        <Header role="client" onRoleChange={() => {}} onLogout={handleLogout} userName={profile?.full_name || user?.email || ""} hideRoleSwitcher />
+        <main className="flex-1 overflow-y-auto custom-scroll p-6 md:p-8 relative z-10">
+          <ClientPortal
+            messages={state.messages || []}
+            matters={state.matters || []}
+            role="client"
+            documents={state.documents || []}
+            invoices={state.invoices || []}
+            onSend={addMessage}
+            clientUserId={user.id}
+          />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <div className="mesh-bg" aria-hidden />
