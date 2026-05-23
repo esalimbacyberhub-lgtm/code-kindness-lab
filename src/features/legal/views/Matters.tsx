@@ -465,6 +465,18 @@ export const Matters = ({
                           <Download className="w-4 h-4" />
                         </button>
                         <button
+                          onClick={() => onUpdateDocument?.(d.id, { clientVisible: !d.clientVisible })}
+                          className={cn(
+                            "text-[10px] font-semibold px-2 py-0.5 rounded border transition-colors",
+                            d.clientVisible
+                              ? "bg-success/15 text-success border-success/30"
+                              : "bg-muted/30 text-muted-foreground border-border hover:border-primary/40"
+                          )}
+                          title={d.clientVisible ? "Shared with client — click to unshare" : "Share this document with the client"}
+                        >
+                          {d.clientVisible ? "Shared \u2713" : "Share with client"}
+                        </button>
+                        <button
                           onClick={() => onDeleteDocument(d.id)}
                           className="text-muted-foreground hover:text-destructive transition-colors"
                         >

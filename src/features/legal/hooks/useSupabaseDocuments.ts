@@ -16,6 +16,7 @@ function rowToDoc(row: any, matters: any[]): any {
     storagePath: row.storage_path || "",
     matterId: row.matter_id || null,
     matter: matter?.fileNo || "General",
+    clientVisible: row.client_visible === true,
   };
 }
 
@@ -26,6 +27,7 @@ function docToRow(d: any, matters: any[]): any {
   if (d.sizeKb !== undefined) row.size_kb = d.sizeKb;
   if (d.url !== undefined) row.url = d.url;
   if (d.storagePath !== undefined) row.storage_path = d.storagePath;
+  if (d.clientVisible !== undefined) row.client_visible = d.clientVisible;
   if (d.date !== undefined) row.date = d.date;
   // Prefer an explicit matter UUID; fall back to a fileNo lookup
   if (d.matterId) {
