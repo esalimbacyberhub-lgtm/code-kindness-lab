@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users, Shield, Briefcase, FileText, UserCircle, Trash2, Edit3, Link2, AlertCircle, Mail, Phone } from "lucide-react";
+import { Users, Shield, Briefcase, FileText, UserCircle, Trash2, Edit3, Link2, AlertCircle, Mail, Phone, UserPlus } from "lucide-react";
 import { useSupabaseUsers, type UserRow } from "../hooks/useSupabaseUsers";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -21,7 +21,11 @@ interface Props {
 }
 
 export function UserManagement({ matters }: Props) {
-  const { users, loading, updateUser, deleteUser, linkClientToMatter } = useSupabaseUsers();
+  const { users, loading, updateUser, deleteUser, linkClientToMatter, createClientAccount } = useSupabaseUsers();
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({ full_name: "", email: "", password: "", matterId: "" });
+  const [creating, setCreating] = useState(false);
+  const [createErr, setCreateErr] = useState("");
   const [edit, setEdit] = useState<UserRow | null>(null);
   const [editForm, setEditForm] = useState({ full_name: "", role: "client" as UserRow["role"], phone: "" });
   const [linkMatter, setLinkMatter] = useState<UserRow | null>(null);
@@ -41,6 +45,25 @@ export function UserManagement({ matters }: Props) {
     if (confirm(`Delete user ${u.email}? This cannot be undone.`)) await deleteUser(u.id);
   };
 
+  const submitCreate = async () => {
+    setCreateErr("");
+    if (!createForm.full_name.trim()) { setCreateErr("Enter the client's full name."); return; }
+    if (!createForm.email.trim())     { setCreateErr("Enter an email address."); return; }
+    if (createForm.password.length < 6) { setCreateErr("Password must be at least 6 characters."); return; }
+    setCreating(true);
+    const res = await createClientAccount({
+      fullName: createForm.full_name.trim(),
+      email: createForm.email.trim(),
+      password: createForm.password,
+      role: "client",
+      matterId: createForm.matterId || undefined,
+    });
+    setCreating(false);
+    if (res.error) { setCreateErr(res.error); return; }
+    setCreateOpen(false);
+    setCreateForm({ full_name: "", email: "", password: "", matterId: "" });
+  };
+
   const byRole = (r: string) => users.filter(u => u.role === r);
 
   return (
@@ -51,20 +74,18 @@ export function UserManagement({ matters }: Props) {
         <p className="text-xs text-muted-foreground mt-1">Manage staff and client accounts. Real-time across all devices.</p>
       </div>
 
-      {/* How to add users banner */}
-      <div className="glass-card rounded-2xl p-4 mb-6 border-l-4 border-l-info bg-info/5">
+      {/* Create client account */}
+      <div className="glass-card rounded-2xl p-4 mb-6 border-l-4 border-l-primary bg-primary/5 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-info shrink-0 mt-0.5" />
-          <div className="flex-1 text-sm">
-            <p className="font-semibold mb-1">To add new users:</p>
-            <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
-              <li>Open the Supabase dashboard → Authentication → Users → "Add user"</li>
-              <li>Enter email + password, tick "Auto Confirm User"</li>
-              <li>The user will appear here. Then assign them a role below.</li>
-              <li>For clients: use "Link to matter" to give them access to their case only.</li>
-            </ol>
+          <AlertCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+          <div className="text-sm">
+            <p className="font-semibold mb-0.5">Create a client account</p>
+            <p className="text-xs text-muted-foreground">Set up a client login and link it to their matter — they will only ever see their own case.</p>
           </div>
         </div>
+        <Button onClick={() => { setCreateErr(""); setCreateOpen(true); }} className="btn-royal shrink-0">
+          <UserPlus className="w-4 h-4 mr-1.5" /> Create Client Account
+        </Button>
       </div>
 
       {/* Stats */}
@@ -136,6 +157,50 @@ export function UserManagement({ matters }: Props) {
           })}
         </div>
       )}
+
+      {/* Create Client Account Dialog */}
+      <Dialog open={createOpen} onOpenChange={o => !o && setCreateOpen(false)}>
+        <DialogContent className="glass-card border-border max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-2xl">Create Client Account</DialogTitle>
+            <p className="text-xs text-muted-foreground">The client will receive these login details and see only their linked matter.</p>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label>Full Name</Label>
+              <Input value={createForm.full_name} onChange={e => setCreateForm(f => ({ ...f, full_name: e.target.value }))} placeholder="e.g. Jane Wanjiku" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Email</Label>
+              <Input type="email" value={createForm.email} onChange={e => setCreateForm(f => ({ ...f, email: e.target.value }))} placeholder="client@example.com" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Temporary Password</Label>
+              <Input value={createForm.password} onChange={e => setCreateForm(f => ({ ...f, password: e.target.value }))} placeholder="At least 6 characters" />
+              <p className="text-[10px] text-muted-foreground">Share this with the client securely. They can use it to log in.</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Link to Matter (optional)</Label>
+              <Select value={createForm.matterId || "none"} onValueChange={(v: any) => setCreateForm(f => ({ ...f, matterId: v === "none" ? "" : v }))}>
+                <SelectTrigger><SelectValue placeholder="Choose a matter" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— No matter yet —</SelectItem>
+                  {matters.map((mm: any) => (
+                    <SelectItem key={mm.id} value={mm.id}>{mm.fileNo} — {mm.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {createErr && <p className="text-xs text-destructive font-medium">{createErr}</p>}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setCreateOpen(false)} disabled={creating}>Cancel</Button>
+            <Button onClick={submitCreate} className="btn-royal" disabled={creating}>
+              {creating ? "Creating..." : "Create Account"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Dialog */}
       <Dialog open={!!edit} onOpenChange={o => !o && setEdit(null)}>

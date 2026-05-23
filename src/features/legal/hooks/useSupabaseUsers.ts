@@ -48,10 +48,44 @@ export function useSupabaseUsers() {
     if (error) console.error("deleteUser:", error);
   }, []);
 
+  const createClientAccount = useCallback(async (args: {
+    fullName: string; email: string; password: string; role?: string; matterId?: string;
+  }) => {
+    const { data, error } = await supabase.functions.invoke("create-client-account", {
+      body: {
+        fullName: args.fullName,
+        email: args.email,
+        password: args.password,
+        role: args.role || "client",
+        matterId: args.matterId || null,
+      },
+    });
+    if (error) return { error: error.message || "Could not create account." };
+    if (data?.error) return { error: data.error };
+    return { success: true, userId: data?.userId };
+  }, []);
+
+  const createClientAccount = useCallback(async (args: {
+    fullName: string; email: string; password: string; role?: string; matterId?: string;
+  }) => {
+    const { data, error } = await supabase.functions.invoke("create-client-account", {
+      body: {
+        fullName: args.fullName,
+        email: args.email,
+        password: args.password,
+        role: args.role || "client",
+        matterId: args.matterId || null,
+      },
+    });
+    if (error) return { error: error.message || "Could not create account." };
+    if (data?.error) return { error: data.error };
+    return { success: true, userId: data?.userId };
+  }, []);
+
   const linkClientToMatter = useCallback(async (matterId: string, clientUserId: string) => {
     const { error } = await supabase.from("matters").update({ client_user_id: clientUserId }).eq("id", matterId);
     if (error) console.error("linkClientToMatter:", error);
   }, []);
 
-  return { users, loading, updateUser, deleteUser, linkClientToMatter };
+  return { users, loading, updateUser, deleteUser, linkClientToMatter, createClientAccount };
 }
