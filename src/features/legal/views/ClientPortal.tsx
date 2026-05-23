@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import type { Message, Matter, Role, VaultDocument, Invoice } from "../types";
 import { cn } from "@/lib/utils";
 import { ShieldLogo } from "@/components/FirmLetterhead";
+import { supabase } from "@/lib/supabase";
 
 interface Props {
   messages: Message[];
@@ -52,7 +53,18 @@ export function ClientPortal({ messages, matters, role, documents, invoices, onS
     setText("");
   };
 
-  const matterDocs = documents.filter(d => d.matter === selectedMatter?.id);
+  const matterDocs = documents.filter(
+    d => d.matterId === selectedMatter?.id && d.clientVisible === true
+  );
+  const handleDownload = async (doc: any) => {
+    if (!doc.storagePath) { alert("This document has no file attached yet."); return; }
+    const { data, error } = await supabase.storage
+      .from("matter-documents")
+      .createSignedUrl(doc.storagePath, 3600);
+    if (error || !data?.signedUrl) { alert("Could not open the file. Please try again."); return; }
+    window.open(data.signedUrl, "_blank");
+  };
+
   const matterInvoices = invoices.filter(i => i.matter === selectedMatter?.title || i.matter === selectedMatter?.fileNo);
   const unpaidTotal = matterInvoices.filter(i => i.status !== "paid").reduce((s, i) => s + (i.totalAmount || 0), 0);
 
@@ -209,8 +221,8 @@ export function ClientPortal({ messages, matters, role, documents, invoices, onS
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <button className="flex items-center gap-1.5 text-xs text-primary hover:underline px-2 py-1"><Eye className="w-3.5 h-3.5" /> View</button>
-                        <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground px-2 py-1"><Download className="w-3.5 h-3.5" /> Download</button>
+                        <button onClick={() => handleDownload(d)} className="flex items-center gap-1.5 text-xs text-primary hover:underline px-2 py-1"><Eye className="w-3.5 h-3.5" /> View</button>
+                        <button onClick={() => handleDownload(d)} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground px-2 py-1"><Download className="w-3.5 h-3.5" /> Download</button>
                       </div>
                     </div>
                   ))}
