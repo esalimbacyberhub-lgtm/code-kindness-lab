@@ -65,15 +65,6 @@ export function ClientPortal({ messages, matters, role, documents, invoices, onS
     window.open(data.signedUrl, "_blank");
   };
 
-  const handleDownload = async (doc: any) => {
-    if (!doc.storagePath) { alert("This document has no file attached yet."); return; }
-    const { data, error } = await supabase.storage
-      .from("matter-documents")
-      .createSignedUrl(doc.storagePath, 3600);
-    if (error || !data?.signedUrl) { alert("Could not open the file. Please try again."); return; }
-    window.open(data.signedUrl, "_blank");
-  };
-
   const matterInvoices = invoices.filter(i => i.matter === selectedMatter?.title || i.matter === selectedMatter?.fileNo);
   const unpaidTotal = matterInvoices.filter(i => i.status !== "paid").reduce((s, i) => s + (i.totalAmount || 0), 0);
 
