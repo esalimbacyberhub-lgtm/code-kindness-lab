@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { KeyRound, CheckCircle2, AlertCircle } from "lucide-react";
+import { KeyRound, CheckCircle2, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,8 @@ export function AccountSettings() {
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -47,11 +49,43 @@ export function AccountSettings() {
         <div className="space-y-4">
           <div className="space-y-1.5">
             <Label>New Password</Label>
-            <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="At least 6 characters" />
+            <div className="relative">
+              <Input
+                type={showNew ? "text" : "password"}
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                placeholder="At least 6 characters"
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNew(s => !s)}
+                tabIndex={-1}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
           <div className="space-y-1.5">
             <Label>Confirm New Password</Label>
-            <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Re-enter new password" />
+            <div className="relative">
+              <Input
+                type={showConfirm ? "text" : "password"}
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                placeholder="Re-enter new password"
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm(s => !s)}
+                tabIndex={-1}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
           {error && (
             <p className="text-xs text-destructive font-medium flex items-center gap-1.5">

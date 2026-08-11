@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users, Shield, Briefcase, FileText, UserCircle, Trash2, Edit3, Link2, AlertCircle, Mail, Phone, UserPlus } from "lucide-react";
+import { Users, Shield, Briefcase, FileText, UserCircle, Trash2, Edit3, Link2, AlertCircle, Mail, Phone, UserPlus, Eye, EyeOff } from "lucide-react";
 import { useSupabaseUsers, type UserRow } from "../hooks/useSupabaseUsers";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -26,6 +26,7 @@ export function UserManagement({ matters }: Props) {
   const [createForm, setCreateForm] = useState({ full_name: "", email: "", password: "", matterId: "", role: "client" as UserRow["role"] });
   const [creating, setCreating] = useState(false);
   const [createErr, setCreateErr] = useState("");
+  const [showCreatePassword, setShowCreatePassword] = useState(false);
   const [edit, setEdit] = useState<UserRow | null>(null);
   const [editForm, setEditForm] = useState({ full_name: "", role: "client" as UserRow["role"], phone: "" });
   const [linkMatter, setLinkMatter] = useState<UserRow | null>(null);
@@ -192,7 +193,23 @@ export function UserManagement({ matters }: Props) {
             </div>
             <div className="space-y-1.5">
               <Label>Temporary Password</Label>
-              <Input value={createForm.password} onChange={e => setCreateForm(f => ({ ...f, password: e.target.value }))} placeholder="At least 6 characters" />
+              <div className="relative">
+                <Input
+                  type={showCreatePassword ? "text" : "password"}
+                  value={createForm.password}
+                  onChange={e => setCreateForm(f => ({ ...f, password: e.target.value }))}
+                  placeholder="At least 6 characters"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCreatePassword(s => !s)}
+                  tabIndex={-1}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showCreatePassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
               <p className="text-[10px] text-muted-foreground">Share this securely. They can change it themselves after logging in via Account Settings.</p>
             </div>
             {createForm.role === "client" && (
