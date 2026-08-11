@@ -10,7 +10,6 @@ const ITEMS: NavItem[] = [
   { key: "dashboard", label: "Command Deck", Icon: Home },
   { key: "matters", label: "Matter Hub", Icon: Briefcase },
   { key: "calendar", label: "Calendar & Deadlines", Icon: Calendar },
-  { key: "vault", label: "Document Vault", Icon: FolderTree },
   { key: "directory", label: "Firm Directory", Icon: BookUser },
 
   { key: "admin", label: "Admin & Audit", Icon: ShieldCheck, partnerOnly: true },

@@ -5,7 +5,6 @@ import { Dashboard } from "@/features/legal/views/Dashboard";
 import { MatterHub } from "@/features/legal/views/Matters";
 import { Finance } from "@/features/legal/views/Finance";
 import { Calendar } from "@/features/legal/views/Calendar";
-import { DocumentVault } from "@/features/legal/views/DocumentVault";
 import { FirmDirectory } from "@/features/legal/views/FirmDirectory";
 import { Invoices } from "@/features/legal/views/Invoices";
 import { ClientPortal } from "@/features/legal/views/ClientPortal";
@@ -29,7 +28,7 @@ const Index = () => {
       case "matters": return <MatterHub onNewMatter={() => setMatterDialogOpen(true)} matters={state.matters} staff={state.staff} role={state.role} onAssign={assignMatter} documents={state.documents} onAddDocument={addDocument} onDeleteDocument={deleteDocument} onUpdateMatter={updateMatter} onUpdateDocument={updateDocument} />
       case "finance": return <Finance ledger={state.ledger} matters={state.matters} onAdd={addLedgerEntry} />;
       case "calendar": return <Calendar deadlines={state.deadlines} matters={state.matters} onAdd={addDeadline} onDelete={deleteDeadline} onUpdate={updateDeadline} />;
-      case "vault": return <DocumentVault documents={state.documents} matters={state.matters} onAdd={addDocument} onDelete={deleteDocument} />;
+      case "vault": return null; // Document Vault removed — documents now live inside each Matter's own folder
       case "directory": return <FirmDirectory staff={state.staff} currentRole={state.role} onAdd={addStaff} onRemove={removeStaff} />;
       case "invoices": return null; // Financials moved to Admin & Audit
       case "users": return <UserManagement matters={state.matters} />;
