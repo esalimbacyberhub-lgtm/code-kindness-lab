@@ -23,7 +23,7 @@ interface Props {
 export function UserManagement({ matters }: Props) {
   const { users, loading, updateUser, deleteUser, linkClientToMatter, createClientAccount } = useSupabaseUsers();
   const [createOpen, setCreateOpen] = useState(false);
-  const [createForm, setCreateForm] = useState({ full_name: "", email: "", password: "", matterId: "" });
+  const [createForm, setCreateForm] = useState({ full_name: "", email: "", password: "", matterId: "", role: "client" as UserRow["role"] });
   const [creating, setCreating] = useState(false);
   const [createErr, setCreateErr] = useState("");
   const [edit, setEdit] = useState<UserRow | null>(null);
@@ -47,7 +47,7 @@ export function UserManagement({ matters }: Props) {
 
   const submitCreate = async () => {
     setCreateErr("");
-    if (!createForm.full_name.trim()) { setCreateErr("Enter the client's full name."); return; }
+    if (!createForm.full_name.trim()) { setCreateErr("Enter the person's full name."); return; }
     if (!createForm.email.trim())     { setCreateErr("Enter an email address."); return; }
     if (createForm.password.length < 6) { setCreateErr("Password must be at least 6 characters."); return; }
     setCreating(true);
@@ -55,13 +55,13 @@ export function UserManagement({ matters }: Props) {
       fullName: createForm.full_name.trim(),
       email: createForm.email.trim(),
       password: createForm.password,
-      role: "client",
-      matterId: createForm.matterId || undefined,
+      role: createForm.role,
+      matterId: createForm.role === "client" ? (createForm.matterId || undefined) : undefined,
     });
     setCreating(false);
     if (res.error) { setCreateErr(res.error); return; }
     setCreateOpen(false);
-    setCreateForm({ full_name: "", email: "", password: "", matterId: "" });
+    setCreateForm({ full_name: "", email: "", password: "", matterId: "", role: "client" });
   };
 
   const byRole = (r: string) => users.filter(u => u.role === r);
@@ -74,17 +74,17 @@ export function UserManagement({ matters }: Props) {
         <p className="text-xs text-muted-foreground mt-1">Manage staff and client accounts. Real-time across all devices.</p>
       </div>
 
-      {/* Create client account */}
+      {/* Create account */}
       <div className="glass-card rounded-2xl p-4 mb-6 border-l-4 border-l-primary bg-primary/5 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
           <div className="text-sm">
-            <p className="font-semibold mb-0.5">Create a client account</p>
-            <p className="text-xs text-muted-foreground">Set up a client login and link it to their matter — they will only ever see their own case.</p>
+            <p className="font-semibold mb-0.5">Create an account</p>
+            <p className="text-xs text-muted-foreground">Set up a login for a staff member or client. Clients only ever see their own linked matter.</p>
           </div>
         </div>
         <Button onClick={() => { setCreateErr(""); setCreateOpen(true); }} className="btn-royal shrink-0">
-          <UserPlus className="w-4 h-4 mr-1.5" /> Create Client Account
+          <UserPlus className="w-4 h-4 mr-1.5" /> Create Account
         </Button>
       </div>
 
@@ -158,39 +158,57 @@ export function UserManagement({ matters }: Props) {
         </div>
       )}
 
-      {/* Create Client Account Dialog */}
+      {/* Create Account Dialog */}
       <Dialog open={createOpen} onOpenChange={o => !o && setCreateOpen(false)}>
         <DialogContent className="glass-card border-border max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-serif text-2xl">Create Client Account</DialogTitle>
-            <p className="text-xs text-muted-foreground">The client will receive these login details and see only their linked matter.</p>
+            <DialogTitle className="font-serif text-2xl">Create Account</DialogTitle>
+            <p className="text-xs text-muted-foreground">
+              {createForm.role === "client"
+                ? "The client will receive these login details and see only their linked matter."
+                : "This person will receive these login details and can access the firm system based on their role."}
+            </p>
           </DialogHeader>
           <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label>Role</Label>
+              <Select value={createForm.role} onValueChange={(v: any) => setCreateForm(f => ({ ...f, role: v, matterId: v === "client" ? f.matterId : "" }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="partner">Partner</SelectItem>
+                  <SelectItem value="associate">Associate</SelectItem>
+                  <SelectItem value="paralegal">Paralegal</SelectItem>
+                  <SelectItem value="client">Client</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-1.5">
               <Label>Full Name</Label>
               <Input value={createForm.full_name} onChange={e => setCreateForm(f => ({ ...f, full_name: e.target.value }))} placeholder="e.g. Jane Wanjiku" />
             </div>
             <div className="space-y-1.5">
               <Label>Email</Label>
-              <Input type="email" value={createForm.email} onChange={e => setCreateForm(f => ({ ...f, email: e.target.value }))} placeholder="client@example.com" />
+              <Input type="email" value={createForm.email} onChange={e => setCreateForm(f => ({ ...f, email: e.target.value }))} placeholder="name@example.com" />
             </div>
             <div className="space-y-1.5">
               <Label>Temporary Password</Label>
               <Input value={createForm.password} onChange={e => setCreateForm(f => ({ ...f, password: e.target.value }))} placeholder="At least 6 characters" />
-              <p className="text-[10px] text-muted-foreground">Share this with the client securely. They can use it to log in.</p>
+              <p className="text-[10px] text-muted-foreground">Share this securely. They can change it themselves after logging in via Account Settings.</p>
             </div>
-            <div className="space-y-1.5">
-              <Label>Link to Matter (optional)</Label>
-              <Select value={createForm.matterId || "none"} onValueChange={(v: any) => setCreateForm(f => ({ ...f, matterId: v === "none" ? "" : v }))}>
-                <SelectTrigger><SelectValue placeholder="Choose a matter" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">— No matter yet —</SelectItem>
-                  {matters.map((mm: any) => (
-                    <SelectItem key={mm.id} value={mm.id}>{mm.fileNo} — {mm.title}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {createForm.role === "client" && (
+              <div className="space-y-1.5">
+                <Label>Link to Matter (optional)</Label>
+                <Select value={createForm.matterId || "none"} onValueChange={(v: any) => setCreateForm(f => ({ ...f, matterId: v === "none" ? "" : v }))}>
+                  <SelectTrigger><SelectValue placeholder="Choose a matter" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— No matter yet —</SelectItem>
+                    {matters.map((mm: any) => (
+                      <SelectItem key={mm.id} value={mm.id}>{mm.fileNo} — {mm.title}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             {createErr && <p className="text-xs text-destructive font-medium">{createErr}</p>}
           </div>
           <DialogFooter>

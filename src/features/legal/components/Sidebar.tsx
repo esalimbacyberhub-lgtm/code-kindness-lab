@@ -11,6 +11,7 @@ const ITEMS: NavItem[] = [
   { key: "matters", label: "Matter Hub", Icon: Briefcase },
   { key: "calendar", label: "Calendar & Deadlines", Icon: Calendar },
   { key: "directory", label: "Firm Directory", Icon: BookUser },
+  { key: "account", label: "Account Settings", Icon: Lock },
 
   { key: "admin", label: "Admin & Audit", Icon: ShieldCheck, partnerOnly: true },
   { key: "users", label: "User Management", Icon: UserCog, partnerOnly: true },
