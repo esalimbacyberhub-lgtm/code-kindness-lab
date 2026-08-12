@@ -102,7 +102,7 @@ export function useLegalState() {
 
   const stateWithSb = { ...state, matters: sb.matters, tasks: sbTask.tasks, deadlines: sbDl.deadlines, documents: sbDoc.documents, messages: sbMsg.messages, financials: { ...(state as any).financials, invoices: sbInv.invoices } };
   return {
-    state: stateWithSb, setView, setRole, toggleSidebar, moveTask, addTask, deleteTask, addMatter, updateMatter: sb.updateMatter,
+    state: stateWithSb, setView, setRole, toggleSidebar, moveTask, addTask, deleteTask, addMatter, updateMatter: sb.updateMatter, deleteMatter: sb.deleteMatter,
     addDeadline, deleteDeadline, updateDeadline, addLedgerEntry, addStaff, removeStaff,
     addDocument, deleteDocument, updateDocument, addInvoice, assignMatter, sendMessage, addWitness, updateWitnessStatus, log
   };

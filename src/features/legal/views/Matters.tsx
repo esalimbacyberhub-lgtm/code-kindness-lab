@@ -109,12 +109,13 @@ interface Props {
   onDeleteDocument: (id: string) => void;
   onUpdateMatter?: (id: string, updates: Partial<Matter>) => void;
   onUpdateDocument?: (id: string, updates: any) => void;
+  onDeleteMatter?: (id: string) => void;
 }
 
 // ════════════════════════════════════════════════════════════════════════════
 export const Matters = ({
   onNewMatter, matters, staff, role, onAssign,
-  documents, onAddDocument, onDeleteDocument, onUpdateMatter, onUpdateDocument,
+  documents, onAddDocument, onDeleteDocument, onUpdateMatter, onUpdateDocument, onDeleteMatter,
 }: Props) => {
   const [selected,    setSelected]    = useState<Matter | null>(null);
   const [statusEdit,  setStatusEdit]  = useState<Matter | null>(null);
@@ -217,6 +218,13 @@ export const Matters = ({
       partyA: matter.partyA, partyB: matter.partyB,
     }));
     alert(`Go to Admin & Audit → Financials to raise an invoice for: ${matter.title || matter.client || "this matter"}`);
+  };
+
+  // ── Delete a matter (case file) entirely ──────────────────────────────────
+  const handleDeleteMatter = (matter: Matter) => {
+    if (!confirm(`Delete matter "${matter.title}" (${matter.fileNo})?\n\nThis permanently removes the case file and cannot be undone.`)) return;
+    onDeleteMatter?.(matter.id);
+    setSelected(null);
   };
 
   // ── Matter detail view ───────────────────────────────────────────────────
@@ -371,6 +379,16 @@ export const Matters = ({
               >
                 <ClipboardList className="w-3.5 h-3.5" /> Issue Fee Note
               </button>
+
+              {/* Delete Matter */}
+              {role !== "client" && onDeleteMatter && (
+                <button
+                  onClick={() => handleDeleteMatter(selected)}
+                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/20 transition-all"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Delete Matter
+                </button>
+              )}
             </div>
           </div>
         </div>
