@@ -106,7 +106,7 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
       type:        effectiveType,
       partyA:      partyAPreview,
       partyB:      partyBPreview,
-      fileNo,
+      // fileNo intentionally omitted -- DB trigger assigns it atomically on insert
       openedDate:  new Date().toISOString().split("T")[0],
     });
     reset();
