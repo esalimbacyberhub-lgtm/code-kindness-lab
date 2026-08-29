@@ -10,6 +10,7 @@ import { Label }  from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Deadline, Matter } from "../types";
 import { cn } from "@/lib/utils";
+import { useCourtRegistries } from "../hooks/useCourtRegistries";
 
 const TYPE_ICON: Record<string,typeof Gavel> = {
   hearing:Gavel, filing:FileText, mention:CalIcon,
@@ -32,40 +33,14 @@ const PILL_BG: Record<string,string> = {
   lsk:     "bg-success/90 text-white",
 };
 
-const COURT_LEVELS = [
+// Court levels now DB-backed via court_registries (see useCourtRegistries hook).
+// This order-only array just controls display order in the level picker.
+const COURT_LEVEL_ORDER = [
   "Supreme Court","Court of Appeal","High Court",
   "Environment & Land Court","Employment & Labour Relations Court",
   "Magistrates Court","Kadhis Court","Small Claims Court","Tribunal",
 ] as const;
-type CourtLevel = (typeof COURT_LEVELS)[number];
-
-const COURT_STATIONS: Record<CourtLevel,string[]> = {
-  "Supreme Court":["Nairobi — Principal Registry"],
-  "Court of Appeal":["Nairobi","Mombasa","Kisumu","Nyeri","Eldoret","Malindi","Nakuru"],
-  "High Court":[
-    "Nairobi — Constitutional & Human Rights Division",
-    "Nairobi — Commercial & Tax Division","Nairobi — Family Division",
-    "Nairobi — Criminal Division","Nairobi — Anti-Corruption & Economic Crimes Division",
-    "Mombasa","Kisumu","Nakuru","Eldoret","Nyeri","Kakamega","Malindi","Garissa",
-    "Machakos","Thika","Bungoma","Kericho","Homabay","Kajiado","Kapenguria",
-  ],
-  "Environment & Land Court":["Nairobi","Mombasa","Kisumu","Nakuru","Eldoret","Nyeri","Machakos","Malindi","Garissa","Bungoma","Kericho"],
-  "Employment & Labour Relations Court":["Nairobi","Mombasa","Kisumu","Nakuru","Eldoret","Nyeri","Kakamega"],
-  "Magistrates Court":[
-    "Milimani — Chief Magistrates Court","Milimani — Criminal Courts",
-    "Makadara","Kibera","Mombasa","Kisumu","Nakuru","Eldoret","Nyeri","Kakamega",
-    "Garissa","Machakos","Thika","Bungoma","Malindi","Kericho","Homabay","Kitale",
-  ],
-  "Kadhis Court":["Nairobi","Mombasa","Kisumu","Malindi","Garissa","Lamu","Wajir","Mandera"],
-  "Small Claims Court":["Nairobi","Mombasa","Kisumu","Nakuru","Eldoret","Thika","Machakos","Nyeri","Bungoma","Malindi"],
-  "Tribunal":[
-    "Business Premises Rent Tribunal","Rent Restriction Tribunal","Tax Appeals Tribunal",
-    "Cooperative Tribunal","National Environment Tribunal",
-    "Public Procurement Administrative Review Board","Sports Disputes Tribunal",
-    "Retirement Benefits Appeals Tribunal","Capital Markets Tribunal",
-    "Financial Centre Tribunal",
-  ],
-};
+type CourtLevel = string;
 
 const LEVEL_RANK: Record<string,number> = {
   "Supreme Court":1,"Court of Appeal":2,"High Court":3,
@@ -101,6 +76,8 @@ export function Calendar({deadlines,matters,onAdd,onDelete,onUpdate}:Props) {
   const [form,setForm]     = useState(BLANK);
   const [view,setView]     = useState<"grid"|"list">("grid");
   const set = <K extends keyof typeof BLANK>(k:K, v:(typeof BLANK)[K]) => setForm(p=>({...p,[k]:v}));
+  const { byCategory, addCustomRegistry } = useCourtRegistries();
+  const courtStationsMap = byCategory();
 
   const now      = new Date();
   const todayStr = now.toISOString().slice(0,10);
@@ -131,13 +108,19 @@ export function Calendar({deadlines,matters,onAdd,onDelete,onUpdate}:Props) {
 
   const submit = ()=>{
     if(!form.title||!form.date) return;
+    const supremeCourtStations = courtStationsMap["Supreme Court"] || [];
     const station = form.useCustomStation && form.customStation.trim()
       ? form.customStation.trim()
       : form.courtLevel === "Supreme Court"
-        ? COURT_STATIONS["Supreme Court"][0]
+        ? (supremeCourtStations[0] || "Supreme Court")
         : form.courtStation
           ? `${form.courtLevel} — ${form.courtStation}`
           : form.courtLevel;
+    // Persist a manually-typed station so it's available next time
+    // (spec: new registries open yearly, staff can add them ad hoc)
+    if (form.useCustomStation && form.customStation.trim()) {
+      addCustomRegistry(form.customStation.trim(), form.courtLevel);
+    }
     onAdd({
       title:form.title, matter:form.matter, court:station,
       date:form.date, type:form.type, mode:form.mode,
@@ -410,7 +393,7 @@ export function Calendar({deadlines,matters,onAdd,onDelete,onUpdate}:Props) {
               <Select value={form.courtLevel} onValueChange={v=>setForm(p=>({...p,courtLevel:v as CourtLevel,courtStation:"",customStation:"",useCustomStation:false}))}>
                 <SelectTrigger><SelectValue/></SelectTrigger>
                 <SelectContent>
-                  {COURT_LEVELS.map((lvl,i)=>(
+                  {COURT_LEVEL_ORDER.map((lvl,i)=>(
                     <SelectItem key={lvl} value={lvl}>
                       <span className="inline-flex items-center gap-2">
                         <span className="w-5 h-5 rounded-full bg-primary/20 text-primary text-[10px] flex items-center justify-center font-bold shrink-0">{i+1}</span>
@@ -444,7 +427,7 @@ export function Calendar({deadlines,matters,onAdd,onDelete,onUpdate}:Props) {
                 <Select value={form.courtStation} onValueChange={v=>set("courtStation",v)}>
                   <SelectTrigger><SelectValue placeholder="Select station…"/></SelectTrigger>
                   <SelectContent>
-                    {(COURT_STATIONS[form.courtLevel]||[]).map(s=><SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    {(courtStationsMap[form.courtLevel]||[]).map(s=><SelectItem key={s} value={s}>{s}</SelectItem>)}
                   </SelectContent>
                 </Select>
               )}
