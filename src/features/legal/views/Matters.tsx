@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { CaseStatusDialog } from "../components/CaseStatusDialog";
+import { RecordMilestoneDialog } from "../components/RecordMilestoneDialog";
+import { useCaseMilestones } from "../hooks/useCaseMilestones";
 import {
   Briefcase, Upload, Trash2, FileText, Link as LinkIcon, Download,
   ArrowLeft, FolderOpen, Folder, Plus, Edit3, Users, Receipt,
@@ -119,6 +121,8 @@ export const Matters = ({
 }: Props) => {
   const [selected,    setSelected]    = useState<Matter | null>(null);
   const [statusEdit,  setStatusEdit]  = useState<Matter | null>(null);
+  const [milestoneEdit, setMilestoneEdit] = useState<Matter | null>(null);
+  const { addMilestone } = useCaseMilestones();
   const [linkCopied,  setLinkCopied]  = useState(false);
   const [activeFolder,setActiveFolder]= useState<string>("All");
   const [newFolderMode,setNewFolderMode] = useState(false);
@@ -255,6 +259,7 @@ export const Matters = ({
     return (
       <div className="space-y-5">
       <CaseStatusDialog matter={statusEdit} open={!!statusEdit} onClose={() => setStatusEdit(null)} onSave={updates => statusEdit && onUpdateMatter && onUpdateMatter(statusEdit.id, updates)} />
+      <RecordMilestoneDialog matter={milestoneEdit} open={!!milestoneEdit} onClose={() => setMilestoneEdit(null)} onSave={(milestoneType, eventDate, includesCounterclaim) => milestoneEdit && addMilestone(milestoneEdit.id, milestoneType, eventDate, includesCounterclaim)} />
         <Dialog open={!!preview} onOpenChange={o => !o && setPreview(null)}>
           <DialogContent className="glass-card border-border max-w-3xl">
             <DialogHeader>
@@ -651,7 +656,10 @@ export const Matters = ({
           <p className="text-[10px] text-warning font-semibold mt-1">⏳ Pending</p>
         )}
         {role !== "client" && onUpdateMatter && (
-          <button onClick={(e) => { e.stopPropagation(); setStatusEdit(m); }} className="text-[10px] text-primary hover:underline mt-1 font-semibold">Update status →</button>
+          <>
+            <button onClick={(e) => { e.stopPropagation(); setStatusEdit(m); }} className="text-[10px] text-primary hover:underline mt-1 font-semibold">Update status →</button>
+            <button onClick={(e) => { e.stopPropagation(); setMilestoneEdit(m); }} className="text-[10px] text-primary hover:underline mt-1 ml-3 font-semibold">Record milestone →</button>
+          </>
         )}
 
         {/* Parties */}
