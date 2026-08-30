@@ -2,7 +2,8 @@ import { useState, useMemo } from "react";
 import {
   Plus, Trash2, Calendar as CalIcon, Scale, FileText,
   Gavel, AlertCircle, Building2, ChevronLeft, ChevronRight,
-  LayoutList, LayoutGrid, X, User, AlignLeft, Video, MapPin, ExternalLink, Clock, Link2, Bell } from "lucide-react";
+  LayoutList, LayoutGrid, X, User, AlignLeft, Video, MapPin, ExternalLink, Clock, Link2, Bell,
+  CalendarDays, CalendarRange } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input }  from "@/components/ui/input";
@@ -62,6 +63,9 @@ const MONTHS = ["January","February","March","April","May","June","July","August
 
 function daysInMonth(y:number,m:number){return new Date(y,m+1,0).getDate();}
 function firstDay(y:number,m:number){const d=new Date(y,m,1).getDay();return d===0?6:d-1;}
+function mondayOf(d:Date):Date{const day=d.getDay();const diff=day===0?-6:1-day;const m=new Date(d);m.setDate(d.getDate()+diff);m.setHours(0,0,0,0);return m;}
+function addDays(d:Date,n:number):Date{const r=new Date(d);r.setDate(r.getDate()+n);return r;}
+function dstr(d:Date):string{return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}
 
 interface Props {
   deadlines: Deadline[];
@@ -74,7 +78,7 @@ interface Props {
 export function Calendar({deadlines,matters,onAdd,onDelete,onUpdate}:Props) {
   const [open,setOpen]     = useState(false);
   const [form,setForm]     = useState(BLANK);
-  const [view,setView]     = useState<"grid"|"list">("grid");
+  const [view,setView]     = useState<"day"|"week"|"month"|"list">("month");
   const set = <K extends keyof typeof BLANK>(k:K, v:(typeof BLANK)[K]) => setForm(p=>({...p,[k]:v}));
   const { byCategory, addCustomRegistry } = useCourtRegistries();
   const courtStationsMap = byCategory();
@@ -89,6 +93,13 @@ export function Calendar({deadlines,matters,onAdd,onDelete,onUpdate}:Props) {
 
   const prev = ()=>{if(cm===0){setCy(y=>y-1);setCm(11);}else setCm(m=>m-1);};
   const next = ()=>{if(cm===11){setCy(y=>y+1);setCm(0);}else setCm(m=>m+1);};
+
+  const [dayCursor,setDayCursor] = useState(todayStr);
+  const [weekCursor,setWeekCursor] = useState(()=>mondayOf(now));
+  const dayPrev = ()=>setDayCursor(d=>dstr(addDays(new Date(d+"T00:00:00"),-1)));
+  const dayNext = ()=>setDayCursor(d=>dstr(addDays(new Date(d+"T00:00:00"),1)));
+  const weekPrev = ()=>setWeekCursor(w=>addDays(w,-7));
+  const weekNext = ()=>setWeekCursor(w=>addDays(w,7));
 
   const dlMap = useMemo(()=>{
     const m:Record<string,Deadline[]>={};
@@ -176,8 +187,14 @@ export function Calendar({deadlines,matters,onAdd,onDelete,onUpdate}:Props) {
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center rounded-lg border border-border overflow-hidden">
-            <button onClick={()=>setView("grid")} className={cn("flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition-all",view==="grid"?"bg-primary text-white":"text-muted-foreground hover:text-foreground")}>
-              <LayoutGrid className="w-3.5 h-3.5"/> Grid
+            <button onClick={()=>setView("day")} className={cn("flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition-all",view==="day"?"bg-primary text-white":"text-muted-foreground hover:text-foreground")}>
+              <CalendarDays className="w-3.5 h-3.5"/> Day
+            </button>
+            <button onClick={()=>setView("week")} className={cn("flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition-all",view==="week"?"bg-primary text-white":"text-muted-foreground hover:text-foreground")}>
+              <CalendarRange className="w-3.5 h-3.5"/> Week
+            </button>
+            <button onClick={()=>setView("month")} className={cn("flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition-all",view==="month"?"bg-primary text-white":"text-muted-foreground hover:text-foreground")}>
+              <LayoutGrid className="w-3.5 h-3.5"/> Month
             </button>
             <button onClick={()=>setView("list")} className={cn("flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition-all",view==="list"?"bg-primary text-white":"text-muted-foreground hover:text-foreground")}>
               <LayoutList className="w-3.5 h-3.5"/> List
@@ -188,8 +205,75 @@ export function Calendar({deadlines,matters,onAdd,onDelete,onUpdate}:Props) {
       </div>
       <div className="blue-divider mb-6"/>
 
-      {/* ══ GRID VIEW ══ */}
-      {view==="grid" && (
+      {/* ══ DAY VIEW ══ */}
+      {view==="day" && (
+        <div className="glass-card rounded-2xl overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
+            <button onClick={dayPrev} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all"><ChevronLeft className="w-4 h-4"/></button>
+            <div className="flex items-center gap-4">
+              <h3 className="font-serif text-xl font-semibold">
+                {new Date(dayCursor+"T00:00:00").toLocaleDateString("en-KE",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}
+              </h3>
+              <button onClick={()=>setDayCursor(todayStr)} className="text-xs px-3 py-1 rounded-full border border-primary/30 text-primary hover:bg-primary/10 transition-all font-medium">Today</button>
+            </div>
+            <button onClick={dayNext} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all"><ChevronRight className="w-4 h-4"/></button>
+          </div>
+          <div className="p-4 space-y-2">
+            {(dlMap[dayCursor]||[]).length===0
+              ? <div className="text-center py-10 text-sm text-muted-foreground">No matters scheduled for this day.</div>
+              : (dlMap[dayCursor]||[]).slice().sort((a,b)=>((a as any).time||"99:99").localeCompare((b as any).time||"99:99")).map(d=><DeadlineRow key={d.id} d={d} onDelete={onDelete}/>)
+            }
+          </div>
+        </div>
+      )}
+
+      {/* ══ WEEK VIEW ══ */}
+      {view==="week" && (
+        <div className="glass-card rounded-2xl overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
+            <button onClick={weekPrev} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all"><ChevronLeft className="w-4 h-4"/></button>
+            <div className="flex items-center gap-4">
+              <h3 className="font-serif text-xl font-semibold">
+                {weekCursor.toLocaleDateString("en-KE",{day:"numeric",month:"short"})} – {addDays(weekCursor,6).toLocaleDateString("en-KE",{day:"numeric",month:"short",year:"numeric"})}
+              </h3>
+              <button onClick={()=>setWeekCursor(mondayOf(now))} className="text-xs px-3 py-1 rounded-full border border-primary/30 text-primary hover:bg-primary/10 transition-all font-medium">This week</button>
+            </div>
+            <button onClick={weekNext} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all"><ChevronRight className="w-4 h-4"/></button>
+          </div>
+          <div className="grid grid-cols-7 border-b border-border/30">
+            {DAYS.map((d,i)=>{
+              const date = addDays(weekCursor,i);
+              const isT = dstr(date)===todayStr;
+              return (
+                <div key={d} className={cn("py-2.5 text-center border-r border-border/20 last:border-r-0",isT&&"bg-primary/5")}>
+                  <div className={cn("text-[11px] font-bold uppercase tracking-wider text-muted-foreground",(d==="Sat"||d==="Sun")&&"text-primary/50")}>{d}</div>
+                  <div className={cn("text-sm font-semibold mt-0.5",isT&&"text-primary")}>{date.getDate()}</div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="grid grid-cols-7 min-h-[240px]">
+            {DAYS.map((d,i)=>{
+              const date = addDays(weekCursor,i);
+              const key = dstr(date);
+              const evts = (dlMap[key]||[]).slice().sort((a,b)=>((a as any).time||"99:99").localeCompare((b as any).time||"99:99"));
+              return (
+                <div key={key} onClick={()=>evts.length>0&&setSelDay(key)}
+                  className={cn("border-r border-border/20 last:border-r-0 p-1.5 space-y-1",evts.length>0?"cursor-pointer hover:bg-primary/5":"")}>
+                  {evts.map(e=>(
+                    <div key={e.id} className={cn("text-[10px] font-semibold px-1.5 py-1 rounded truncate",PILL_BG[e.type]||"bg-primary text-white")} title={e.title}>
+                      {(e as any).time && <span className="opacity-80">{(e as any).time} · </span>}{e.title}
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ══ MONTH VIEW ══ */}
+      {view==="month" && (
         <div className="glass-card rounded-2xl overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
             <button onClick={prev} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all"><ChevronLeft className="w-4 h-4"/></button>
