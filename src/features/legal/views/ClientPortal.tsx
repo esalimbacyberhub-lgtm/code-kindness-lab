@@ -6,6 +6,7 @@ import type { Message, Matter, Role, VaultDocument, Invoice } from "../types";
 import { cn } from "@/lib/utils";
 import { ShieldLogo } from "@/components/FirmLetterhead";
 import { supabase } from "@/lib/supabase";
+import { useLawyerAvailability } from "../hooks/useLawyerAvailability";
 
 interface Props {
   messages: Message[];
@@ -23,6 +24,7 @@ const kes = (n: number) => `KES ${(+n||0).toLocaleString("en-KE", { minimumFract
 const PORTAL_TABS = [
   { id: "case", label: "My Case", icon: Briefcase },
   { id: "docs", label: "Documents", icon: FileText },
+  { id: "availability", label: "Availability", icon: Clock },
   { id: "messages", label: "Messages", icon: MessageSquare },
   { id: "payments", label: "Payments", icon: CreditCard },
 ] as const;
@@ -65,6 +67,7 @@ export function ClientPortal({ messages, matters, role, documents, invoices, onS
     window.open(data.signedUrl, "_blank");
   };
 
+  const { slots: availabilitySlots, loading: availabilityLoading } = useLawyerAvailability(selectedMatter?.id);
   const matterInvoices = invoices.filter(i => i.matter === selectedMatter?.title || i.matter === selectedMatter?.fileNo);
   const unpaidTotal = matterInvoices.filter(i => i.status !== "paid").reduce((s, i) => s + (i.totalAmount || 0), 0);
 
@@ -228,6 +231,42 @@ export function ClientPortal({ messages, matters, role, documents, invoices, onS
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {tab === "availability" && (
+            <div className="space-y-5">
+              <div className="glass-card rounded-2xl p-5 border-l-4 border-l-primary bg-primary/5">
+                <p className="text-sm text-muted-foreground">
+                  Below are times your assigned lawyer is already booked. Anything not listed is likely open —
+                  message us on the <button onClick={() => setTab("messages")} className="text-primary hover:underline font-semibold">Messages</button> tab to confirm and book a slot.
+                </p>
+              </div>
+              <div className="glass-card rounded-2xl overflow-hidden">
+                <div className="px-5 py-4 border-b border-border/50">
+                  <h3 className="font-semibold text-sm">Busy Times</h3>
+                </div>
+                {availabilityLoading ? (
+                  <div className="p-10 text-center text-muted-foreground text-sm">Loading…</div>
+                ) : availabilitySlots.length === 0 ? (
+                  <div className="p-10 text-center text-muted-foreground">
+                    <Clock className="w-8 h-8 mx-auto mb-3 opacity-40" />
+                    <p className="text-sm">No upcoming busy times on record — your lawyer looks open. Message us to arrange a time.</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border/30">
+                    {availabilitySlots.map((s, i) => (
+                      <div key={i} className="flex items-center justify-between p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-lg bg-warning/10 flex items-center justify-center"><Clock className="w-4 h-4 text-warning" /></div>
+                          <p className="text-sm font-medium">{fmtDate(s.date)}</p>
+                        </div>
+                        <span className="text-xs text-muted-foreground">{s.time ? s.time : "All day"}{s.endTime ? ` – ${s.endTime}` : ""}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
