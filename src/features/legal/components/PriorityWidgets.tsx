@@ -25,13 +25,9 @@ export function PriorityWidgets({ tasks, matters = [], deadlines = [], invoices 
   const todayDeadlines = deadlines.filter((d: any) => d.date === today);
   const todayCount = todayDeadlines.length;
 
-  // ── PRIORITY: deadlines in next 3 days + overdue invoices + high-priority tasks
+  // ── PRIORITY: deadlines in next 3 days only
   const urgentDeadlines = deadlines.filter((d: any) => d.date >= today && d.date <= threeDaysStr);
-  const overdueInvoices = invoices.filter((i: any) =>
-    i.status === "overdue" || (i.dueDate && i.dueDate < today && i.status !== "paid")
-  );
-  const highPriorityTasks = tasks.filter(t => (t as any).priority === "high" && t.status !== "done");
-  const priorityCount = urgentDeadlines.length + overdueInvoices.length + highPriorityTasks.length;
+  const priorityCount = urgentDeadlines.length;
 
   // ── PENDING: matters with caseStatus pending or empty
   const pendingMatters = matters.filter((m: any) => !m.caseStatus || m.caseStatus === "pending");
@@ -45,7 +41,7 @@ export function PriorityWidgets({ tasks, matters = [], deadlines = [], invoices 
 
   const cards = [
     { kind: "today" as const,     label: "Today",     value: todayCount,                                  sub: "Hearings & mentions", Icon: CalendarDays,   tone: "info"   },
-    { kind: "priority" as const,  label: "Priority",  value: priorityCount,                               sub: "Urgent / overdue",     Icon: AlertTriangle, tone: "accent" },
+    { kind: "priority" as const,  label: "Priority",  value: priorityCount,                               sub: "Deadlines (3 days)",   Icon: AlertTriangle, tone: "accent" },
     { kind: "pending" as const,   label: "Pending",   value: pendingCount,                                sub: "Matters",              Icon: Clock,         tone: "ivory"  },
     { kind: "billables" as const, label: "Billables", value: `KES ${billables.toLocaleString("en-KE")}`,  sub: `${invoices.length} invoiced`, Icon: Coins,  tone: "gold"   },
   ];
@@ -124,34 +120,13 @@ export function PriorityWidgets({ tasks, matters = [], deadlines = [], invoices 
             </DialogTitle>
           </DialogHeader>
           {priorityCount === 0 ? (
-            <p className="text-sm text-muted-foreground py-6 text-center">Nothing urgent right now.</p>
+            <p className="text-sm text-muted-foreground py-6 text-center">No deadlines in the next 3 days.</p>
           ) : (
             <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-              {urgentDeadlines.length > 0 && (
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-2">Deadlines (next 3 days)</p>
-              )}
               {urgentDeadlines.map((d: any) => (
                 <div key={d.id} className="glass-card rounded-lg p-3 border-l-4 border-l-accent">
                   <p className="font-semibold text-sm">{d.title}</p>
                   <p className="text-xs text-muted-foreground">{d.court} · {d.date}{d.time ? ` ${d.time}` : ""}</p>
-                </div>
-              ))}
-              {overdueInvoices.length > 0 && (
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-3">Overdue invoices</p>
-              )}
-              {overdueInvoices.map((i: any) => (
-                <div key={i.id} className="glass-card rounded-lg p-3 border-l-4 border-l-destructive">
-                  <p className="font-semibold text-sm">{i.matter || i.client || "Invoice"}</p>
-                  <p className="text-xs text-muted-foreground">KES {(i.amount || i.total || 0).toLocaleString("en-KE")}</p>
-                </div>
-              ))}
-              {highPriorityTasks.length > 0 && (
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-3">High-priority tasks</p>
-              )}
-              {highPriorityTasks.map((t: any) => (
-                <div key={t.id} className="glass-card rounded-lg p-3 border-l-4 border-l-warning">
-                  <p className="font-semibold text-sm">{t.title}</p>
-                  {t.matter && <p className="text-xs text-muted-foreground">{t.matter}</p>}
                 </div>
               ))}
             </div>

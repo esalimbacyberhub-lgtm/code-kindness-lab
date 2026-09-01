@@ -12,7 +12,7 @@ const COLUMNS: { key: TaskStatus; title: string; subtitle: string; dot: string }
   { key: "todo",       title: "To Do",       subtitle: "Scheduled work",   dot: "bg-warning" },
   { key: "inprogress", title: "In Progress", subtitle: "Active on cases",  dot: "bg-accent" },
   { key: "review",     title: "Review",      subtitle: "Pending checks",   dot: "bg-primary" },
-  { key: "done",       title: "Done",        subtitle: "Completed",        dot: "bg-success" },
+  { key: "done",       title: "Done",        subtitle: "Completed (24h)",  dot: "bg-success" },
 ];
 
 const PRIORITY_BORDER: Record<Task["priority"], string> = {
@@ -20,6 +20,15 @@ const PRIORITY_BORDER: Record<Task["priority"], string> = {
   medium: "border-l-warning",
   low:    "border-l-success",
 };
+
+const DONE_VISIBLE_MS = 24 * 60 * 60 * 1000; // auto-hide Done tasks 24h after completion
+
+function isRecentlyDone(updatedAt?: string): boolean {
+  if (!updatedAt) return true; // no timestamp on record — fail open, keep visible
+  const ts = new Date(updatedAt).getTime();
+  if (Number.isNaN(ts)) return true;
+  return Date.now() - ts < DONE_VISIBLE_MS;
+}
 
 interface AutoItem {
   id: string;
@@ -149,7 +158,9 @@ export function TaskBoard({ tasks, matters = [], deadlines = [], invoices = [], 
     <>
       <section aria-label="Task board" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {COLUMNS.map(col => {
-          const items = tasks.filter(t => t.status === col.key);
+          const items = tasks
+            .filter(t => t.status === col.key)
+            .filter(t => col.key !== "done" || isRecentlyDone((t as any).updatedAt));
           const autos = autoItems.filter(a => a.status === col.key);
           return (
             <div
@@ -158,7 +169,7 @@ export function TaskBoard({ tasks, matters = [], deadlines = [], invoices = [], 
               onDragLeave={() => setOverCol(null)}
               onDrop={handleDrop(col.key)}
               className={cn(
-                "rounded-2xl border border-border/50 bg-card/30 p-3 min-h-[320px] transition",
+                "rounded-2xl border border-border/50 bg-card/30 p-2.5 min-h-[220px] transition",
                 overCol === col.key && "border-primary/60 bg-primary/5"
               )}
             >
@@ -191,7 +202,7 @@ export function TaskBoard({ tasks, matters = [], deadlines = [], invoices = [], 
                     onDragStart={handleDragStart(t.id)}
                     onDragEnd={() => setDraggingId(null)}
                     className={cn(
-                      "bg-secondary/40 hover:bg-secondary/60 rounded-xl p-3 border-l-[3px] cursor-grab active:cursor-grabbing transition group",
+                      "bg-secondary/40 hover:bg-secondary/60 rounded-lg p-2 border-l-[3px] cursor-grab active:cursor-grabbing transition group",
                       PRIORITY_BORDER[t.priority],
                       draggingId === t.id && "opacity-40"
                     )}
@@ -233,7 +244,7 @@ export function TaskBoard({ tasks, matters = [], deadlines = [], invoices = [], 
                       key={a.id}
                       title="Auto-generated from your matters/calendar/invoices"
                       className={cn(
-                        "rounded-xl p-3 border-l-[3px] opacity-90 cursor-default",
+                        "rounded-lg p-2 border-l-[3px] opacity-90 cursor-default",
                         style.cls
                       )}
                     >

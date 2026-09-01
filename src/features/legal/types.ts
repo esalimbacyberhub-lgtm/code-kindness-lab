@@ -4,6 +4,7 @@ export type TaskStatus = "todo" | "inprogress" | "review" | "done";
 export interface Task {
   id: string; title: string; priority: Priority;
   status: TaskStatus; due: string; matter: string; assignedTo?: string;
+  updatedAt?: string;
 }
 export interface Matter {
   id: string; client: string; title: string;
