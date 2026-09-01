@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { CaseStatusDialog } from "../components/CaseStatusDialog";
 import { RecordMilestoneDialog } from "../components/RecordMilestoneDialog";
 import { useCaseMilestones } from "../hooks/useCaseMilestones";
+import { useMatterFolders } from "../hooks/useMatterFolders";
+import { FolderTree } from "../components/FolderTree";
 import {
   Briefcase, Upload, Trash2, FileText, Link as LinkIcon, Download,
   ArrowLeft, FolderOpen, Folder, Plus, Edit3, Users, Receipt,
@@ -124,48 +126,24 @@ export const Matters = ({
   const [milestoneEdit, setMilestoneEdit] = useState<Matter | null>(null);
   const { addMilestone } = useCaseMilestones();
   const [linkCopied,  setLinkCopied]  = useState(false);
-  const [activeFolder,setActiveFolder]= useState<string>("All");
-  const [newFolderMode,setNewFolderMode] = useState(false);
-  const [newFolderName,setNewFolderName] = useState("");
+  const [activeFolder,setActiveFolder]= useState<string | null>(null);
   const [search,      setSearch]      = useState("");
   const [browseYear,  setBrowseYear]  = useState<string | null>(null);
   const [browseType,  setBrowseType]  = useState<string | null>(null);
   const [preview,        setPreview]        = useState<{ doc: any; url: string } | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   // Reset folder view when switching matters
-  useEffect(() => { setActiveFolder("All"); }, [selected]);
+  useEffect(() => { setActiveFolder(null); }, [selected]);
+
+  // Flat folder list for this matter (name lookups, move-to dropdown)
+  const { folders: matterFolders } = useMatterFolders(selected?.id ?? null);
 
   // ── Subfolder helpers ──────────────────────────────────────────────────────
-  const getMatterFolders = (matterId: string): string[] =>
-    matters.find(m => m.id === matterId)?.folders ?? [];
+  const getFolderName = (folderId: string | null): string =>
+    matterFolders.find(f => f.id === folderId)?.name || "Uncategorised";
 
-  const getDocFolder = (_matterId: string, docId: string): string =>
-    documents.find(d => d.id === docId)?.folder || "Uncategorised";
-
-  const setDocFolder = (_matterId: string, docId: string, folder: string) => {
-    onUpdateDocument?.(docId, { folder });
-  };
-
-  const addFolder = (matterId: string, name: string) => {
-    const clean = name.trim();
-    if (!clean) return;
-    const current = matters.find(m => m.id === matterId)?.folders ?? [];
-    if (!current.includes(clean)) {
-      onUpdateMatter?.(matterId, { folders: [...current, clean] });
-    }
-    setNewFolderName("");
-    setNewFolderMode(false);
-    setActiveFolder(clean);
-  };
-
-  const deleteFolder = (matterId: string, folder: string) => {
-    if (!confirm(`Delete folder "${folder}"? Documents inside will move to Uncategorised.`)) return;
-    const current = matters.find(m => m.id === matterId)?.folders ?? [];
-    onUpdateMatter?.(matterId, { folders: current.filter(f => f !== folder) });
-    documents
-      .filter(d => d.matterId === matterId && d.folder === folder)
-      .forEach(d => onUpdateDocument?.(d.id, { folder: "" }));
-    setActiveFolder("All");
+  const setDocFolder = (_matterId: string, docId: string, folderId: string | null) => {
+    onUpdateDocument?.(docId, { folderId });
   };
 
   // ── Upload ────────────────────────────────────────────────────────────────
@@ -177,7 +155,7 @@ export const Matters = ({
       name: file.name,
       matter: "",
       matterId: matter.id,
-      folder: activeFolder === "All" ? "Uncategorised" : activeFolder,
+      folderId: activeFolder,
       fileType: file.type || "application/octet-stream",
       date: new Date().toISOString().split("T")[0],
       uploadedBy: role,
@@ -234,27 +212,20 @@ export const Matters = ({
   // ── Matter detail view ───────────────────────────────────────────────────
   if (selected) {
     const allMatterDocs = documents.filter(d => d.matterId === selected.id);
-    const customFolders = getMatterFolders(selected.id);
-    const folders        = [...DEFAULT_FOLDERS, ...customFolders.filter(f => !DEFAULT_FOLDERS.includes(f))];
 
-    const filteredDocs = activeFolder === "All"
+    const filteredDocs = activeFolder === null
       ? allMatterDocs
-      : activeFolder === "Uncategorised"
-        ? allMatterDocs.filter(d => {
-            const f = getDocFolder(selected.id, d.id);
-            return f === "Uncategorised" || (!folders.includes(f) && f !== "");
-          })
-        : allMatterDocs.filter(d => getDocFolder(selected.id, d.id) === activeFolder);
+      : allMatterDocs.filter(d => (d.folderId || null) === activeFolder);
 
     const searchedDocs = search.trim()
       ? filteredDocs.filter(d => d.name.toLowerCase().includes(search.toLowerCase()))
       : filteredDocs;
 
-    // Count docs per folder
-    const folderCount = (f: string) => {
-      if (f === "All") return allMatterDocs.length;
-      return allMatterDocs.filter(d => getDocFolder(selected.id, d.id) === f).length;
-    };
+    // Count docs per folder (for the folder tree sidebar)
+    const folderDocCounts: Record<string, number> = {};
+    allMatterDocs.forEach(d => {
+      if (d.folderId) folderDocCounts[d.folderId] = (folderDocCounts[d.folderId] || 0) + 1;
+    });
 
     return (
       <div className="space-y-5">
@@ -400,97 +371,19 @@ export const Matters = ({
 
         {/* ── Document Folder System ── */}
         <div className="glass-card rounded-xl overflow-hidden">
-          {/* Folder tabs header */}
-          <div className="border-b border-border/50 bg-secondary/20">
-            <div className="flex items-center gap-0 overflow-x-auto custom-scroll px-3 pt-2">
-              {/* All tab */}
-              <button
-                onClick={() => setActiveFolder("All")}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-2 text-xs font-semibold whitespace-nowrap transition-all border-b-2",
-                  activeFolder === "All"
-                    ? "text-primary border-primary"
-                    : "text-muted-foreground border-transparent hover:text-foreground",
-                )}
-              >
-                <Folder className="w-3.5 h-3.5" />
-                All
-                <span className="bg-primary/15 text-primary px-1.5 py-0.5 rounded-full text-[10px] font-bold">
-                  {allMatterDocs.length}
-                </span>
-              </button>
-
-              {/* Folder tabs */}
-              {folders.map(f => (
-                <button
-                  key={f}
-                  onClick={() => setActiveFolder(f)}
-                  className={cn(
-                    "group flex items-center gap-1.5 px-3 py-2 text-xs font-semibold whitespace-nowrap transition-all border-b-2",
-                    activeFolder === f
-                      ? "text-primary border-primary"
-                      : "text-muted-foreground border-transparent hover:text-foreground",
-                  )}
-                >
-                  <FolderOpen className="w-3.5 h-3.5" />
-                  {f}
-                  {folderCount(f) > 0 && (
-                    <span className="bg-muted/60 text-muted-foreground px-1.5 py-0.5 rounded-full text-[10px] font-bold">
-                      {folderCount(f)}
-                    </span>
-                  )}
-                  {/* Delete folder button */}
-                  {!DEFAULT_FOLDERS.includes(f) && (
-                    <span
-                      onClick={e => { e.stopPropagation(); deleteFolder(selected.id, f); }}
-                      className="hidden group-hover:inline text-destructive/60 hover:text-destructive ml-1 text-[10px]"
-                    >
-                      ✕
-                    </span>
-                  )}
-                </button>
-              ))}
-
-              {/* Add folder */}
-              {newFolderMode ? (
-                <div className="flex items-center gap-1 px-2 py-1">
-                  <input
-                    autoFocus
-                    value={newFolderName}
-                    onChange={e => setNewFolderName(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === "Enter") addFolder(selected.id, newFolderName);
-                      if (e.key === "Escape") { setNewFolderMode(false); setNewFolderName(""); }
-                    }}
-                    placeholder="Folder name..."
-                    className="text-xs bg-background border border-border rounded px-2 py-1 w-32 outline-none focus:ring-1 focus:ring-primary"
-                  />
-                  <button
-                    onClick={() => addFolder(selected.id, newFolderName)}
-                    className="text-xs text-primary hover:underline"
-                  >
-                    Add
-                  </button>
-                  <button
-                    onClick={() => { setNewFolderMode(false); setNewFolderName(""); }}
-                    className="text-xs text-muted-foreground hover:text-destructive"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setNewFolderMode(true)}
-                  className="flex items-center gap-1 px-3 py-2 text-xs text-muted-foreground hover:text-primary transition-all whitespace-nowrap"
-                >
-                  <Plus className="w-3.5 h-3.5" /> New Folder
-                </button>
-              )}
+          <div className="grid grid-cols-1 md:grid-cols-[240px_1fr]">
+            {/* Folder tree sidebar */}
+            <div className="border-b md:border-b-0 md:border-r border-border/50 bg-secondary/20 p-3">
+              <FolderTree
+                matterId={selected.id}
+                documentCounts={folderDocCounts}
+                activeFolderId={activeFolder}
+                onSelectFolder={setActiveFolder}
+              />
             </div>
-          </div>
 
-          {/* Folder content */}
-          <div className="p-5">
+            {/* Folder content */}
+            <div className="p-5">
             {/* Search + Upload bar */}
             <div className="flex items-center gap-3 mb-4">
               <div className="relative flex-1">
@@ -504,7 +397,7 @@ export const Matters = ({
               </div>
               <label className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:opacity-90 cursor-pointer font-semibold">
                 <Upload className="w-3.5 h-3.5" />
-                Upload to {activeFolder === "All" ? "Folder" : activeFolder}
+                Upload to {activeFolder === null ? "root" : getFolderName(activeFolder)}
                 <input type="file" className="hidden" onChange={e => handleUpload(e, selected)} />
               </label>
             </div>
@@ -514,14 +407,14 @@ export const Matters = ({
               <div className="text-center py-10 text-muted-foreground">
                 <FolderOpen className="w-8 h-8 mx-auto mb-2 opacity-40" />
                 <p className="text-sm">
-                  {search ? "No documents match your search." : `No documents in ${activeFolder === "All" ? "this matter" : activeFolder} yet.`}
+                  {search ? "No documents match your search." : `No documents in ${activeFolder === null ? "this matter" : getFolderName(activeFolder)} yet.`}
                 </p>
               </div>
             ) : (
               <ul className="space-y-2">
                 {searchedDocs.map(d => {
-                  const folder  = getDocFolder(selected.id, d.id);
-                  const colorCls = docColorClass(d.name, folder);
+                  const folderName = getFolderName(d.folderId || null);
+                  const colorCls = docColorClass(d.name, folderName);
                   return (
                     <li
                       key={d.id}
@@ -537,7 +430,7 @@ export const Matters = ({
                           <div className="flex items-center gap-2 mt-0.5">
                             <p className="text-xs text-muted-foreground">{d.date} · {d.uploadedBy}</p>
                             <span className="text-[10px] px-1.5 py-0.5 rounded bg-secondary/50 text-muted-foreground font-mono">
-                              {folder}
+                              {folderName}
                             </span>
                           </div>
                         </div>
@@ -545,13 +438,13 @@ export const Matters = ({
                       <div className="flex items-center gap-2 ml-3 shrink-0">
                         {/* Move to folder */}
                         <select
-                          value={folder}
-                          onChange={e => setDocFolder(selected.id, d.id, e.target.value)}
+                          value={d.folderId || ""}
+                          onChange={e => setDocFolder(selected.id, d.id, e.target.value || null)}
                           onClick={e => e.stopPropagation()}
                           className="text-[11px] bg-background border border-border rounded px-1.5 py-0.5 text-muted-foreground"
                         >
-                          <option value="Uncategorised">Uncategorised</option>
-                          {folders.map(f => <option key={f} value={f}>{f}</option>)}
+                          <option value="">Uncategorised</option>
+                          {matterFolders.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
                         </select>
                         <button
                           onClick={() => handleView(d)}
@@ -591,6 +484,7 @@ export const Matters = ({
                 })}
               </ul>
             )}
+          </div>
           </div>
         </div>
       </div>

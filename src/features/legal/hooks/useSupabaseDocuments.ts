@@ -9,6 +9,7 @@ function rowToDoc(row: any, matters: any[]): any {
     id: row.id,
     name: row.name || "",
     folder: row.folder || "",
+    folderId: row.folder_id || null,
     uploadedBy: row.uploaded_by_name || row.uploaded_by || "",
     date: row.date,
     sizeKb: row.size_kb || 0,
@@ -24,6 +25,7 @@ function docToRow(d: any, matters: any[]): any {
   const row: any = {};
   if (d.name !== undefined) row.name = d.name;
   if (d.folder !== undefined) row.folder = d.folder;
+  if (d.folderId !== undefined) row.folder_id = d.folderId;
   if (d.sizeKb !== undefined) row.size_kb = d.sizeKb;
   if (d.url !== undefined) row.url = d.url;
   if (d.storagePath !== undefined) row.storage_path = d.storagePath;

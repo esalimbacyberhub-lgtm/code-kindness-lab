@@ -32,11 +32,18 @@ export interface LedgerEntry {
 export interface StaffMember {
   id: string; name: string; role: Role; email: string; phone: string; practice: string; initials: string;
 }
+export interface MatterFolder {
+  id: string;
+  matterId: string;
+  parentFolderId?: string | null;
+  name: string;
+  position: number;
+}
 export interface VaultDocument {
   id: string; name: string; matter: string;
   fileType?: string; date?: string; uploadedBy?: string;
   uploadedAt?: string; size?: number; mime?: string; data?: string;
-  matterId?: string; folder?: string; sizeKb?: number;
+  matterId?: string; folder?: string; folderId?: string | null; sizeKb?: number;
   storagePath?: string; url?: string; file?: File;
   clientVisible?: boolean;
 }
