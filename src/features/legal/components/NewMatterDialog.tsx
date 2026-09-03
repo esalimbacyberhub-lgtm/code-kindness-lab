@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { FileText, Users, Plus, X } from "lucide-react";
 import type { Matter } from "../types";
+import { useCourtRegistries } from "../hooks/useCourtRegistries";
 
 interface Props {
   open: boolean;
@@ -31,6 +32,20 @@ const MATTER_TYPES: { value: Matter["type"]; abbrev: string }[] = [
   { value: "Intellectual Property",    abbrev: "IP"   },
   { value: "Probate & Administration", abbrev: "PA"   },
 ];
+
+// Court category -> code, mirrors set_matter_file_no() on the backend so the
+// live preview matches what the DB trigger will actually assign.
+const COURT_CATEGORY_CODES: Record<string, string> = {
+  "Supreme Court":                        "SC",
+  "Court of Appeal":                      "COA",
+  "High Court":                           "HC",
+  "Environment & Land Court":             "ELC",
+  "Employment & Labour Relations Court":  "ELRC",
+  "Magistrates Court":                    "MC",
+  "Kadhis Court":                         "KC",
+  "Small Claims Court":                   "SCC",
+  "Tribunal":                             "TRB",
+};
 
 function genFileNo(
   type: Matter["type"],
@@ -52,13 +67,18 @@ function genFileNo(
 
 // ── Blank form state ─────────────────────────────────────────────────────────
 const BLANK = {
-  client:     "",
-  title:      "",
-  type:       "Civil Litigation" as Matter["type"],
-  customType: "",
-  isCustom:   false,
-  plaintiffs: [""] as string[],
-  defendants: [""] as string[],
+  client:         "",
+  title:          "",
+  type:           "Civil Litigation" as Matter["type"],
+  customType:     "",
+  isCustom:       false,
+  plaintiffs:     [""] as string[],
+  defendants:     [""] as string[],
+  isLitigious:    false,
+  courtLevel:     "High Court",
+  courtStation:   "",
+  customStation:  "",
+  useCustomStation: false,
 };
 
 export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], matterCount = 0 }: Props) {
@@ -66,13 +86,22 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
   const set = (k: keyof typeof BLANK, v: string | boolean) =>
     setF(p => ({ ...p, [k]: v }));
 
-  // Live case number preview
+  const { byCategory, addCustomRegistry } = useCourtRegistries();
+  const courtStationsMap = byCategory();
+
+  const effectiveStation = f.useCustomStation ? f.customStation.trim() : f.courtStation;
+
+  // Live case number preview — uses the court code when this is a litigious
+  // matter with a station picked, otherwise falls back to the type-based code
+  // (mirrors exactly what set_matter_file_no() does server-side)
   const fileNo = genFileNo(
     f.type,
     matters,
-    f.isCustom && f.customType.trim()
-      ? f.customType.trim().toUpperCase().replace(/\s+/g, "").slice(0, 6)
-      : undefined,
+    f.isLitigious && effectiveStation
+      ? COURT_CATEGORY_CODES[f.courtLevel]
+      : (f.isCustom && f.customType.trim()
+          ? f.customType.trim().toUpperCase().replace(/\s+/g, "").slice(0, 6)
+          : undefined),
   );
 
   const reset = () => setF(BLANK);
@@ -100,12 +129,18 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
       f.isCustom && f.customType.trim() ? f.customType.trim() : f.type
     ) as Matter["type"];
 
+    if (f.isLitigious && f.useCustomStation && f.customStation.trim()) {
+      addCustomRegistry(f.customStation.trim(), f.courtLevel);
+    }
+
     onCreate({
       client:      f.client.trim(),
       title:       f.title.trim(),
       type:        effectiveType,
       partyA:      partyAPreview,
       partyB:      partyBPreview,
+      // court: exact court_registries.name so the DB trigger's category lookup matches
+      court:       f.isLitigious && effectiveStation ? effectiveStation : undefined,
       // fileNo intentionally omitted -- DB trigger assigns it atomically on insert
       openedDate:  new Date().toISOString().split("T")[0],
     });
@@ -197,6 +232,74 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
                 placeholder="e.g. Admiralty, Arbitration, Regulatory, Employment…"
                 className="mt-1.5"
               />
+            )}
+          </div>
+
+          {/* ── Litigious / Court matter toggle ── */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={f.isLitigious}
+                onChange={e => set("isLitigious", e.target.checked)}
+                className="rounded border-border"
+              />
+              <span className="text-sm">This is a litigious matter filed in court</span>
+            </label>
+
+            {f.isLitigious && (
+              <div className="grid grid-cols-2 gap-3 pl-6">
+                <div className="space-y-1.5">
+                  <Label>Court Level</Label>
+                  <Select
+                    value={f.courtLevel}
+                    onValueChange={v => setF(p => ({ ...p, courtLevel: v, courtStation: "", customStation: "", useCustomStation: false }))}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.keys(COURT_CATEGORY_CODES).map(level => (
+                        <SelectItem key={level} value={level}>
+                          <span className="font-mono text-[11px] text-muted-foreground mr-2">
+                            {COURT_CATEGORY_CODES[level]}
+                          </span>
+                          {level}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Court Station / Registry</Label>
+                  {f.useCustomStation ? (
+                    <Input
+                      value={f.customStation}
+                      onChange={e => set("customStation", e.target.value)}
+                      placeholder="Type exact court station name…"
+                    />
+                  ) : (
+                    <Select
+                      value={f.courtStation}
+                      onValueChange={v => {
+                        if (v === "__custom__") {
+                          setF(p => ({ ...p, useCustomStation: true, courtStation: "" }));
+                        } else {
+                          set("courtStation", v);
+                        }
+                      }}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Select station…" /></SelectTrigger>
+                      <SelectContent>
+                        {(courtStationsMap[f.courtLevel] || []).map(s => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                        <SelectItem value="__custom__">
+                          <span className="text-primary">✎ Other — specify manually</span>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              </div>
             )}
           </div>
 
