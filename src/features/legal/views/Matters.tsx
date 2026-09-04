@@ -88,10 +88,8 @@ const COURT_GROUP_ORDER = [...Object.values(COURT_CODE_LABELS), "Non-Litigious"]
 // Falls back to a PREFIX match for legacy matters filed before the court-trigger
 // existed, whose custom type codes embed a court hint (e.g. "HCCOMM", "ELCLMISC").
 // Checked longest-code-first so e.g. "ELRC..." isn't wrongly caught by "ELC".
-// NOTE: "COA" is intentionally excluded — "COACA"/"COACAPPL" are ambiguous
-// (Court of Appeal vs. Companies Act) and need manual confirmation from Omuyoma
-// before being auto-classified. Add "COA" back into this list once confirmed.
-const LEGACY_PREFIX_CODES = ["ELRC", "ELC", "HC", "SCC", "SC", "MC", "KC", "TRB"];
+// "COA" confirmed by Omuyoma as Court of Appeal (covers COACA/COACAPPL).
+const LEGACY_PREFIX_CODES = ["ELRC", "ELC", "HC", "SCC", "SC", "MC", "KC", "TRB", "COA"];
 
 function getMatterCourtGroup(m: Matter): string {
   const code = m.fileNo?.split("/")[1];
