@@ -292,7 +292,7 @@ interface Props {
 export const Matters = ({
   onNewMatter, matters, staff, role, onAssign,
   documents, onAddDocument, onDeleteDocument, onDeleteDocumentWithPassword, onRenameDocument, onReorderDocuments,
-  onUpdateMatter, onUpdateDocument, onDeleteMatter,
+  onUpdateMatter, onUpdateDocument, onDeleteMatter, onDeleteMatterWithPassword,
 }: Props) => {
   const [selected,    setSelected]    = useState<Matter | null>(null);
   const [statusEdit,  setStatusEdit]  = useState<Matter | null>(null);
@@ -425,6 +425,34 @@ export const Matters = ({
       <div className="space-y-5">
       <CaseStatusDialog matter={statusEdit} open={!!statusEdit} onClose={() => setStatusEdit(null)} onSave={updates => statusEdit && onUpdateMatter && onUpdateMatter(statusEdit.id, updates)} />
       <RecordMilestoneDialog matter={milestoneEdit} open={!!milestoneEdit} onClose={() => setMilestoneEdit(null)} onSave={(milestoneType, eventDate, includesCounterclaim) => milestoneEdit && addMilestone(milestoneEdit.id, milestoneType, eventDate, includesCounterclaim)} />
+        <Dialog open={!!matterDeleteTarget} onOpenChange={(open) => { if (!open) { setMatterDeleteTarget(null); setMatterDeletePassword(""); setMatterDeleteError(""); } }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete "{matterDeleteTarget?.title}" ({matterDeleteTarget?.fileNo})?</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                This permanently removes the entire case file, including its documents and folders, and cannot be undone. Enter the master password to confirm.
+              </p>
+              <Input
+                type="password"
+                autoFocus
+                value={matterDeletePassword}
+                onChange={e => setMatterDeletePassword(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter") confirmMatterDelete(); }}
+                placeholder="Master password"
+              />
+              {matterDeleteError && <p className="text-sm text-destructive">{matterDeleteError}</p>}
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" size="sm" onClick={() => setMatterDeleteTarget(null)}>Cancel</Button>
+                <Button variant="destructive" size="sm" disabled={matterDeleting || !matterDeletePassword} onClick={confirmMatterDelete}>
+                  {matterDeleting ? "Deleting..." : "Delete Matter"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         <Dialog open={!!preview} onOpenChange={o => !o && setPreview(null)}>
           <DialogContent className="glass-card border-border max-w-3xl">
             <DialogHeader>

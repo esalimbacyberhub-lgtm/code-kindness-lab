@@ -120,10 +120,23 @@ export function useSupabaseMatters() {
     if (error) { console.error("deleteMatter:", error); alert("Could not delete matter: " + error.message); }
   }, []);
 
+  // Password-gated matter delete — same security_settings-backed check used
+  // for folders and documents.
+  const deleteMatterWithPassword = useCallback(async (id: string, password: string): Promise<{ ok: boolean; error?: string }> => {
+    const { error } = await supabase.rpc("delete_matter_with_password", {
+      p_matter_id: id,
+      p_password: password,
+    });
+    if (error) {
+      return { ok: false, error: error.message || "Failed to delete matter" };
+    }
+    return { ok: true };
+  }, []);
+
   const assignMatter = useCallback(async (id: string, assigneeId: string) => {
     const { error } = await supabase.from("matters").update({ assigned_to: assigneeId }).eq("id", id);
     if (error) console.error("assignMatter:", error);
   }, []);
 
-  return { matters, loading, addMatter, updateMatter, deleteMatter, assignMatter };
+  return { matters, loading, addMatter, updateMatter, deleteMatter, deleteMatterWithPassword, assignMatter };
 }
