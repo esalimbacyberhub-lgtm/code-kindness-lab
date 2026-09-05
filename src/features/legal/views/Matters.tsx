@@ -312,6 +312,26 @@ export const Matters = ({
   const [docDeleting,     setDocDeleting]     = useState(false);
   const docSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
+  const [matterDeleteTarget,  setMatterDeleteTarget]  = useState<Matter | null>(null);
+  const [matterDeletePassword, setMatterDeletePassword] = useState("");
+  const [matterDeleteError,  setMatterDeleteError]  = useState("");
+  const [matterDeleting,     setMatterDeleting]     = useState(false);
+
+  const confirmMatterDelete = async () => {
+    if (!matterDeleteTarget || !onDeleteMatterWithPassword) return;
+    setMatterDeleting(true);
+    setMatterDeleteError("");
+    const result = await onDeleteMatterWithPassword(matterDeleteTarget.id, matterDeletePassword);
+    setMatterDeleting(false);
+    if (!result.ok) {
+      setMatterDeleteError(result.error || "Failed to delete matter");
+      return;
+    }
+    setMatterDeleteTarget(null);
+    setMatterDeletePassword("");
+    setSelected(null);
+  };
+
   const confirmDocDelete = async () => {
     if (!docDeleteTarget || !onDeleteDocumentWithPassword) return;
     setDocDeleting(true);
