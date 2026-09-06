@@ -348,6 +348,17 @@ export const Matters = ({
   // Reset folder view when switching matters
   useEffect(() => { setActiveFolder(null); }, [selected]);
 
+  // If the Dashboard's "Deadlines" list was clicked, jump straight into that matter
+  useEffect(() => {
+    const targetId = sessionStorage.getItem("omuyoma_open_matter_id");
+    if (!targetId) return;
+    const match = matters.find(m => m.id === targetId);
+    if (match) {
+      setSelected(match);
+      sessionStorage.removeItem("omuyoma_open_matter_id");
+    }
+  }, [matters]);
+
   // Flat folder list for this matter (name lookups, move-to dropdown)
   const { folders: matterFolders } = useMatterFolders(selected?.id ?? null);
 

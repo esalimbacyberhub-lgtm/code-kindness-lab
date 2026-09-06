@@ -17,7 +17,7 @@ export interface Matter {
   resultDate?: string; court?: string; fileNo?: string; openedDate?: string; notes?: string; folders?: string[]; partyA?: string; partyB?: string; assignedTo?: string;
 }
 export interface Deadline {
-  id: string; title: string; matter: string; court: string; date: string;
+  id: string; title: string; matter: string; matterId?: string; court: string; date: string;
   time?: string;
   mode?: "online" | "physical";
   meetingLink?: string;

@@ -16,6 +16,7 @@ function rowToDeadline(row: any, matters: any[]): Deadline {
     judge: row.judge || "",
     summary: row.summary || "",
     matter: matter?.fileNo || "General",
+    matterId: matter?.id || undefined,
   } as Deadline;
 }
 
