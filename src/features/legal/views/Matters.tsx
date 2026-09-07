@@ -284,13 +284,34 @@ interface Props {
   onUpdateMatter?: (id: string, updates: Partial<Matter>) => void;
   onUpdateDocument?: (id: string, updates: any) => void;
   onDeleteMatter?: (id: string) => void;
+  onDeleteMatterWithPassword?: (id: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  onAddDeadline?: (d: Omit<Deadline, "id">) => void;
+}
+
+// Court code -> whether this matter is litigious (mirrors getMatterCourtGroup's
+// prefix-matching, kept local since it's only needed for the Activities tab)
+function isLitigiousMatter(m: Matter): boolean {
+  const code = m.fileNo?.split("/")[1];
+  if (!code) return false;
+  const knownCourtCodes = ["SC", "COA", "HC", "ELC", "ELRC", "MC", "KC", "SCC", "TRB"];
+  return knownCourtCodes.some(c => code.startsWith(c));
+}
+
+// Activity type -> matching deadline type, for the auto-created calendar entry
+function activityToDeadlineType(activityType: string): Deadline["type"] {
+  const t = activityType.toLowerCase();
+  if (t.includes("mention")) return "mention";
+  if (t.includes("hearing")) return "hearing";
+  if (t.includes("ruling") || t.includes("judgment")) return "ruling";
+  if (t.includes("filing")) return "filing";
+  return "deadline";
 }
 
 // ════════════════════════════════════════════════════════════════════════════
 export const Matters = ({
   onNewMatter, matters, staff, role, onAssign,
   documents, onAddDocument, onDeleteDocument, onDeleteDocumentWithPassword, onRenameDocument, onReorderDocuments,
-  onUpdateMatter, onUpdateDocument, onDeleteMatter, onDeleteMatterWithPassword,
+  onUpdateMatter, onUpdateDocument, onDeleteMatter, onDeleteMatterWithPassword, onAddDeadline,
 }: Props) => {
   const [selected,    setSelected]    = useState<Matter | null>(null);
   const [statusEdit,  setStatusEdit]  = useState<Matter | null>(null);
@@ -428,6 +449,12 @@ export const Matters = ({
 
   // ── Delete a matter (case file) entirely ──────────────────────────────────
   const handleDeleteMatter = (matter: Matter) => {
+    if (onDeleteMatterWithPassword) {
+      setMatterDeleteTarget(matter);
+      setMatterDeleteError("");
+      setMatterDeletePassword("");
+      return;
+    }
     if (!confirm(`Delete matter "${matter.title}" (${matter.fileNo})?\n\nThis permanently removes the case file and cannot be undone.`)) return;
     onDeleteMatter?.(matter.id);
     setSelected(null);
