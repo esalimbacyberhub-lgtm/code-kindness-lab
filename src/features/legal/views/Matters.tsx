@@ -11,6 +11,7 @@ import { CaseStatusDialog } from "../components/CaseStatusDialog";
 import { RecordMilestoneDialog } from "../components/RecordMilestoneDialog";
 import { useCaseMilestones } from "../hooks/useCaseMilestones";
 import { useMatterFolders } from "../hooks/useMatterFolders";
+import { useSupabaseCaseActivities, LITIGIOUS_ACTIVITY_TYPES } from "../hooks/useSupabaseCaseActivities";
 import { FolderTree } from "../components/FolderTree";
 import {
   Briefcase, Upload, Trash2, FileText, Link as LinkIcon, Download,
