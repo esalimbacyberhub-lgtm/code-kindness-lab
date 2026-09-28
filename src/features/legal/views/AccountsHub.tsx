@@ -13,13 +13,14 @@ import { useSupabaseLedger } from "../hooks/useSupabaseLedger";
 import type { Matter } from "../types";
 
 const VAT_RATE = 0.16;
+const VAT_REDUCED_RATE = 0.08; // temporary reduced rate on fuel — check KRA notices for its end date
 const CATEGORIES = ["Rent", "Utilities", "Stationery", "Court fees", "Travel", "Professional fees", "Subscriptions", "Other"];
 
 const today = () => new Date().toISOString().slice(0, 10);
 const kes = (n: number) =>
   `KES ${n.toLocaleString("en-KE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 // VAT contained in a VAT-inclusive amount
-const calcVat = (gross: number) => Math.round((gross - gross / (1 + VAT_RATE)) * 100) / 100;
+const calcVat = (gross: number, rate: number = VAT_RATE) => Math.round((gross - gross / (1 + rate)) * 100) / 100;
 
 const STATUS_COLOR: Record<string, string> = {
   outstanding: "text-destructive bg-destructive/10 border-destructive/30",
@@ -45,20 +46,57 @@ function MatterSelect({ value, onChange, matters }: { value: string; onChange: (
 }
 
 function AmountFields({ amount, vat, onAmount, onVat }: { amount: number; vat: number; onAmount: (n: number) => void; onVat: (n: number) => void }) {
+  // VAT treatment decides how the VAT amount is worked out from the (VAT-inclusive) total.
+  // Rates live in VAT_RATE / VAT_REDUCED_RATE at the top of this file — change them there if the law changes.
+  type Treatment = "standard" | "reduced" | "none" | "custom";
+  const RATES = { standard: VAT_RATE, reduced: VAT_REDUCED_RATE, none: 0 } as const;
+  const [treatment, setTreatment] = useState<Treatment>("standard");
+  const apply = (t: Treatment, gross: number) => {
+    if (t !== "custom") onVat(calcVat(gross, RATES[t]));
+  };
+  const hint: Record<Treatment, string> = {
+    standard: "Standard rate (16%), contained in the total.",
+    reduced: "Reduced rate (8%) — fuel only. Check the KRA notice for when it ends.",
+    none: "No VAT claimed — exempt or zero-rated, or the supplier has no eTIMS invoice.",
+    custom: "Enter the VAT amount shown on the invoice.",
+  };
   return (
     <div className="grid grid-cols-2 gap-3">
       <div className="space-y-2">
         <Label>Total amount (incl. VAT)</Label>
-        <Input type="number" value={amount || ""} onChange={e => onAmount(Number(e.target.value))} placeholder="0" />
+        <Input
+          type="number"
+          value={amount || ""}
+          onChange={e => {
+            const n = Number(e.target.value);
+            onAmount(n);
+            apply(treatment, n);
+          }}
+          placeholder="0"
+        />
       </div>
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label>VAT included</Label>
-          <button type="button" onClick={() => onVat(calcVat(amount))} className="text-[10px] text-brand-gold hover:underline">
-            Calc 16%
-          </button>
-        </div>
-        <Input type="number" value={vat || ""} onChange={e => onVat(Number(e.target.value))} placeholder="0" />
+        <Label>VAT treatment</Label>
+        <Select value={treatment} onValueChange={v => { const t = v as Treatment; setTreatment(t); apply(t, amount); }}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="standard">Standard 16%</SelectItem>
+            <SelectItem value="reduced">Reduced 8% (fuel)</SelectItem>
+            <SelectItem value="none">No VAT / exempt</SelectItem>
+            <SelectItem value="custom">Custom amount</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="col-span-2 space-y-2">
+        <Label>VAT included (KES)</Label>
+        <Input
+          type="number"
+          value={vat || ""}
+          disabled={treatment !== "custom"}
+          onChange={e => onVat(Number(e.target.value))}
+          placeholder="0"
+        />
+        <p className="text-[10px] text-muted-foreground">{hint[treatment]}</p>
       </div>
     </div>
   );
