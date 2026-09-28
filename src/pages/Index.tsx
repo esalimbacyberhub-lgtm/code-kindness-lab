@@ -4,6 +4,7 @@ import { Sidebar } from "@/features/legal/components/Sidebar";
 import { Dashboard } from "@/features/legal/views/Dashboard";
 import { MatterHub } from "@/features/legal/views/Matters";
 import { Finance } from "@/features/legal/views/Finance";
+import { AccountsHub } from "@/features/legal/views/AccountsHub";
 import { Calendar } from "@/features/legal/views/Calendar";
 import { FirmDirectory } from "@/features/legal/views/FirmDirectory";
 import { Invoices } from "@/features/legal/views/Invoices";
@@ -27,7 +28,7 @@ const Index = () => {
     switch (state.currentView) {
       case "dashboard": return <Dashboard tasks={state.tasks} deadlines={state.deadlines||[]} matters={state.matters||[]} invoices={(state as any).financials?.invoices||[]} onMoveTask={moveTask} onAddTask={addTask} onDeleteTask={deleteTask} onNewMatter={() => setMatterDialogOpen(true)} onGoToCalendar={() => setView("calendar")} onGoToMatters={() => setView("matters")} />;
       case "matters": return <MatterHub onNewMatter={() => setMatterDialogOpen(true)} matters={state.matters} staff={state.staff} role={state.role} onAssign={assignMatter} documents={state.documents} onAddDocument={addDocument} onDeleteDocument={deleteDocument} onDeleteDocumentWithPassword={deleteDocumentWithPassword} onRenameDocument={renameDocument} onReorderDocuments={reorderDocuments} onUpdateMatter={updateMatter} onUpdateDocument={updateDocument} onDeleteMatter={deleteMatter} onDeleteMatterWithPassword={deleteMatterWithPassword} onAddDeadline={addDeadline} />
-      case "finance": return <Finance ledger={state.ledger} matters={state.matters} onAdd={addLedgerEntry} />;
+      case "finance": return <AccountsHub matters={state.matters} />;
       case "calendar": return <Calendar deadlines={state.deadlines} matters={state.matters} onAdd={addDeadline} onDelete={deleteDeadline} onUpdate={updateDeadline} />;
       case "vault": return null; // Document Vault removed — documents now live inside each Matter's own folder
       case "directory": return <FirmDirectory staff={state.staff} currentRole={state.role} onAdd={addStaff} onRemove={removeStaff} />;

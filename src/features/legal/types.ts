@@ -69,3 +69,22 @@ export interface Invoice {
   date: string; dueDate: string; items: InvoiceItem[];
   status: "draft"|"sent"|"paid"|"overdue"; notes?: string; partyA?: string; partyB?: string; assignedTo?: string; totalAmount: number;
 }
+export interface Purchase {
+  id: string; purchaseDate: string; supplierName: string; description: string;
+  category?: string; amount: number; vatAmount: number; paid: boolean; matterId?: string;
+}
+export interface Creditor {
+  id: string; supplierName: string; invoiceRef?: string; amount: number;
+  amountPaid: number; vatAmount: number; dueDate?: string; matterId?: string;
+  status: "outstanding"|"partially_paid"|"paid";
+}
+export interface Debtor {
+  id: string; clientName: string; invoiceRef?: string; amount: number;
+  amountReceived: number; vatAmount: number; dueDate?: string; matterId?: string;
+  status: "outstanding"|"partially_paid"|"paid";
+}
+export interface AccountBalance {
+  id: string; code: string; name: string;
+  type: "asset"|"liability"|"equity"|"income"|"expense";
+  debit: number; credit: number; balance: number;
+}

@@ -13,6 +13,7 @@ const ITEMS: NavItem[] = [
   { key: "directory", label: "Firm Directory", Icon: BookUser },
   { key: "account", label: "Account Settings", Icon: Lock },
 
+  { key: "finance", label: "Accounts", Icon: Receipt, partnerOnly: true },
   { key: "admin", label: "Admin & Audit", Icon: ShieldCheck, partnerOnly: true },
   { key: "users", label: "User Management", Icon: UserCog, partnerOnly: true },
   { key: "clientportal", label: "Client Portal", Icon: Globe, partnerOnly: true },
