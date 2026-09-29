@@ -46,8 +46,12 @@ export function useSupabaseLedger() {
     let mounted = true;
     load();
 
+    // Unique per hook instance — AccountsHub calls this hook twice (all-time for
+    // Trial Balance, one month-filtered for VAT), and two channels with the same
+    // name collide in Supabase realtime.
+    const channelName = `journal_lines_changes_${range ? range.from + "_" + range.to : "all"}`;
     const channel = supabase
-      .channel("journal_lines_changes")
+      .channel(channelName)
       .on("postgres_changes", { event: "*", schema: "public", table: "journal_lines" }, () => {
         if (mounted) load();
       })
