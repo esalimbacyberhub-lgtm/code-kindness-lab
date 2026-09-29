@@ -128,7 +128,13 @@ export function AccountsHub({ matters }: Props) {
   const { purchases, addPurchase, deletePurchase } = useSupabasePurchases();
   const { creditors, addCreditor, updateCreditor, deleteCreditor } = useSupabaseCreditors();
   const { debtors, addDebtor, updateDebtor, deleteDebtor } = useSupabaseDebtors();
-  const { balances } = useSupabaseLedger();
+  const { balances } = useSupabaseLedger(); // all-time — Trial Balance
+  const [vatMonth, setVatMonth] = useState(() => new Date().toISOString().slice(0, 7)); // YYYY-MM
+  const vatRange = {
+    from: `${vatMonth}-01`,
+    to: new Date(Number(vatMonth.slice(0, 4)), Number(vatMonth.slice(5, 7)), 0).toISOString().slice(0, 10),
+  };
+  const { balances: vatBalances } = useSupabaseLedger(vatRange); // this month only — VAT Analysis
 
   // ── Purchases dialog ──
   const blankPurchase = { purchaseDate: today(), supplierName: "", description: "", category: "Other", amount: 0, vatAmount: 0, paid: "paid", matterId: "general" };
@@ -201,9 +207,9 @@ export function AccountsHub({ matters }: Props) {
   const debtorsOwed = debtors.reduce((a, d) => a + (d.amount - d.amountReceived), 0);
 
   // ── VAT (from ledger) ──
-  const acct = (code: string) => balances.find(b => b.code === code);
-  const outputVat = acct("2100") ? acct("2100")!.credit - acct("2100")!.debit : 0;
-  const inputVat = acct("1200") ? acct("1200")!.debit - acct("1200")!.credit : 0;
+  const acctVat = (code: string) => vatBalances.find(b => b.code === code);
+  const outputVat = acctVat("2100") ? acctVat("2100")!.credit - acctVat("2100")!.debit : 0;
+  const inputVat = acctVat("1200") ? acctVat("1200")!.debit - acctVat("1200")!.credit : 0;
   const netVat = outputVat - inputVat;
 
   // ── Trial balance ──
@@ -324,9 +330,15 @@ export function AccountsHub({ matters }: Props) {
 
         {/* ───────── VAT ───────── */}
         <TabsContent value="vat">
-          <div className="mb-4">
-            <h3 className="text-xl font-serif">VAT Analysis</h3>
-            <p className="text-xs text-muted-foreground mt-1">Net VAT = Output VAT (charged on fees) − Input VAT (paid on purchases).</p>
+          <div className="flex flex-wrap items-end justify-between gap-4 mb-4">
+            <div>
+              <h3 className="text-xl font-serif">VAT Analysis</h3>
+              <p className="text-xs text-muted-foreground mt-1">Net VAT = Output VAT (charged on fees) − Input VAT (paid on purchases), for the month selected below.</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Month</Label>
+              <Input type="month" value={vatMonth} onChange={e => setVatMonth(e.target.value)} className="w-40" />
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="glass-card rounded-2xl p-5 text-center">
