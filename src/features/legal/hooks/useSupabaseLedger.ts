@@ -2,7 +2,11 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import type { AccountBalance } from "../types";
 
-export function useSupabaseLedger() {
+// Optional date range (inclusive, YYYY-MM-DD). Omit for an all-time (cumulative)
+// balance — used by Trial Balance. Pass one for a period balance — used by VAT
+// Analysis, since VAT returns are filed monthly and "you owe KRA" must reflect
+// only that period's Output/Input VAT, not the running total since day one.
+export function useSupabaseLedger(range?: { from: string; to: string }) {
   const [balances, setBalances] = useState<AccountBalance[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -17,9 +21,28 @@ export function useSupabaseLedger() {
 
     if (acctErr) { console.error("loadAccounts error:", acctErr); setLoading(false); return; }
 
-    const { data: lines, error: lineErr } = await supabase
-      .from("journal_lines")
-      .select("account_id, debit, credit");
+    let entryIds: string[] = [];
+    const filterByEntries = !!range;
+    if (range) {
+      const { data: entries, error: entryErr } = await supabase
+        .from("journal_entries")
+        .select("id")
+        .gte("entry_date", range.from)
+        .lte("entry_date", range.to);
+      if (entryErr) { console.error("loadJournalEntries error:", entryErr); setLoading(false); return; }
+      entryIds = (entries || []).map((e: any) => e.id);
+      if (entryIds.length === 0) {
+        setBalances((accounts || []).map((a: any) => ({
+          id: a.id, code: a.code, name: a.name, type: a.type, debit: 0, credit: 0, balance: 0,
+        })));
+        setLoading(false);
+        return;
+      }
+    }
+
+    let lineQuery = supabase.from("journal_lines").select("account_id, debit, credit, entry_id");
+    if (filterByEntries) lineQuery = lineQuery.in("entry_id", entryIds);
+    const { data: lines, error: lineErr } = await lineQuery;
 
     if (lineErr) { console.error("loadJournalLines error:", lineErr); setLoading(false); return; }
 
@@ -40,7 +63,7 @@ export function useSupabaseLedger() {
 
     setBalances(result);
     setLoading(false);
-  }, []);
+  }, [range?.from, range?.to]);
 
   useEffect(() => {
     let mounted = true;
