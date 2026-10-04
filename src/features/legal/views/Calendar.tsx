@@ -323,7 +323,7 @@ export function Calendar({deadlines,matters,onAdd,onDelete,onUpdate}:Props) {
         <>
           {overdue.length>0&&(
             <div className="mb-6">
-              <h3 className="text-sm font-semibold text-destructive mb-3 flex items-center gap-2"><AlertCircle className="w-4 h-4"/> Overdue ({overdue.length})</h3>
+              <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Past ({overdue.length})</h3>
               <div className="space-y-2">{overdue.map(d=><DeadlineRow key={d.id} d={d} onDelete={onDelete} overdue/>)}</div>
             </div>
           )}
@@ -598,7 +598,7 @@ function DeadlineRow({d,onDelete,overdue=false}:{d:Deadline;onDelete:(id:string)
   const Icon = TYPE_ICON[d.type]??CalIcon;
   const rank = courtRank(d.court);
   return (
-    <div className={cn("glass-card glass-card-hover rounded-xl p-4 flex items-center gap-4",overdue&&"border border-destructive/30")}>
+    <div className="glass-card glass-card-hover rounded-xl p-4 flex items-center gap-4">
       <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center text-xs border shrink-0",TYPE_COLOR[d.type]??TYPE_COLOR.deadline)}>
         <Icon className="w-4 h-4"/>
       </div>
@@ -612,7 +612,7 @@ function DeadlineRow({d,onDelete,overdue=false}:{d:Deadline;onDelete:(id:string)
         {(d as any).summary&&<p className="text-xs text-muted-foreground mt-0.5 italic truncate">{(d as any).summary}</p>}
       </div>
       <div className="text-right shrink-0">
-        <p className={cn("text-sm font-semibold",overdue?"text-destructive":"text-primary")}>
+        <p className={cn("text-sm font-semibold",overdue?"text-muted-foreground":"text-primary")}>
           {new Date(d.date+"T00:00:00").toLocaleDateString("en-KE",{day:"numeric",month:"short",year:"numeric"})}
         </p>
         <p className="text-[10px] uppercase text-muted-foreground capitalize mt-0.5">{d.type==="lsk"?"LSK":d.type}</p>

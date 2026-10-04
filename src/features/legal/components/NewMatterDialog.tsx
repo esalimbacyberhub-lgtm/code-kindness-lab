@@ -248,7 +248,7 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
             </label>
 
             {f.isLitigious && (
-              <div className="grid grid-cols-2 gap-3 pl-6">
+              <div className="grid grid-cols-2 gap-3 pl-6 animate-in fade-in slide-in-from-top-2 duration-200">
                 <div className="space-y-1.5">
                   <Label>Court Level</Label>
                   <Select

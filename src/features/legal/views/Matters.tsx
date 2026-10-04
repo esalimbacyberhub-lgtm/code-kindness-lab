@@ -1309,7 +1309,7 @@ function CaseActivitiesPanel({ matter, onAddDeadline }: { matter: Matter; onAddD
                   </td>
                   <td className="py-2.5 pr-4 text-muted-foreground">{a.courtRoom || "—"}</td>
                   <td className="py-2.5 pr-4 text-muted-foreground">{a.actionedTo || "—"}</td>
-                  <td className="py-2.5 pr-4 text-muted-foreground max-w-[220px] truncate" title={a.outcome}>{a.outcome || "—"}</td>
+                  <td className="py-2.5 pr-4 text-muted-foreground min-w-[220px] whitespace-pre-wrap break-words">{a.outcome || "—"}</td>
                   <td className="py-2.5">
                     <button onClick={() => { if (confirm("Delete this activity?")) deleteActivity(a.id); }} className="text-muted-foreground hover:text-destructive">
                       <Trash2 className="w-3.5 h-3.5" />
