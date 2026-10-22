@@ -15,7 +15,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
-export type UserRole = "partner" | "associate" | "paralegal" | "client";
+export type UserRole = "partner" | "associate" | "paralegal" | "client" | "accountant";
 
 export interface Profile {
   id: string;

@@ -59,7 +59,7 @@ export interface AuditLog {
   id: string; action: string; user: string; timestamp: string; module: string;
 }
 export type ViewKey = "dashboard"|"matters"|"calendar"|"vault"|"directory"|"invoices"|"admin"|"finance"|"clientportal"|"drafting"|"witness" | "users" | "account";
-export type Role = "partner"|"associate"|"paralegal"|"client";
+export type Role = "partner"|"associate"|"paralegal"|"client"|"accountant";
 
 export interface InvoiceItem {
   id: string; description: string; quantity: number; rate: number; amount: number;

@@ -13,6 +13,7 @@ const ROLE_META = {
   partner:   { label: "Partner",   icon: Shield,      color: "bg-primary/15 text-primary border-primary/40" },
   associate: { label: "Associate", icon: Briefcase,   color: "bg-info/15 text-info border-info/40" },
   paralegal: { label: "Paralegal", icon: FileText,    color: "bg-accent/15 text-accent border-accent/40" },
+  accountant: { label: "Accounts", icon: FileText,    color: "bg-success/15 text-success border-success/40" },
   client:    { label: "Client",    icon: UserCircle,  color: "bg-secondary/40 text-foreground border-border" },
 };
 
@@ -179,6 +180,7 @@ export function UserManagement({ matters }: Props) {
                   <SelectItem value="partner">Partner</SelectItem>
                   <SelectItem value="associate">Associate</SelectItem>
                   <SelectItem value="paralegal">Paralegal</SelectItem>
+                  <SelectItem value="accountant">Accounts (Accounts page only)</SelectItem>
                   <SelectItem value="client">Client</SelectItem>
                 </SelectContent>
               </Select>
@@ -261,6 +263,7 @@ export function UserManagement({ matters }: Props) {
                   <SelectItem value="partner">Partner</SelectItem>
                   <SelectItem value="associate">Associate</SelectItem>
                   <SelectItem value="paralegal">Paralegal</SelectItem>
+                  <SelectItem value="accountant">Accounts (Accounts page only)</SelectItem>
                   <SelectItem value="client">Client</SelectItem>
                 </SelectContent>
               </Select>

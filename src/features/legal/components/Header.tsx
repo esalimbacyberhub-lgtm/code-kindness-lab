@@ -15,6 +15,7 @@ const ROLE_LABEL: Record<Role, string> = {
   partner: "Managing Partner",
   associate: "Associate",
   paralegal: "Paralegal",
+  accountant: "Accounts",
   client: "Client View",
 };
 

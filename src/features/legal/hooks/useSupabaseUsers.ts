@@ -5,7 +5,7 @@ export interface UserRow {
   id: string;
   email: string;
   full_name: string;
-  role: "partner" | "associate" | "paralegal" | "client";
+  role: "partner" | "associate" | "paralegal" | "client" | "accountant";
   phone?: string;
   created_at?: string;
 }

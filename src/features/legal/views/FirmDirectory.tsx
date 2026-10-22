@@ -11,9 +11,10 @@ const ROLE_COLOR: Record<Role, string> = {
   partner: "bg-brand-gold/15 text-brand-gold border-brand-gold/30",
   associate: "bg-primary/15 text-primary border-primary/30",
   paralegal: "bg-info/15 text-info border-info/30",
+  accountant: "bg-success/15 text-success border-success/30",
   client: "bg-muted/40 text-muted-foreground border-border",
 };
-const ROLE_LABEL: Record<Role, string> = { partner: "Partner", associate: "Associate", paralegal: "Paralegal", client: "Client" };
+const ROLE_LABEL: Record<Role, string> = { partner: "Partner", associate: "Associate", paralegal: "Paralegal", accountant: "Accounts", client: "Client" };
 
 const PRACTICES = ["Litigation", "Conveyancing", "Corporate & Commercial", "Family Law", "Criminal", "Intellectual Property", "Probate & Administration"];
 
