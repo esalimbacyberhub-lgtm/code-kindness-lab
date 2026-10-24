@@ -1002,7 +1002,7 @@ export const Matters = ({
                 viewMode === "court" ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:border-primary/40",
               )}
             >
-              By Court
+              By Type
             </button>
           </div>
 
@@ -1040,7 +1040,7 @@ export const Matters = ({
                   onClick={() => { setBrowseCourtCategory(null); setBrowseCourt(null); }}
                   className={cn("hover:underline", !browseCourtCategory ? "text-primary font-semibold" : "text-muted-foreground")}
                 >
-                  All Courts
+                  All Types
                 </button>
                 {browseCourtCategory && (
                   <>
