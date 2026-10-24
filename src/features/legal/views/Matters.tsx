@@ -11,6 +11,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { CaseStatusDialog } from "../components/CaseStatusDialog";
 import { RecordMilestoneDialog } from "../components/RecordMilestoneDialog";
 import { ActivityDraftTools } from "../components/ActivityDraftTools";
+import { MatterDeadlinesPanel, MatterDraftsPanel } from "../components/MatterTabs";
 import { useCaseMilestones } from "../hooks/useCaseMilestones";
 import { useMatterFolders } from "../hooks/useMatterFolders";
 import { useSupabaseCaseActivities, LITIGIOUS_ACTIVITY_TYPES } from "../hooks/useSupabaseCaseActivities";
@@ -292,6 +293,7 @@ interface Props {
   onDeleteMatter?: (id: string) => void;
   onDeleteMatterWithPassword?: (id: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   onAddDeadline?: (d: Omit<Deadline, "id">) => void;
+  deadlines?: Deadline[];
 }
 
 // Court code -> whether this matter is litigious (mirrors getMatterCourtGroup's
@@ -317,7 +319,7 @@ function activityToDeadlineType(activityType: string): Deadline["type"] {
 export const Matters = ({
   onNewMatter, matters, staff, role, onAssign,
   documents, onAddDocument, onDeleteDocument, onDeleteDocumentWithPassword, onRenameDocument, onReorderDocuments,
-  onUpdateMatter, onUpdateDocument, onDeleteMatter, onDeleteMatterWithPassword, onAddDeadline,
+  onUpdateMatter, onUpdateDocument, onDeleteMatter, onDeleteMatterWithPassword, onAddDeadline, deadlines = [],
 }: Props) => {
   const [selected,    setSelected]    = useState<Matter | null>(null);
   const [statusEdit,  setStatusEdit]  = useState<Matter | null>(null);
@@ -374,7 +376,7 @@ export const Matters = ({
   };
   // Reset folder view when switching matters
   useEffect(() => { setActiveFolder(null); }, [selected]);
-  const [detailTab, setDetailTab] = useState<"documents" | "activities">("documents");
+  const [detailTab, setDetailTab] = useState<"documents" | "activities" | "deadlines" | "drafts">("documents");
   useEffect(() => { setDetailTab("documents"); }, [selected?.id]);
 
   // If the Dashboard's "Deadlines" list was clicked, jump straight into that matter
@@ -676,7 +678,31 @@ export const Matters = ({
           >
             Case Activities
           </button>
+          <button
+            onClick={() => setDetailTab("deadlines")}
+            className={cn(
+              "text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors",
+              detailTab === "deadlines" ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:border-primary/40",
+            )}
+          >
+            Deadlines
+          </button>
+          <button
+            onClick={() => setDetailTab("drafts")}
+            className={cn(
+              "text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors",
+              detailTab === "drafts" ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:border-primary/40",
+            )}
+          >
+            Drafts
+          </button>
         </div>
+
+        {detailTab === "deadlines" && (
+          <MatterDeadlinesPanel matter={selected} deadlines={deadlines} onAddDeadline={onAddDeadline} canEdit={role !== "client"} />
+        )}
+
+        {detailTab === "drafts" && <MatterDraftsPanel matter={selected} />}
 
         {detailTab === "documents" && (
         <>
