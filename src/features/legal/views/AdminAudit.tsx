@@ -6,6 +6,7 @@ import {
 import type { AuditLog, Matter, StaffMember, LedgerEntry, Role, Deadline } from "../types";
 import { cn } from "@/lib/utils";
 import FinancialsModule from "@/components/FinancialsModule";
+import { ManualLedger } from "./ManualLedger";
 
 interface Props {
   logs:      AuditLog[];
@@ -182,120 +183,7 @@ export function AdminAudit({ logs, matters, staff, ledger, deadlines, role }: Pr
         </>
       )}
 
-      {/* ════════════════════ FINANCIAL LEDGER ════════════════════ */}
-      {tab === "ledger" && (
-        <>
-          {/* Ledger KPI strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-            {[
-              { label: "Billable",     value: kes(billable),      color: "text-primary",     bg: "bg-primary/8"     },
-              { label: "Received",     value: kes(payments),      color: "text-success",     bg: "bg-success/8"     },
-              { label: "Disbursed",    value: kes(disbursements), color: "text-destructive", bg: "bg-destructive/8" },
-              { label: "Trust",        value: kes(trust),         color: "text-warning",     bg: "bg-warning/8"     },
-            ].map(k => (
-              <div key={k.label} className={cn("glass-card rounded-xl p-4", k.bg)}>
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono mb-1">{k.label}</p>
-                <p className={cn("text-lg font-bold", k.color)}>{k.value}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Filter row */}
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-xs text-muted-foreground font-mono uppercase tracking-wider">Filter:</span>
-            {["all", "billable", "payment", "disbursement", "trust"].map(f => (
-              <button
-                key={f}
-                onClick={() => setLedgerFilter(f)}
-                className={cn(
-                  "px-3 py-1 rounded-full text-[11px] font-semibold capitalize transition-all",
-                  ledgerFilter === f
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted/40 text-muted-foreground hover:bg-muted",
-                )}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
-
-          {/* Ledger table */}
-          <div className="glass-card rounded-2xl overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border/50">
-                  {["Date","Description","Matter","Type","Debit","Credit"].map(h => (
-                    <th
-                      key={h}
-                      className={cn(
-                        "px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground text-left",
-                        (h === "Debit" || h === "Credit") && "text-right",
-                      )}
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredLedger.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground text-sm">
-                      No ledger entries yet. Entries are recorded when invoices are created and paid.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredLedger.map(e => (
-                    <tr key={e.id} className="border-b border-border/30 hover:bg-secondary/20 transition-colors">
-                      <td className="px-4 py-3 text-muted-foreground font-mono text-xs">
-                        {new Date(e.date).toLocaleDateString("en-KE", { day: "2-digit", month: "short", year: "numeric" })}
-                      </td>
-                      <td className="px-4 py-3 max-w-[220px] truncate">{e.description}</td>
-                      <td className="px-4 py-3 text-muted-foreground text-xs truncate max-w-[140px]">{e.matter || "—"}</td>
-                      <td className="px-4 py-3">
-                        <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-semibold capitalize", LEDGER_TYPE_STYLE[e.type] || "bg-muted/40 text-muted-foreground")}>
-                          {e.type}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right font-semibold text-success">
-                        {e.debit > 0 ? (
-                          <span className="flex items-center justify-end gap-1">
-                            <ArrowDownLeft className="w-3 h-3" />
-                            {kes(e.debit)}
-                          </span>
-                        ) : "—"}
-                      </td>
-                      <td className="px-4 py-3 text-right font-semibold text-destructive">
-                        {e.credit > 0 ? (
-                          <span className="flex items-center justify-end gap-1">
-                            <ArrowUpRight className="w-3 h-3" />
-                            {kes(e.credit)}
-                          </span>
-                        ) : "—"}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-              {filteredLedger.length > 0 && (
-                <tfoot>
-                  <tr className="border-t border-primary/20 bg-primary/5">
-                    <td colSpan={4} className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-primary">
-                      Totals
-                    </td>
-                    <td className="px-4 py-3 text-right font-bold text-success">
-                      {kes(filteredLedger.reduce((s, e) => s + e.debit, 0))}
-                    </td>
-                    <td className="px-4 py-3 text-right font-bold text-destructive">
-                      {kes(filteredLedger.reduce((s, e) => s + e.credit, 0))}
-                    </td>
-                  </tr>
-                </tfoot>
-              )}
-            </table>
-          </div>
-        </>
-      )}
+      {tab === "ledger" && <ManualLedger matters={matters} role={role} />}
 
       {/* ════════════════════ ACTIVITY LOG ════════════════════ */}
       {tab === "audit" && (
