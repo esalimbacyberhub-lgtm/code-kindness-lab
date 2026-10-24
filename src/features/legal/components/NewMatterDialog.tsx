@@ -13,6 +13,7 @@ import {
 import { FileText, Users, Plus, X } from "lucide-react";
 import type { Matter } from "../types";
 import { useCourtRegistries } from "../hooks/useCourtRegistries";
+import { supabase } from "@/lib/supabase";
 
 interface Props {
   open: boolean;
@@ -79,6 +80,9 @@ const BLANK = {
   courtStation:   "",
   customStation:  "",
   useCustomStation: false,
+  manualNo:       false,
+  manualSeq:      "",
+  manualYear:     String(new Date().getFullYear()),
 };
 
 export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], matterCount = 0 }: Props) {
@@ -106,6 +110,26 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
 
   const reset = () => setF(BLANK);
 
+  // Manual case number: the prefix mirrors what set_matter_file_no() would use
+  const [busy, setBusy] = useState(false);
+  const caseCode =
+    f.isLitigious && effectiveStation
+      ? COURT_CATEGORY_CODES[f.courtLevel]
+      : (f.isCustom && f.customType.trim()
+          ? f.customType.trim().toUpperCase().replace(/\s+/g, "").slice(0, 6)
+          : (MATTER_TYPES.find(t => t.value === f.type)?.abbrev || "OTH"));
+  const seqNum  = parseInt(f.manualSeq, 10);
+  const yearNum = parseInt(f.manualYear, 10);
+  const manualValid =
+    Number.isInteger(seqNum) && seqNum >= 1 && seqNum <= 9999 &&
+    Number.isInteger(yearNum) && yearNum >= 1990 && yearNum <= new Date().getFullYear() + 1;
+  const manualFileNo = manualValid
+    ? `OM/${caseCode}/${String(seqNum).padStart(3, "0")}/${yearNum}`
+    : "";
+  const shownFileNo = f.manualNo
+    ? (manualFileNo || `OM/${caseCode}/___/${f.manualYear}`)
+    : fileNo;
+
   // Multi-party helpers
   const updateParty = (side: "plaintiffs" | "defendants", idx: number, value: string) =>
     setF(p => {
@@ -123,8 +147,19 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
   const partyAPreview = f.plaintiffs.map((s: string) => s.trim()).filter(Boolean).join(" & ");
   const partyBPreview = f.defendants.map((s: string) => s.trim()).filter(Boolean).join(" & ");
 
-  const submit = () => {
+  const submit = async () => {
     if (!f.client.trim() || !f.title.trim()) return;
+    let reservedNo: string | undefined;
+    if (f.manualNo) {
+      if (!manualValid) { alert("Enter a valid sequence number (1-9999) and year."); return; }
+      setBusy(true);
+      const { data, error } = await supabase.rpc("reserve_matter_number", {
+        p_code: caseCode, p_year: yearNum, p_seq: seqNum,
+      });
+      setBusy(false);
+      if (error) { alert("Could not reserve that case number: " + error.message); return; }
+      reservedNo = (data as string) || manualFileNo;
+    }
     const effectiveType = (
       f.isCustom && f.customType.trim() ? f.customType.trim() : f.type
     ) as Matter["type"];
@@ -141,7 +176,9 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
       partyB:      partyBPreview,
       // court: exact court_registries.name so the DB trigger's category lookup matches
       court:       f.isLitigious && effectiveStation ? effectiveStation : undefined,
-      // fileNo intentionally omitted -- DB trigger assigns it atomically on insert
+      // Automatic: fileNo omitted and the DB trigger assigns it atomically on insert.
+      // Manual: the number was validated and reserved above.
+      ...(reservedNo ? { fileNo: reservedNo } : {}),
       openedDate:  new Date().toISOString().split("T")[0],
     });
     reset();
@@ -171,12 +208,53 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
           <FileText className="w-5 h-5 text-primary shrink-0" />
           <div>
             <p className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground font-mono mb-0.5">
-              Auto Case Number
+              {f.manualNo ? "Manual Case Number" : "Auto Case Number"}
             </p>
             <p className="font-mono font-bold text-primary text-xl leading-none tracking-wide">
-              {fileNo}
+              {shownFileNo}
             </p>
           </div>
+        </div>
+
+        {/* ── Manual case number (optional) ── */}
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={f.manualNo}
+              onChange={e => set("manualNo", e.target.checked)}
+              className="rounded border-border"
+            />
+            <span className="text-sm">Enter case number manually</span>
+          </label>
+          {f.manualNo && (
+            <div className="grid grid-cols-3 gap-3 pl-6">
+              <div className="space-y-1.5">
+                <Label>Prefix</Label>
+                <Input value={`OM/${caseCode}`} disabled className="font-mono" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Sequence</Label>
+                <Input
+                  inputMode="numeric"
+                  value={f.manualSeq}
+                  onChange={e => set("manualSeq", e.target.value.replace(/\D/g, "").slice(0, 4))}
+                  placeholder="e.g. 012"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Year</Label>
+                <Input
+                  inputMode="numeric"
+                  value={f.manualYear}
+                  onChange={e => set("manualYear", e.target.value.replace(/\D/g, "").slice(0, 4))}
+                />
+              </div>
+              <p className="col-span-3 text-[11px] text-muted-foreground">
+                The prefix follows the court or matter type chosen below, so the matter stays in the right court group.
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="space-y-4 py-1">
@@ -370,7 +448,7 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
                   <span className="text-primary font-sans font-bold not-italic mx-2">v.</span>
                   <span className="font-semibold not-italic">{partyBPreview || "—"}</span>
                 </p>
-                <p className="text-[10px] text-muted-foreground font-mono mt-0.5">{fileNo}</p>
+                <p className="text-[10px] text-muted-foreground font-mono mt-0.5">{shownFileNo}</p>
               </div>
             )}
           </div>
@@ -383,7 +461,7 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
           </Button>
           <Button
             onClick={submit}
-            disabled={!f.client.trim() || !f.title.trim()}
+            disabled={!f.client.trim() || !f.title.trim() || busy}
             className="btn-royal"
           >
             Open Matter →
