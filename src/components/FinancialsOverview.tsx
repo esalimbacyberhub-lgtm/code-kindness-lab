@@ -102,9 +102,8 @@ export function FinancialsOverview() {
   });
 
   // Group by debtor
-  const byDebtor: Record_[]= [] as any;
   type Debtor = { client: string; outstanding: number; items: Record[]; oldest: number };
-  const debtorsMap: Record<string, Debtor> = {};
+  const debtorsMap: { [client: string]: Debtor } = {};
   outstandingRecords.forEach(r => {
     if (!debtorsMap[r.client]) debtorsMap[r.client] = { client: r.client, outstanding: 0, items: [], oldest: 0 };
     debtorsMap[r.client].outstanding += r.amount;

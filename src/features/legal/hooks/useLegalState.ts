@@ -107,6 +107,6 @@ export function useLegalState() {
   return {
     state: stateWithSb, setView, setRole, toggleSidebar, moveTask, addTask, deleteTask, addMatter, updateMatter: sb.updateMatter, deleteMatter: sb.deleteMatter, deleteMatterWithPassword: sb.deleteMatterWithPassword,
     addDeadline, deleteDeadline, updateDeadline, addLedgerEntry, addStaff, removeStaff,
-    addDocument, deleteDocument, deleteDocumentWithPassword, renameDocument, reorderDocuments, updateDocument, addInvoice, assignMatter, sendMessage, addWitness, updateWitnessStatus, log
+    addDocument, deleteDocument, deleteDocumentWithPassword, renameDocument, reorderDocuments, updateDocument, addInvoice, assignMatter, addMessage, sendMessage, addWitness, updateWitnessStatus, log
   };
 }

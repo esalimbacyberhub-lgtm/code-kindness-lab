@@ -62,7 +62,7 @@ export function AccountSettings() {
     // Clean up any stale/abandoned unverified factors first — Supabase
     // blocks re-enrollment if one already exists with the same friendly name.
     const { data: existing } = await supabase.auth.mfa.listFactors();
-    const stale = existing?.totp.filter(f => f.status === "unverified") || [];
+    const stale = existing?.all?.filter(f => f.factor_type === "totp" && f.status === "unverified") || [];
     for (const f of stale) {
       await supabase.auth.mfa.unenroll({ factorId: f.id });
     }

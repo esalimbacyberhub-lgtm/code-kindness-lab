@@ -29,7 +29,7 @@ const addDays = (dateStr, n) => {
 }
 
 const daysBetween = (a, b) =>
-  Math.floor((new Date(b) - new Date(a)) / 86_400_000)
+  Math.floor((new Date(b).getTime() - new Date(a).getTime()) / 86_400_000)
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DOUBLE-ENTRY GL DERIVATION
@@ -89,7 +89,7 @@ function buildGL(invoices, trustTxns) {
     })
   })
 
-  return rows.sort((a, b) => new Date(a.date) - new Date(b.date))
+  return rows.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -116,7 +116,7 @@ function computeBalances(gl) {
       acc[line.code].cr += line.cr
     })
   )
-  Object.values(acc).forEach((a) => {
+  Object.values(acc as any).forEach((a: any) => {
     a.balance = a.normal === "dr" ? a.dr - a.cr : a.cr - a.dr
   })
   return acc
@@ -182,7 +182,7 @@ function InvoiceForm({ onSave, onClose, count }) {
     onClose()
   }
 
-  const inp = {
+  const inp: any = {
     style: {
       background: "#080f1c",
       border: "1px solid rgba(255,255,255,0.1)",
@@ -402,7 +402,7 @@ export default function FinancialsModule() {
     sub:    "#94a3b8",
   }
 
-  const s = {
+  const s: any = {
     card:    { background: C.panel, border: `1px solid ${C.border}`, borderRadius: 12, padding: "20px 24px", marginBottom: 16 },
     tbl:     { width: "100%", borderCollapse: "collapse", fontSize: 13 },
     th:      { textAlign: "left", padding: "10px 14px", fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: C.muted, borderBottom: `1px solid ${C.border}` },
@@ -766,7 +766,7 @@ export default function FinancialsModule() {
                     <tr>{["Date","Client","Reference","Type","Amount"].map((h) => <th key={h} style={{ ...s.th, textAlign: h === "Amount" ? "right" : "left" }}>{h}</th>)}</tr>
                   </thead>
                   <tbody>
-                    {[...trustTxns].sort((a, b) => new Date(b.date) - new Date(a.date)).map((t) => (
+                    {[...trustTxns].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((t) => (
                       <tr key={t.id}>
                         <td style={{ ...s.td, color: C.muted }}>{fmtDate(t.date)}</td>
                         <td style={s.td}>{t.client}</td>

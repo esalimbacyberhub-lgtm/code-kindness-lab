@@ -19,7 +19,8 @@ import {
   ArrowLeft, FolderOpen, Folder, Plus, Edit3, Users, Receipt,
   ClipboardList, ChevronRight, Search, Filter, Eye, GripVertical, Pencil,
 } from "lucide-react";
-import type { Matter, StaffMember, Role, VaultDocument } from "../types";
+import type { Matter, StaffMember, Role, VaultDocument, Deadline } from "../types";
+import type { CaseActivity } from "../hooks/useSupabaseCaseActivities";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
