@@ -9,6 +9,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { CaseStatusDialog } from "../components/CaseStatusDialog";
 import { RecordMilestoneDialog } from "../components/RecordMilestoneDialog";
+import { ActivityDraftTools } from "../components/ActivityDraftTools";
 import { useCaseMilestones } from "../hooks/useCaseMilestones";
 import { useMatterFolders } from "../hooks/useMatterFolders";
 import { useSupabaseCaseActivities, LITIGIOUS_ACTIVITY_TYPES } from "../hooks/useSupabaseCaseActivities";
@@ -1233,7 +1234,7 @@ export const Matters = ({
 const ACTIVITY_TABLE_COLS = ["Activity", "Activity Date", "Court Room", "Actioned To", "Outcomes"];
 
 function CaseActivitiesPanel({ matter, onAddDeadline }: { matter: Matter; onAddDeadline?: (d: Omit<Deadline, "id">) => void }) {
-  const { activities, addActivity, deleteActivity } = useSupabaseCaseActivities(matter.id);
+  const { activities, addActivity, updateActivity, deleteActivity, uploadDraft, getDraftUrl } = useSupabaseCaseActivities(matter.id);
   const litigious = isLitigiousMatter(matter);
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -1311,6 +1312,7 @@ function CaseActivitiesPanel({ matter, onAddDeadline }: { matter: Matter; onAddD
                   <td className="py-2.5 pr-4 text-muted-foreground">{a.actionedTo || "—"}</td>
                   <td className="py-2.5 pr-4 text-muted-foreground min-w-[220px] whitespace-pre-wrap break-words">{a.outcome || "—"}</td>
                   <td className="py-2.5">
+                    <ActivityDraftTools activity={a} onUpdate={updateActivity} onUpload={uploadDraft} getUrl={getDraftUrl} />
                     <button onClick={() => { if (confirm("Delete this activity?")) deleteActivity(a.id); }} className="text-muted-foreground hover:text-destructive">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

@@ -11,6 +11,8 @@ export interface CaseActivity {
   outcome: string;
   nextDate: string;
   clientVisible: boolean;
+  draftPath?: string;
+  draftName?: string;
   createdAt: string;
 }
 
@@ -37,6 +39,8 @@ function rowToActivity(row: any): CaseActivity {
     outcome: row.outcome || "",
     nextDate: row.next_date || "",
     clientVisible: row.client_visible === true,
+    draftPath: row.draft_path || "",
+    draftName: row.draft_name || "",
     createdAt: row.created_at || "",
   };
 }
@@ -110,10 +114,40 @@ export function useSupabaseCaseActivities(matterId: string | null) {
   }, [refetch]);
 
   const deleteActivity = useCallback(async (id: string) => {
+    const { data: drow } = await supabase.from("case_activities").select("draft_path").eq("id", id).single();
+    if (drow?.draft_path) await supabase.storage.from("matter-documents").remove([drow.draft_path]);
     const { error } = await supabase.from("case_activities").delete().eq("id", id);
     if (error) console.error("deleteActivity:", error);
     await refetch();
   }, [refetch]);
 
-  return { activities, loading, addActivity, updateActivity, deleteActivity };
+  // Upload (or replace) the draft file attached to an activity
+  const uploadDraft = useCallback(async (id: string, file: File): Promise<boolean> => {
+    if (!matterId) return false;
+    const safe = file.name.replace(/[^\w.\-]+/g, "_");
+    const path = `${matterId}/activity-drafts/${id}_${Date.now()}_${safe}`;
+    const { data: prev } = await supabase.from("case_activities").select("draft_path").eq("id", id).single();
+    const { error: upErr } = await supabase.storage
+      .from("matter-documents")
+      .upload(path, file, { upsert: false, contentType: file.type || undefined });
+    if (upErr) { alert("Could not upload the draft: " + upErr.message); return false; }
+    const { error } = await supabase.from("case_activities")
+      .update({ draft_path: path, draft_name: file.name }).eq("id", id);
+    if (error) {
+      await supabase.storage.from("matter-documents").remove([path]);
+      alert("Could not attach the draft: " + error.message);
+      return false;
+    }
+    if (prev?.draft_path) await supabase.storage.from("matter-documents").remove([prev.draft_path]);
+    await refetch();
+    return true;
+  }, [matterId, refetch]);
+
+  const getDraftUrl = useCallback(async (path: string): Promise<string | null> => {
+    const { data, error } = await supabase.storage.from("matter-documents").createSignedUrl(path, 3600);
+    if (error) { alert("Could not open the draft: " + error.message); return null; }
+    return data?.signedUrl ?? null;
+  }, []);
+
+  return { activities, loading, addActivity, updateActivity, deleteActivity, uploadDraft, getDraftUrl };
 }
