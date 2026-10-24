@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { formatDate } from "@/lib/formatDate";
 import {
   Plus, Trash2, Calendar as CalIcon, Scale, FileText,
   Gavel, AlertCircle, Building2, ChevronLeft, ChevronRight,
@@ -613,7 +614,7 @@ function DeadlineRow({d,onDelete,overdue=false}:{d:Deadline;onDelete:(id:string)
       </div>
       <div className="text-right shrink-0">
         <p className={cn("text-sm font-semibold",overdue?"text-muted-foreground":"text-primary")}>
-          {new Date(d.date+"T00:00:00").toLocaleDateString("en-KE",{day:"numeric",month:"short",year:"numeric"})}
+          {formatDate(d.date+"T00:00:00")}
         </p>
         <p className="text-[10px] uppercase text-muted-foreground capitalize mt-0.5">{d.type==="lsk"?"LSK":d.type}</p>
       </div>

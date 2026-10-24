@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { PriorityWidgets } from "../components/PriorityWidgets";
 import { TaskBoard } from "../components/TaskBoard";
 import type { Task, TaskStatus, Deadline } from "../types";
+import { formatDate } from "@/lib/formatDate";
 
 interface Props {
   tasks: Task[];
@@ -47,11 +48,14 @@ export function Dashboard({ tasks, deadlines = [], matters = [], invoices = [], 
 
   const [deadlinesOpen, setDeadlinesOpen] = useState(false);
 
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = formatDate(new Date());
   const allUpcoming = [...deadlines]
     .filter(d => d.date >= todayStr)
     .sort((a, b) => a.date.localeCompare(b.date));
-  const upcoming = allUpcoming.slice(0, 6);
+  const horizon = new Date();
+  horizon.setDate(horizon.getDate() + 14);
+  const horizonStr = formatDate(horizon);
+  const dueSoon = allUpcoming.filter(d => d.date <= horizonStr);
 
   const daysUntil = (d: string) => {
     const diff = Math.ceil((new Date(d + "T00:00:00").getTime() - new Date().setHours(0,0,0,0)) / 86400000);
@@ -94,9 +98,9 @@ export function Dashboard({ tasks, deadlines = [], matters = [], invoices = [], 
           >
             <CalIcon className="w-4 h-4 text-brand-gold" />
             <h3 className="font-semibold text-sm">Deadlines</h3>
-            {upcoming.length > 0 && (
+            {dueSoon.length > 0 && (
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-brand-gold/15 text-brand-gold font-bold">
-                {upcoming.length}
+                {dueSoon.length}
               </span>
             )}
           </button>
@@ -107,9 +111,42 @@ export function Dashboard({ tasks, deadlines = [], matters = [], invoices = [], 
           )}
         </div>
 
-        <p className="text-xs text-muted-foreground">
-          {allUpcoming.length === 0 ? "No upcoming court dates." : "Click above to view all upcoming court dates and deadlines."}
-        </p>
+        {dueSoon.length === 0 ? (
+          <p className="text-xs text-muted-foreground">
+            {allUpcoming.length === 0
+              ? "No upcoming court dates."
+              : `Nothing due in the next 14 days. Next: ${allUpcoming[0].title} on ${formatDate(allUpcoming[0].date)}.`}
+          </p>
+        ) : (
+          <div className="space-y-2">
+            <p className="text-[11px] text-muted-foreground mb-1">
+              Next 14 days · {dueSoon.length} item{dueSoon.length !== 1 ? "s" : ""}
+            </p>
+            {dueSoon.map(d => {
+              const Icon = TYPE_ICON[d.type] || CalIcon;
+              const dc = daysUntil(d.date);
+              return (
+                <button
+                  key={d.id}
+                  onClick={() => openMatterFromDeadline(d)}
+                  className="w-full text-left flex items-center gap-3 p-2.5 rounded-lg bg-secondary/20 hover:bg-secondary/40 transition-all border-l-4 border-l-brand-gold/40"
+                >
+                  <div className={"w-7 h-7 rounded-lg flex items-center justify-center border shrink-0 " + (TYPE_STYLE[d.type] || TYPE_STYLE.deadline)}>
+                    <Icon className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">{d.title}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">{[d.matter, d.court].filter(Boolean).join(" · ")}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-xs font-mono">{formatDate(d.date)}</p>
+                    <p className={"text-[11px] font-semibold " + dc.color}>{dc.label}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <TaskBoard tasks={tasks} matters={matters} deadlines={deadlines} invoices={invoices} onMove={onMoveTask} onAdd={onAddTask} onDelete={onDeleteTask} />

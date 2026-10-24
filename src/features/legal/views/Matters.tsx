@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { formatDate } from "@/lib/formatDate";
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
   DragEndEvent,
@@ -883,7 +884,7 @@ export const Matters = ({
         <h3 className="font-semibold text-sm leading-tight">{m.title}</h3>
         <p className="text-xs text-muted-foreground mt-1">{m.client}</p>
         {(m as any).caseStatus === "hearing-scheduled" && (m as any).nextHearingDate && (
-          <p className="text-[10px] text-info font-semibold mt-1">⚖️ Hearing: {new Date((m as any).nextHearingDate).toLocaleDateString("en-KE",{day:"numeric",month:"short",year:"numeric"})}</p>
+          <p className="text-[10px] text-info font-semibold mt-1">⚖️ Hearing: {formatDate((m as any).nextHearingDate)}</p>
         )}
         {(m as any).caseStatus === "completed" && (m as any).result && (
           <p className="text-[10px] text-success font-semibold mt-1">✓ Completed — {((m as any).result || "").toUpperCase()}</p>
@@ -1307,7 +1308,7 @@ function CaseActivitiesPanel({ matter, onAddDeadline }: { matter: Matter; onAddD
                 <tr key={a.id} className="border-b border-border/30 last:border-0">
                   <td className="py-2.5 pr-4 font-medium">{a.activityType}</td>
                   <td className="py-2.5 pr-4 text-muted-foreground">
-                    {a.activityDate ? new Date(a.activityDate + "T00:00:00").toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                    {a.activityDate ? formatDate(a.activityDate + "T00:00:00") : "—"}
                   </td>
                   <td className="py-2.5 pr-4 text-muted-foreground">{a.courtRoom || "—"}</td>
                   <td className="py-2.5 pr-4 text-muted-foreground">{a.actionedTo || "—"}</td>

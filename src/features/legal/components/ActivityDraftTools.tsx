@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { formatDate } from "@/lib/formatDate";
 import { Pencil, MessageSquarePlus, Paperclip, FileText, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -45,7 +46,7 @@ export function ActivityDraftTools({ activity, onUpdate, onUpload, getUrl }: Pro
   const saveUpdate = async () => {
     const text = note.trim();
     if (!text) return;
-    const stamp = new Date().toLocaleDateString("en-KE", { day: "numeric", month: "short", year: "numeric" });
+    const stamp = formatDate();
     const next = [activity.outcome, `${stamp}: ${text}`].filter(Boolean).join("\n\n");
     setBusy(true);
     await onUpdate(activity.id, { outcome: next });

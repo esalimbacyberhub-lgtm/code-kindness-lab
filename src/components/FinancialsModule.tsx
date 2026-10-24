@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react"
 import { FirmLetterhead, FirmFooter, FIRM } from "./FirmLetterhead"
 import { FinancialsOverview } from "./FinancialsOverview";
+import { formatDate } from "@/lib/formatDate";
 import { FinancialNotes } from "./FinancialNotes";
 import { FeeNotesTab } from "./FeeNotesTab"
 import { useSupabaseInvoices } from "@/features/legal/hooks/useSupabaseInvoices"
@@ -16,7 +17,7 @@ const kes = (n) =>
   `KES ${(+n || 0).toLocaleString("en-KE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
 const fmtDate = (d) =>
-  d ? new Date(d).toLocaleDateString("en-KE", { day: "2-digit", month: "short", year: "numeric" }) : "—"
+  d ? formatDate(d) : "—"
 
 const uid = () => Math.random().toString(36).slice(2, 9).toUpperCase()
 

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { formatDate } from "@/lib/formatDate";
 import { Send, Lock, FileText, Briefcase, CreditCard, MessageSquare, Clock, CheckCircle2, Download, Eye, Phone, Mail, Building2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +19,7 @@ interface Props {
   clientUserId?: string;
 }
 
-const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString("en-KE", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+const fmtDate = (d: string) => d ? formatDate(d) : "—";
 const kes = (n: number) => `KES ${(+n||0).toLocaleString("en-KE", { minimumFractionDigits: 2 })}`;
 
 const PORTAL_TABS = [

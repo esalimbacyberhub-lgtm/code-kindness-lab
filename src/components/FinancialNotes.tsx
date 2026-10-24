@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formatDate } from "@/lib/formatDate";
 import { useSupabaseFinancialNotes } from "@/features/legal/hooks/useSupabaseFinancialNotes";
 import { Plus, Trash2, FileText, Tag, Calendar as CalIcon, X, AlertCircle, Edit3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,7 @@ const CATEGORIES = [
 
 const BLANK = { date: new Date().toISOString().slice(0,10), category: "general", title: "", body: "", relatedRef: "" };
 
-const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString("en-KE", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+const fmtDate = (d: string) => d ? formatDate(d) : "—";
 
 export function FinancialNotes() {
   const { notes, addNote, updateNote, deleteNote } = useSupabaseFinancialNotes();

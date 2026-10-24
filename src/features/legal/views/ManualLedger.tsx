@@ -1,4 +1,5 @@
 import { Fragment, useMemo, useState } from "react";
+import { formatDate } from "@/lib/formatDate";
 import { Plus, Pencil, Trash2, X, ChevronDown, ChevronRight, Receipt } from "lucide-react";
 import type { Matter, Role } from "../types";
 import { cn } from "@/lib/utils";
@@ -262,7 +263,7 @@ export function ManualLedger({ matters, role }: Props) {
                         {open ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                       </td>
                       <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
-                        {new Date(e.entry_date).toLocaleDateString("en-KE", { day: "2-digit", month: "short", year: "numeric" })}
+                        {formatDate(e.entry_date)}
                       </td>
                       <td className="max-w-[260px] truncate px-4 py-3">{e.description}</td>
                       <td className="max-w-[160px] truncate px-4 py-3 text-xs text-muted-foreground">

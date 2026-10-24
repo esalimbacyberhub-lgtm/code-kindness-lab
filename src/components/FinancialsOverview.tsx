@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { formatDate } from "@/lib/formatDate";
 import {
   TrendingUp, TrendingDown, AlertCircle, Users, CheckCircle2,
   Clock, FileText, DollarSign, Send,
@@ -30,7 +31,7 @@ interface FeeNote {
 }
 
 const kes = (n: number) => `KES ${(+n || 0).toLocaleString("en-KE", { minimumFractionDigits: 2 })}`;
-const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString("en-KE", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+const fmtDate = (d: string) => d ? formatDate(d) : "—";
 
 function daysBetween(a: string, b: string) {
   const da = new Date(a).getTime();
