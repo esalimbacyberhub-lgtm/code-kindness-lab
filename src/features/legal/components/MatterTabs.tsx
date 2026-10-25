@@ -25,13 +25,30 @@ function dayLabel(date: string): { text: string; cls: string } {
   return { text: `${-diff}d ago`, cls: "text-muted-foreground" };
 }
 
-const DRAFT_KINDS = [
-  { key: "defence", label: "Defence" },
-  { key: "motion", label: "Response to motion" },
-  { key: "submissions", label: "Submissions" },
-  { key: "other", label: "Other draft" },
-] as const;
-type DraftKind = (typeof DRAFT_KINDS)[number]["key"];
+type Group = "draft" | "other";
+interface Kind { key: string; label: string; type: Deadline["type"] }
+
+// Names only: the due date is always typed in, because it depends on the court's rules and directions
+const DRAFT_KINDS: Kind[] = [
+  { key: "appearance", label: "Memorandum of appearance", type: "filing" },
+  { key: "defence", label: "Defence", type: "filing" },
+  { key: "reply", label: "Reply to defence", type: "filing" },
+  { key: "motion", label: "Response to motion", type: "filing" },
+  { key: "affidavit", label: "Replying affidavit", type: "filing" },
+  { key: "submissions", label: "Written submissions", type: "filing" },
+  { key: "witness", label: "Witness statements", type: "filing" },
+  { key: "documents", label: "List and bundle of documents", type: "filing" },
+  { key: "custom", label: "Other draft — type your own", type: "filing" },
+];
+
+const OTHER_KINDS: Kind[] = [
+  { key: "hearing", label: "Hearing", type: "hearing" },
+  { key: "mention", label: "Mention", type: "mention" },
+  { key: "ruling", label: "Ruling", type: "ruling" },
+  { key: "judgment", label: "Judgment", type: "ruling" },
+  { key: "filing", label: "Filing", type: "filing" },
+  { key: "custom", label: "Other deadline — type your own", type: "deadline" },
+];
 
 // Draft deadlines are titled "Draft: ..." (added here) or "Drafting — ..." (from a Drafting case activity)
 const isDraftDeadline = (d: Deadline) => /^draft/i.test(String(d.title || ""));
@@ -46,9 +63,11 @@ interface DeadlinesProps {
 
 export function MatterDeadlinesPanel({ matter, deadlines, onAddDeadline, onAddTask, canEdit }: DeadlinesProps) {
   const [open, setOpen] = useState(false);
-  const [kind, setKind] = useState<DraftKind>("defence");
+  const [group, setGroup] = useState<Group>("draft");
+  const [kindKey, setKindKey] = useState("defence");
   const [customName, setCustomName] = useState("");
   const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
   const [notes, setNotes] = useState("");
   const today = formatDate(new Date());
 
@@ -62,32 +81,46 @@ export function MatterDeadlinesPanel({ matter, deadlines, onAddDeadline, onAddTa
   const draftList = mine.filter(isDraftDeadline);
   const otherList = mine.filter(d => !isDraftDeadline(d));
 
-  const label = kind === "other" ? customName.trim() : DRAFT_KINDS.find(k => k.key === kind)!.label;
+  const kinds = group === "draft" ? DRAFT_KINDS : OTHER_KINDS;
+  const kind = kinds.find(k => k.key === kindKey) ?? kinds[0];
+  const label = kind.key === "custom" ? customName.trim() : kind.label;
   const canSave = !!date && !!label;
 
-  const close = () => { setOpen(false); setKind("defence"); setCustomName(""); setDate(""); setNotes(""); };
+  const changeGroup = (g: Group) => {
+    setGroup(g);
+    setKindKey(g === "draft" ? "defence" : "hearing");
+    setCustomName("");
+  };
+
+  const close = () => {
+    setOpen(false); setGroup("draft"); setKindKey("defence");
+    setCustomName(""); setDate(""); setTime(""); setNotes("");
+  };
 
   const submit = () => {
     if (!canSave || !onAddDeadline) return;
-    const title = `Draft: ${label} — ${matter.title}`;
+    const title = group === "draft" ? `Draft: ${label} — ${matter.title}` : `${label} — ${matter.title}`;
     onAddDeadline({
       title,
       matter: matter.fileNo || "General",
       matterId: matter.id,
       court: matter.court || "",
       date,
-      type: "filing",
+      time: group === "other" && time ? time : undefined,
+      type: kind.type,
       summary: notes.trim() || undefined,
     });
-    // A real task, so the draft can be worked through To Do, In Progress, Review and Done
-    onAddTask?.({
-      title,
-      matter: matter.title || matter.fileNo || "",
-      matterId: matter.id,
-      priority: "high",
-      status: "todo",
-      due: date,
-    });
+    // Drafts also become a real task, so they can be worked through To Do, In Progress, Review and Done
+    if (group === "draft") {
+      onAddTask?.({
+        title,
+        matter: matter.title || matter.fileNo || "",
+        matterId: matter.id,
+        priority: "high",
+        status: "todo",
+        due: date,
+      });
+    }
     close();
   };
 
@@ -102,14 +135,14 @@ export function MatterDeadlinesPanel({ matter, deadlines, onAddDeadline, onAddTa
           </p>
         </div>
         <div className="text-right shrink-0">
-          <p className="text-xs font-mono">{formatDate(d.date)}</p>
+          <p className="text-xs font-mono">{formatDate(d.date)}{d.time ? ` ${d.time}` : ""}</p>
           <p className={cn("text-[11px] font-semibold", dl.cls)}>{dl.text}</p>
         </div>
       </li>
     );
   };
 
-  const group = (list: Deadline[]) => {
+  const groupList = (list: Deadline[]) => {
     const upcoming = list.filter(d => d.date >= today);
     const past = list.filter(d => d.date < today).reverse();
     return (
@@ -134,7 +167,7 @@ export function MatterDeadlinesPanel({ matter, deadlines, onAddDeadline, onAddTa
             onClick={() => setOpen(true)}
             className="flex items-center gap-1.5 whitespace-nowrap text-xs px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:opacity-90 font-semibold"
           >
-            <Plus className="w-3.5 h-3.5" /> Add draft deadline
+            <Plus className="w-3.5 h-3.5" /> Add deadline
           </button>
         )}
       </div>
@@ -146,47 +179,76 @@ export function MatterDeadlinesPanel({ matter, deadlines, onAddDeadline, onAddTa
             <p className="text-sm text-muted-foreground text-center py-6">
               No draft deadlines yet. One added here also appears in To Do on the Command Deck.
             </p>
-          ) : group(draftList)}
+          ) : groupList(draftList)}
         </div>
         {otherList.length > 0 && (
           <div>
-            <p className="text-[10px] uppercase tracking-[0.15em] font-semibold text-muted-foreground mb-2">Other court dates</p>
-            {group(otherList)}
+            <p className="text-[10px] uppercase tracking-[0.15em] font-semibold text-muted-foreground mb-2">Other deadlines</p>
+            {groupList(otherList)}
           </div>
         )}
       </div>
 
       <Dialog open={open} onOpenChange={o => { if (!o) close(); }}>
-        <DialogContent className="glass-card border-border max-w-md">
+        <DialogContent className="glass-card border-border max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-serif text-xl">Add draft deadline</DialogTitle>
+            <DialogTitle className="font-serif text-xl">Add deadline</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-2">
+              {(["draft", "other"] as Group[]).map(g => (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => changeGroup(g)}
+                  className={cn(
+                    "text-xs font-semibold px-3 py-2 rounded-lg border transition-colors",
+                    group === g ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:border-primary/40",
+                  )}
+                >
+                  {g === "draft" ? "Draft" : "Court date / other"}
+                </button>
+              ))}
+            </div>
             <div className="space-y-1.5">
-              <Label>Draft *</Label>
-              <Select value={kind} onValueChange={v => setKind(v as DraftKind)}>
+              <Label>{group === "draft" ? "Draft *" : "Type *"}</Label>
+              <Select value={kind.key} onValueChange={setKindKey}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {DRAFT_KINDS.map(k => <SelectItem key={k.key} value={k.key}>{k.label}</SelectItem>)}
+                  {kinds.map(k => <SelectItem key={k.key} value={k.key}>{k.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
-            {kind === "other" && (
+            {kind.key === "custom" && (
               <div className="space-y-1.5">
-                <Label>Draft name *</Label>
-                <Input value={customName} onChange={e => setCustomName(e.target.value)} placeholder="e.g. Written submissions on costs" />
+                <Label>{group === "draft" ? "Draft name *" : "Deadline name *"}</Label>
+                <Input
+                  value={customName}
+                  onChange={e => setCustomName(e.target.value)}
+                  placeholder={group === "draft" ? "e.g. Written submissions on costs" : "e.g. Pre-trial conference"}
+                />
               </div>
             )}
-            <div className="space-y-1.5">
-              <Label>Due date *</Label>
-              <Input type="date" value={date} onChange={e => setDate(e.target.value)} />
+            <div className={cn("grid gap-3", group === "other" ? "grid-cols-2" : "grid-cols-1")}>
+              <div className="space-y-1.5">
+                <Label>Due date *</Label>
+                <Input type="date" value={date} onChange={e => setDate(e.target.value)} />
+              </div>
+              {group === "other" && (
+                <div className="space-y-1.5">
+                  <Label>Time (optional)</Label>
+                  <Input type="time" value={time} onChange={e => setTime(e.target.value)} />
+                </div>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label>Note (optional)</Label>
               <Input value={notes} onChange={e => setNotes(e.target.value)} placeholder="e.g. Served on 2026-10-20" />
             </div>
             <p className="text-[11px] text-muted-foreground">
-              Added to this matter's Deadlines, the Calendar, and your To Do list.
+              {group === "draft"
+                ? "Added to this matter's Deadlines, the Calendar, and your To Do list."
+                : "Added to this matter's Deadlines and the Calendar."}
             </p>
           </div>
           <DialogFooter>
