@@ -305,6 +305,7 @@ interface Props {
   onDeleteMatterWithPassword?: (id: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   onAddDeadline?: (d: Omit<Deadline, "id">) => void;
   deadlines?: Deadline[];
+  onAddTask?: (t: any) => void;
 }
 
 // Court code -> whether this matter is litigious (mirrors getMatterCourtGroup's
@@ -330,7 +331,7 @@ function activityToDeadlineType(activityType: string): Deadline["type"] {
 export const Matters = ({
   onNewMatter, matters, staff, role, onAssign,
   documents, onAddDocument, onDeleteDocument, onDeleteDocumentWithPassword, onRenameDocument, onReorderDocuments,
-  onUpdateMatter, onUpdateDocument, onDeleteMatter, onDeleteMatterWithPassword, onAddDeadline, deadlines = [],
+  onUpdateMatter, onUpdateDocument, onDeleteMatter, onDeleteMatterWithPassword, onAddDeadline, deadlines = [], onAddTask,
 }: Props) => {
   const [selected,    setSelected]    = useState<Matter | null>(null);
   const [statusEdit,  setStatusEdit]  = useState<Matter | null>(null);
@@ -670,7 +671,7 @@ export const Matters = ({
         </div>
 
         {/* ── Tab Switcher ── */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setDetailTab("documents")}
             className={cn(
@@ -710,7 +711,7 @@ export const Matters = ({
         </div>
 
         {detailTab === "deadlines" && (
-          <MatterDeadlinesPanel matter={selected} deadlines={deadlines} onAddDeadline={onAddDeadline} canEdit={role !== "client"} />
+          <MatterDeadlinesPanel matter={selected} deadlines={deadlines} onAddDeadline={onAddDeadline} onAddTask={onAddTask} canEdit={role !== "client"} />
         )}
 
         {detailTab === "drafts" && <MatterDraftsPanel matter={selected} />}

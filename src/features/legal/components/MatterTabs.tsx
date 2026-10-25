@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import type { Deadline, Matter } from "../types";
 import { useSupabaseCaseActivities } from "../hooks/useSupabaseCaseActivities";
@@ -24,18 +25,29 @@ function dayLabel(date: string): { text: string; cls: string } {
   return { text: `${-diff}d ago`, cls: "text-muted-foreground" };
 }
 
-type Kind = "defence" | "motion";
-const KIND_TITLE: Record<Kind, string> = { defence: "Defence deadline", motion: "Respond to motion" };
+const DRAFT_KINDS = [
+  { key: "defence", label: "Defence" },
+  { key: "motion", label: "Response to motion" },
+  { key: "submissions", label: "Submissions" },
+  { key: "other", label: "Other draft" },
+] as const;
+type DraftKind = (typeof DRAFT_KINDS)[number]["key"];
+
+// Draft deadlines are titled "Draft: ..." (added here) or "Drafting — ..." (from a Drafting case activity)
+const isDraftDeadline = (d: Deadline) => /^draft/i.test(String(d.title || ""));
 
 interface DeadlinesProps {
   matter: Matter;
   deadlines: Deadline[];
   onAddDeadline?: (d: Omit<Deadline, "id">) => void;
+  onAddTask?: (t: any) => void;
   canEdit: boolean;
 }
 
-export function MatterDeadlinesPanel({ matter, deadlines, onAddDeadline, canEdit }: DeadlinesProps) {
-  const [kind, setKind] = useState<Kind | null>(null);
+export function MatterDeadlinesPanel({ matter, deadlines, onAddDeadline, onAddTask, canEdit }: DeadlinesProps) {
+  const [open, setOpen] = useState(false);
+  const [kind, setKind] = useState<DraftKind>("defence");
+  const [customName, setCustomName] = useState("");
   const [date, setDate] = useState("");
   const [notes, setNotes] = useState("");
   const today = formatDate(new Date());
@@ -47,21 +59,34 @@ export function MatterDeadlinesPanel({ matter, deadlines, onAddDeadline, canEdit
       .sort((a, b) => a.date.localeCompare(b.date)),
     [deadlines, matter.id, matter.fileNo],
   );
-  const upcoming = mine.filter(d => d.date >= today);
-  const past = mine.filter(d => d.date < today).reverse();
+  const draftList = mine.filter(isDraftDeadline);
+  const otherList = mine.filter(d => !isDraftDeadline(d));
 
-  const close = () => { setKind(null); setDate(""); setNotes(""); };
+  const label = kind === "other" ? customName.trim() : DRAFT_KINDS.find(k => k.key === kind)!.label;
+  const canSave = !!date && !!label;
+
+  const close = () => { setOpen(false); setKind("defence"); setCustomName(""); setDate(""); setNotes(""); };
 
   const submit = () => {
-    if (!kind || !date || !onAddDeadline) return;
+    if (!canSave || !onAddDeadline) return;
+    const title = `Draft: ${label} — ${matter.title}`;
     onAddDeadline({
-      title: `${KIND_TITLE[kind]} — ${matter.title}`,
+      title,
       matter: matter.fileNo || "General",
       matterId: matter.id,
       court: matter.court || "",
       date,
       type: "filing",
       summary: notes.trim() || undefined,
+    });
+    // A real task, so the draft can be worked through To Do, In Progress, Review and Done
+    onAddTask?.({
+      title,
+      matter: matter.title || matter.fileNo || "",
+      matterId: matter.id,
+      priority: "high",
+      status: "todo",
+      due: date,
     });
     close();
   };
@@ -84,57 +109,89 @@ export function MatterDeadlinesPanel({ matter, deadlines, onAddDeadline, canEdit
     );
   };
 
+  const group = (list: Deadline[]) => {
+    const upcoming = list.filter(d => d.date >= today);
+    const past = list.filter(d => d.date < today).reverse();
+    return (
+      <div className="space-y-3">
+        {upcoming.length > 0 && <ul className="space-y-2">{upcoming.map(d => row(d, false))}</ul>}
+        {past.length > 0 && (
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.15em] font-semibold text-muted-foreground mb-2">Past</p>
+            <ul className="space-y-2">{past.map(d => row(d, true))}</ul>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="glass-card rounded-xl p-5">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         <h3 className="font-semibold text-sm">Deadlines for this matter</h3>
         {canEdit && onAddDeadline && (
-          <div className="flex items-center gap-2">
-            <button onClick={() => setKind("defence")} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:opacity-90 font-semibold">
-              <Plus className="w-3.5 h-3.5" /> Add defence deadline
-            </button>
-            <button onClick={() => setKind("motion")} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 font-semibold">
-              <Plus className="w-3.5 h-3.5" /> Respond to motion
-            </button>
+          <button
+            onClick={() => setOpen(true)}
+            className="flex items-center gap-1.5 whitespace-nowrap text-xs px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:opacity-90 font-semibold"
+          >
+            <Plus className="w-3.5 h-3.5" /> Add draft deadline
+          </button>
+        )}
+      </div>
+
+      <div className="space-y-6">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.15em] font-semibold text-muted-foreground mb-2">Draft deadlines</p>
+          {draftList.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">
+              No draft deadlines yet. One added here also appears in To Do on the Command Deck.
+            </p>
+          ) : group(draftList)}
+        </div>
+        {otherList.length > 0 && (
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.15em] font-semibold text-muted-foreground mb-2">Other court dates</p>
+            {group(otherList)}
           </div>
         )}
       </div>
 
-      {mine.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-8">No deadlines recorded for this matter yet.</p>
-      ) : (
-        <div className="space-y-4">
-          {upcoming.length > 0 && <ul className="space-y-2">{upcoming.map(d => row(d, false))}</ul>}
-          {past.length > 0 && (
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.15em] font-semibold text-muted-foreground mb-2">Past</p>
-              <ul className="space-y-2">{past.map(d => row(d, true))}</ul>
-            </div>
-          )}
-        </div>
-      )}
-
-      <Dialog open={kind !== null} onOpenChange={o => { if (!o) close(); }}>
+      <Dialog open={open} onOpenChange={o => { if (!o) close(); }}>
         <DialogContent className="glass-card border-border max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-serif text-xl">{kind ? KIND_TITLE[kind] : ""}</DialogTitle>
+            <DialogTitle className="font-serif text-xl">Add draft deadline</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
+              <Label>Draft *</Label>
+              <Select value={kind} onValueChange={v => setKind(v as DraftKind)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {DRAFT_KINDS.map(k => <SelectItem key={k.key} value={k.key}>{k.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            {kind === "other" && (
+              <div className="space-y-1.5">
+                <Label>Draft name *</Label>
+                <Input value={customName} onChange={e => setCustomName(e.target.value)} placeholder="e.g. Written submissions on costs" />
+              </div>
+            )}
+            <div className="space-y-1.5">
               <Label>Due date *</Label>
               <Input type="date" value={date} onChange={e => setDate(e.target.value)} />
-              <p className="text-[11px] text-muted-foreground">
-                Enter the date worked out from the court's rules or directions. It is added to the Calendar and the Command Deck.
-              </p>
             </div>
             <div className="space-y-1.5">
               <Label>Note (optional)</Label>
               <Input value={notes} onChange={e => setNotes(e.target.value)} placeholder="e.g. Served on 2026-10-20" />
             </div>
+            <p className="text-[11px] text-muted-foreground">
+              Added to this matter's Deadlines, the Calendar, and your To Do list.
+            </p>
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={close}>Cancel</Button>
-            <Button onClick={submit} disabled={!date} className="btn-royal">Add deadline</Button>
+            <Button onClick={submit} disabled={!canSave} className="btn-royal">Add deadline</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

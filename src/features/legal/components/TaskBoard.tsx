@@ -81,6 +81,8 @@ function deriveAutoItems(deadlines: any[]): AutoItem[] {
   const items: AutoItem[] = [];
 
   deadlines.forEach((d: any) => {
+    // Draft deadlines added from a matter already have a real To Do task
+    if (/^Draft:/.test(String(d.title || ""))) return;
     let status: TaskStatus | null = null;
     if (d.date === today)        status = "inprogress";
     else if (d.date < today)     status = "review";
