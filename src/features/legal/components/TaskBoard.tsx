@@ -81,6 +81,8 @@ function deriveAutoItems(deadlines: any[]): AutoItem[] {
   const items: AutoItem[] = [];
 
   deadlines.forEach((d: any) => {
+    // Hearings and mentions live on the Calendar, Today/Priority and the Deadlines card, not on the task board
+    if (d.type === "hearing" || d.type === "mention") return;
     // Draft deadlines added from a matter already have a real To Do task
     if (/^Draft(:|ing\b)/.test(String(d.title || ""))) return;
     let status: TaskStatus | null = null;
