@@ -396,7 +396,7 @@ function FeeNoteForm({ onSave, onClose, count, initial, invoiced }: { onSave: (f
 export function FeeNotesTab({ invoices = [], addInvoice }: { invoices?: any[]; addInvoice?: (inv: any) => void } = {}) {
   const { feeNotes, addFeeNote, updateFeeNote, deleteFeeNote } = useSupabaseFeeNotes()
 
-  const genInvoiceNo = () => `INV/${new Date().getFullYear()}/${String(invoices.length + 1).padStart(3, "0")}`
+  // Invoice numbers are reserved from the database counter when an invoice is generated
 
   const generateInvoice = async (fn: FeeNote) => {
     if (invoices.some(inv => inv.sourceFeeNoteId === fn.id)) {
@@ -408,8 +408,11 @@ export function FeeNotesTab({ invoices = [], addInvoice }: { invoices?: any[]; a
       ...((fn.disbursements || []).map(dd => ({ id: dd.id, description: dd.description, quantity: 1, rate: dd.rate, amount: dd.rate }))),
     ]
     if (!addInvoice) { alert("Invoicing is unavailable here."); return; }
-    await addInvoice({
-      invoiceNo: genInvoiceNo(),
+    const { data: reservedNo, error: noErr } = await supabase.rpc("next_invoice_no")
+    if (noErr || !reservedNo) { alert("Could not reserve an invoice number: " + (noErr?.message || "no number returned")); return }
+    const invoiceNo = reservedNo as string
+    const added: any = await addInvoice({
+      invoiceNo,
       date: isoToday(),
       dueDate: fn.dueDate || "",
       client: fn.client,
@@ -419,8 +422,9 @@ export function FeeNotesTab({ invoices = [], addInvoice }: { invoices?: any[]; a
       lineItems: items,
       sourceFeeNoteId: fn.id,
     })
+    if (added === false) return
     await updateFeeNote(fn.id, { status: "settled" })
-    alert(`Invoice ${genInvoiceNo()} generated. Find it in the Invoices tab.`)
+    alert(`Invoice ${invoiceNo} generated. Find it in the Invoices tab.`)
   }
   const [showForm, setShowForm]   = useState(false)
   const [viewing, setViewing]     = useState<FeeNote | null>(null)

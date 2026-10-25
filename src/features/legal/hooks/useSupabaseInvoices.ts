@@ -61,7 +61,8 @@ export function useSupabaseInvoices(matters: any[]) {
   const addInvoice = useCallback(async (inv: any) => {
     const row = invoiceToRow(inv, matters);
     const { error } = await supabase.from("invoices").insert([row]);
-    if (error) console.error("addInvoice:", error);
+    if (error) { console.error("addInvoice:", error); alert("Could not save the invoice: " + error.message); return false; }
+    return true;
   }, [matters]);
 
   const updateInvoice = useCallback(async (id: string, updates: any) => {
