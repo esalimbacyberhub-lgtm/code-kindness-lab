@@ -83,6 +83,8 @@ const BLANK = {
   manualNo:       false,
   manualSeq:      "",
   manualYear:     String(new Date().getFullYear()),
+  manualCode:     "",
+  codeTouched:    false,
 };
 
 export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], matterCount = 0 }: Props) {
@@ -124,15 +126,33 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
 
   // Manual case number: the prefix mirrors what set_matter_file_no() would use
   const [busy, setBusy] = useState(false);
-  const caseCode =
+  const suggestedCode =
     f.isLitigious && effectiveStation
       ? COURT_CATEGORY_CODES[f.courtLevel]
       : (f.isCustom && f.customType.trim()
           ? f.customType.trim().toUpperCase().replace(/\s+/g, "").slice(0, 6)
           : (MATTER_TYPES.find(t => t.value === f.type)?.abbrev || "OTH"));
+
+  // The code can be typed by hand; the suggestion above is only the starting point
+  const cleanCode = (v: string) => v.toUpperCase().replace(/^OM\//, "").replace(/[^A-Z0-9]/g, "").slice(0, 12);
+  const suggestedShown = suggestedCode || "OTH";
+  const caseCode: string = f.manualNo && f.codeTouched ? cleanCode(f.manualCode) : suggestedShown;
+  const codeFieldValue = f.codeTouched ? f.manualCode : suggestedShown;
+
+  // Warn, never block: the Matter Hub reads this code to decide litigious vs non-litigious
+  const COURT_CODES = Object.values(COURT_CATEGORY_CODES);
+  const codeLooksLitigious = COURT_CODES.some(c => caseCode.startsWith(c));
+  const codeWarning =
+    !f.manualNo || !caseCode ? "" :
+    f.isLitigious && !codeLooksLitigious
+      ? `This matter is marked litigious, but "${caseCode}" does not start with a court code (${COURT_CODES.join(", ")}), so it will appear under Non-Litigious in the Matter Hub.`
+      : !f.isLitigious && codeLooksLitigious
+        ? `"${caseCode}" starts with a court code, so this matter will appear as litigious in the Matter Hub.`
+        : "";
   const seqNum  = parseInt(f.manualSeq, 10);
   const yearNum = parseInt(f.manualYear, 10);
   const manualValid =
+    caseCode.length >= 1 &&
     Number.isInteger(seqNum) && seqNum >= 1 && seqNum <= 9999 &&
     Number.isInteger(yearNum) && yearNum >= 1990 && yearNum <= new Date().getFullYear() + 1;
   const manualFileNo = manualValid
@@ -163,7 +183,7 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
     if (!f.client.trim() || !f.title.trim()) return;
     let reservedNo: string | undefined;
     if (f.manualNo) {
-      if (!manualValid) { alert("Enter a valid sequence number (1-9999) and year."); return; }
+      if (!manualValid) { alert("Enter a valid prefix, sequence number (1-9999) and year."); return; }
       setBusy(true);
       const { data, error } = await supabase.rpc("reserve_matter_number", {
         p_code: caseCode, p_year: yearNum, p_seq: seqNum,
@@ -242,10 +262,23 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
             <span className="text-sm">Enter case number manually</span>
           </label>
           {f.manualNo && (
-            <div className="grid grid-cols-3 gap-3 pl-6">
-              <div className="space-y-1.5">
-                <Label>Prefix</Label>
-                <Input value={`OM/${caseCode}`} disabled className="font-mono" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pl-6">
+              <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                <Label>Prefix (type the code)</Label>
+                <div className="flex items-center gap-1">
+                  <span className="font-mono text-sm text-muted-foreground">OM/</span>
+                  <Input
+                    value={codeFieldValue}
+                    onChange={e => setF(p => ({ ...p, manualCode: cleanCode(e.target.value), codeTouched: true }))}
+                    placeholder="e.g. IP"
+                    className="font-mono"
+                  />
+                </div>
+                {f.codeTouched && (
+                  <button type="button" onClick={() => setF(p => ({ ...p, manualCode: "", codeTouched: false }))} className="text-[11px] text-primary hover:underline">
+                    Use suggested ({suggestedShown})
+                  </button>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label>Sequence</Label>
@@ -264,9 +297,12 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
                   onChange={e => set("manualYear", e.target.value.replace(/\D/g, "").slice(0, 4))}
                 />
               </div>
-              <p className="col-span-3 text-[11px] text-muted-foreground">
-                The prefix follows the court or matter type chosen below, so the matter stays in the right court group.
+              <p className="col-span-2 sm:col-span-3 text-[11px] text-muted-foreground">
+                The code is suggested from the court or matter type chosen below, but you can type any code. "OM/" is added automatically.
               </p>
+              {codeWarning && (
+                <p className="col-span-2 sm:col-span-3 text-[11px] text-warning">{codeWarning}</p>
+              )}
             </div>
           )}
         </div>
