@@ -844,7 +844,7 @@ export const Matters = ({
         )}
 
         {detailTab === "activities" && (
-          <CaseActivitiesPanel matter={selected} onAddDeadline={onAddDeadline} />
+          <CaseActivitiesPanel matter={selected} onAddDeadline={onAddDeadline} onAddTask={onAddTask} />
         )}
       </div>
     );
@@ -1273,7 +1273,7 @@ export const Matters = ({
 // ── Case Activities panel ──────────────────────────────────────────────────
 const ACTIVITY_TABLE_COLS = ["Activity", "Activity Date", "Court Room", "Actioned To", "Outcomes"];
 
-function CaseActivitiesPanel({ matter, onAddDeadline }: { matter: Matter; onAddDeadline?: (d: Omit<Deadline, "id">) => void }) {
+function CaseActivitiesPanel({ matter, onAddDeadline, onAddTask }: { matter: Matter; onAddDeadline?: (d: Omit<Deadline, "id">) => void; onAddTask?: (t: any) => void }) {
   const { activities, addActivity, updateActivity, deleteActivity, uploadDraft, getDraftUrl } = useSupabaseCaseActivities(matter.id);
   const litigious = isLitigiousMatter(matter);
 
@@ -1310,6 +1310,17 @@ function CaseActivitiesPanel({ matter, onAddDeadline }: { matter: Matter; onAddD
         date: form.nextDate,
         type: activityToDeadlineType(form.activityType),
       });
+      // Drafting activities also become To Do tasks, so they can be worked through to Done
+      if (/^draft/i.test(form.activityType.trim())) {
+        onAddTask?.({
+          title: `${form.activityType} — ${matter.title}`,
+          matter: matter.title || matter.fileNo || "",
+          matterId: matter.id,
+          priority: "high",
+          status: "todo",
+          due: form.nextDate,
+        });
+      }
     }
     setDialogOpen(false);
     resetForm();
@@ -1416,7 +1427,7 @@ function CaseActivitiesPanel({ matter, onAddDeadline }: { matter: Matter; onAddD
             <div className="space-y-1.5">
               <Label>Next Date (optional)</Label>
               <Input type="date" value={form.nextDate} onChange={e => setForm(f => ({ ...f, nextDate: e.target.value }))} />
-              <p className="text-[11px] text-muted-foreground">If set, a matching deadline is created automatically on the Calendar.</p>
+              <p className="text-[11px] text-muted-foreground">If set, a matching deadline is created automatically on the Calendar. Drafting activities also appear in To Do.</p>
             </div>
 
             <label className="flex items-center gap-2 cursor-pointer">
