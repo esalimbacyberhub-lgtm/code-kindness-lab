@@ -223,11 +223,27 @@ function FeeNoteDocument({ fn, onClose }: { fn: FeeNote; onClose: () => void }) 
 // ─────────────────────────────────────────────────────────────────────────────
 // FEE NOTE FORM
 // ─────────────────────────────────────────────────────────────────────────────
-function FeeNoteForm({ onSave, onClose, count }: { onSave: (fn: FeeNote) => void; onClose: () => void; count: number }) {
-  const [f, setF] = useState({
-    client: "", clientAddr: "", matterRef: "", matterTitle: "",
-    partyA: "", partyB: "", date: isoToday(), dueDate: "", notes: "", vatEnabled: true,
-    items: [BLANK_ITEM()], disbursements: [] as FeeItem[],
+function FeeNoteForm({ onSave, onClose, count, initial, invoiced }: { onSave: (fn: FeeNote) => Promise<boolean | void> | boolean | void; onClose: () => void; count: number; initial?: FeeNote | null; invoiced?: boolean }) {
+  const [f, setF] = useState(() => {
+    const blank = {
+      client: "", clientAddr: "", matterRef: "", matterTitle: "",
+      partyA: "", partyB: "", date: isoToday(), dueDate: "", notes: "", vatEnabled: true,
+      items: [BLANK_ITEM()], disbursements: [] as FeeItem[],
+    }
+    if (!initial) return blank
+    const hasLines = !!initial.items && initial.items.length > 0
+    return {
+      client: initial.client || "", clientAddr: initial.clientAddr || "",
+      matterRef: initial.matterRef || "", matterTitle: initial.matterTitle || "",
+      partyA: initial.partyA || "", partyB: initial.partyB || "",
+      date: String(initial.date || "").slice(0, 10) || isoToday(),
+      dueDate: String(initial.dueDate || "").slice(0, 10),
+      notes: initial.notes || "",
+      // Notes saved before line items were stored keep their total as one line, VAT off, so the total is unchanged
+      vatEnabled: hasLines ? !!initial.vatEnabled : false,
+      items: hasLines ? initial.items : [{ id: uid(), description: "Professional fees (as previously issued)", hours: 1, rate: initial.total || 0 }],
+      disbursements: hasLines ? (initial.disbursements || []) : [],
+    }
   })
   const set = (k: string, v: unknown) => setF(p => ({ ...p, [k]: v }))
 
@@ -240,13 +256,15 @@ function FeeNoteForm({ onSave, onClose, count }: { onSave: (fn: FeeNote) => void
   const setItem = (arr: "items" | "disbursements", id: string, k: string, v: unknown) =>
     set(arr, (f[arr] as FeeItem[]).map(i => i.id === id ? { ...i, [k]: typeof v === "string" && k !== "description" ? +v : v } : i))
 
-  const save = () => {
+  const save = async () => {
     if (!f.client.trim() || !f.matterRef.trim()) return alert("Client and Matter Reference are required.")
-    onSave({
-      id: uid(), feeNoteNo: genFeeNoteNo(count),
-      ...f, subtotal, vat, total, status: "draft",
+    const ok = await onSave({
+      id: initial ? initial.id : uid(),
+      feeNoteNo: initial ? initial.feeNoteNo : genFeeNoteNo(count),
+      ...f, subtotal, vat, total,
+      status: initial ? initial.status : "draft",
     })
-    onClose()
+    if (ok !== false) onClose()
   }
 
   const inp: React.CSSProperties = { background: "#080f1c", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 7, padding: "9px 12px", color: "#e8eaf0", fontSize: 13, width: "100%", boxSizing: "border-box", outline: "none", fontFamily: "inherit" }
@@ -258,11 +276,22 @@ function FeeNoteForm({ onSave, onClose, count }: { onSave: (fn: FeeNote) => void
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
           <div>
-            <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: "0.14em", textTransform: "uppercase", color: "#4169E1", marginBottom: 4 }}>NEW FEE NOTE</div>
-            <div style={{ fontSize: 22, fontWeight: 900, color: "#e8eaf0" }}>{genFeeNoteNo(count)}</div>
+            <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: "0.14em", textTransform: "uppercase", color: "#4169E1", marginBottom: 4 }}>{initial ? "EDIT FEE NOTE" : "NEW FEE NOTE"}</div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: "#e8eaf0" }}>{initial ? initial.feeNoteNo : genFeeNoteNo(count)}</div>
           </div>
           <button onClick={onClose} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#94a3b8", borderRadius: 8, padding: "7px 16px", cursor: "pointer", fontSize: 13 }}>✕ Close</button>
         </div>
+
+        {initial && (!initial.items || initial.items.length === 0) && (
+          <div style={{ marginBottom: 14, padding: "10px 14px", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 8, color: "#fbbf24", fontSize: 12 }}>
+            This fee note was saved before its line items were stored, so its total is shown as a single line (VAT off). Re-enter the breakdown if you need it.
+          </div>
+        )}
+        {initial && initial.status !== "draft" && (
+          <div style={{ marginBottom: 14, padding: "10px 14px", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 8, color: "#fbbf24", fontSize: 12 }}>
+            This fee note is already {initial.status}. Changes are not sent to the client automatically{invoiced ? ", and the invoice generated from it will not change. Edit that invoice separately" : ""}.
+          </div>
+        )}
 
         {/* Client + Matter */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
@@ -347,7 +376,7 @@ function FeeNoteForm({ onSave, onClose, count }: { onSave: (fn: FeeNote) => void
         {/* Actions */}
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
           <button onClick={onClose} style={{ padding: "10px 22px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#94a3b8", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
-          <button onClick={save} style={{ padding: "10px 28px", background: "#4169E1", border: "none", color: "#fff", borderRadius: 8, fontSize: 13, fontWeight: 900, cursor: "pointer" }}>Issue Fee Note →</button>
+          <button onClick={save} style={{ padding: "10px 28px", background: "#4169E1", border: "none", color: "#fff", borderRadius: 8, fontSize: 13, fontWeight: 900, cursor: "pointer" }}>{initial ? "Save changes" : "Issue Fee Note →"}</button>
         </div>
       </div>
     </div>
@@ -388,9 +417,16 @@ export function FeeNotesTab({ invoices = [], addInvoice }: { invoices?: any[]; a
   }
   const [showForm, setShowForm]   = useState(false)
   const [viewing, setViewing]     = useState<FeeNote | null>(null)
+  const [editing, setEditing] = useState<FeeNote | null>(null)
 
   const save = async (fn: FeeNote) => {
-    await addFeeNote(fn)
+    return await addFeeNote(fn)
+  }
+
+  const saveEdit = async (fn: FeeNote) => {
+    const ok = await updateFeeNote(fn.id, fn)
+    if (ok !== false) setEditing(null)
+    return ok
   }
 
   const deleteFN = async (id: string) => {
@@ -458,7 +494,7 @@ export function FeeNotesTab({ invoices = [], addInvoice }: { invoices?: any[]; a
                   <tr key={fn.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
                     <td style={{ padding: "12px 14px", fontWeight: 800, color: "#4169E1" }}>{fn.feeNoteNo}</td>
                     <td style={{ padding: "12px 14px" }}>{fn.client}</td>
-                    <td style={{ padding: "12px 14px", color: C.muted, fontFamily: "monospace", fontSize: 12 }}>{fn.matterRef}</td>
+                    <td style={{ padding: "12px 14px", color: C.muted, fontFamily: "monospace", fontSize: 12 }}>{fn.matterRef || "—"}</td>
                     <td style={{ padding: "12px 14px", color: C.muted }}>{fmtDate(fn.date)}</td>
                     <td style={{ padding: "12px 14px", fontWeight: 800 }}>{kes(fn.total)}</td>
                     <td style={{ padding: "12px 14px" }}>
@@ -471,6 +507,7 @@ export function FeeNotesTab({ invoices = [], addInvoice }: { invoices?: any[]; a
                         {fn.status !== "draft" && !invoices.some(inv => inv.sourceFeeNoteId === fn.id) && <button onClick={() => generateInvoice(fn)} style={{ padding: "5px 12px", background: "rgba(201,168,76,0.14)", border: "1px solid rgba(201,168,76,0.3)", color: "#C9A84C", borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Generate Invoice</button>}
                         {invoices.some(inv => inv.sourceFeeNoteId === fn.id) && <span style={{ padding: "5px 10px", fontSize: 10, fontWeight: 800, color: "#22c55e" }}>✓ Invoiced</span>}
                         {fn.status !== "draft" && <FeeNoteWhatsApp feeNote={fn} />}
+                        <button onClick={() => setEditing(fn)} style={{ padding: "5px 12px", background: "rgba(65,105,225,0.12)", border: "1px solid rgba(65,105,225,0.25)", color: "#93c5fd", borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Edit</button>
                         <button onClick={() => deleteFN(fn.id)} style={{ padding: "5px 12px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "#ef4444", borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Del</button>
                       </div>
                     </td>
@@ -484,6 +521,7 @@ export function FeeNotesTab({ invoices = [], addInvoice }: { invoices?: any[]; a
 
       {/* Modals */}
       {showForm  && <FeeNoteForm onSave={save} onClose={() => setShowForm(false)} count={feeNotes.length} />}
+      {editing && <FeeNoteForm initial={editing} invoiced={invoices.some(inv => inv.sourceFeeNoteId === editing.id)} onSave={saveEdit} onClose={() => setEditing(null)} count={feeNotes.length} />}
       {viewing   && <FeeNoteDocument fn={viewing} onClose={() => setViewing(null)} />}
     </>
   )
