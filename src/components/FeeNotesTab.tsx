@@ -2,6 +2,7 @@ import { useState, useMemo } from "react"
 import { FeeNoteWhatsApp } from "./FeeNoteWhatsApp"
 import { FirmLetterhead, FirmFooter, FIRM } from "./FirmLetterhead"
 import { useSupabaseFeeNotes } from "@/features/legal/hooks/useSupabaseFeeNotes"
+import { supabase } from "@/lib/supabase"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -258,9 +259,15 @@ function FeeNoteForm({ onSave, onClose, count, initial, invoiced }: { onSave: (f
 
   const save = async () => {
     if (!f.client.trim() || !f.matterRef.trim()) return alert("Client and Matter Reference are required.")
+    let feeNoteNo = initial ? initial.feeNoteNo : ""
+    if (!initial) {
+      const { data, error } = await supabase.rpc("next_fee_note_no")
+      if (error || !data) return alert("Could not reserve a fee note number: " + (error?.message || "no number returned"))
+      feeNoteNo = data as string
+    }
     const ok = await onSave({
       id: initial ? initial.id : uid(),
-      feeNoteNo: initial ? initial.feeNoteNo : genFeeNoteNo(count),
+      feeNoteNo,
       ...f, subtotal, vat, total,
       status: initial ? initial.status : "draft",
     })
@@ -277,7 +284,7 @@ function FeeNoteForm({ onSave, onClose, count, initial, invoiced }: { onSave: (f
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
           <div>
             <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: "0.14em", textTransform: "uppercase", color: "#4169E1", marginBottom: 4 }}>{initial ? "EDIT FEE NOTE" : "NEW FEE NOTE"}</div>
-            <div style={{ fontSize: 22, fontWeight: 900, color: "#e8eaf0" }}>{initial ? initial.feeNoteNo : genFeeNoteNo(count)}</div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: "#e8eaf0" }}>{initial ? initial.feeNoteNo : "Number assigned on save"}</div>
           </div>
           <button onClick={onClose} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#94a3b8", borderRadius: 8, padding: "7px 16px", cursor: "pointer", fontSize: 13 }}>✕ Close</button>
         </div>
