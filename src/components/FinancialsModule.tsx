@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react"
+import { supabase } from "@/lib/supabase"
 import { FirmLetterhead, FirmFooter, FIRM } from "./FirmLetterhead"
 import { FinancialsOverview } from "./FinancialsOverview";
 import { formatDate } from "@/lib/formatDate";
@@ -177,10 +178,12 @@ function InvoiceForm({ onSave, onClose, count }) {
   const vat = form.vatEnabled ? subtotal * VAT_RATE : 0
   const total = subtotal + vat
 
-  const save = () => {
+  const save = async () => {
     if (!form.client.trim() || !form.matter.trim()) return alert("Client and Matter are required.")
-    onSave({ ...form, id: uid(), subtotal, total, createdAt: isoToday() })
-    onClose()
+    const { data: reservedNo, error: noErr } = await supabase.rpc("next_invoice_no")
+    if (noErr || !reservedNo) return alert("Could not reserve an invoice number: " + (noErr?.message || "no number returned"))
+    const ok = await onSave({ ...form, number: reservedNo, id: uid(), subtotal, total, createdAt: isoToday() })
+    if (ok !== false) onClose()
   }
 
   const inp: any = {
@@ -205,14 +208,14 @@ function InvoiceForm({ onSave, onClose, count }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
           <div>
             <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase", color: "#c9a84c", marginBottom: 4 }}>NEW INVOICE</div>
-            <div style={{ fontSize: 24, fontWeight: 800, color: "#e8eaf0" }}>{form.number}</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: "#e8eaf0" }}>Number assigned on save</div>
           </div>
           <button onClick={onClose} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#94a3b8", borderRadius: 8, padding: "7px 16px", cursor: "pointer", fontSize: 13 }}>✕ Close</button>
         </div>
 
         {/* Row 1 */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 14 }}>
-          {[["Client *", "client", "text", "e.g. Kamau Holdings Ltd"], ["Matter / File Ref *", "matter", "text", "e.g. Conveyancing — Karen"], ["Invoice No.", "number", "text", ""]].map(([label, key, type, ph]) => (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
+          {[["Client *", "client", "text", "e.g. Kamau Holdings Ltd"], ["Matter / File Ref *", "matter", "text", "e.g. Conveyancing — Karen"]].map(([label, key, type, ph]) => (
             <div key={key}>
               <label style={{ display: "block", marginBottom: 5, fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "#6b7fa3" }}>{label}</label>
               <input type={type} {...inp} value={form[key]} onChange={(e) => set(key, e.target.value)} placeholder={ph} />
