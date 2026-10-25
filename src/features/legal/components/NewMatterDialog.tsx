@@ -85,6 +85,9 @@ const BLANK = {
   manualYear:     String(new Date().getFullYear()),
   manualCode:     "",
   codeTouched:    false,
+  customLevel:    false,
+  customCourtName: "",
+  customCourtCode: "",
 };
 
 export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], matterCount = 0 }: Props) {
@@ -135,7 +138,8 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
 
   // The code can be typed by hand; the suggestion above is only the starting point
   const cleanCode = (v: string) => v.toUpperCase().replace(/^OM\//, "").replace(/[^A-Z0-9]/g, "").slice(0, 12);
-  const suggestedShown = suggestedCode || "OTH";
+  const customCourtCodeClean = f.isLitigious && f.customLevel ? cleanCode(f.customCourtCode) : "";
+  const suggestedShown = f.isLitigious && f.customLevel ? customCourtCodeClean : (suggestedCode || "OTH");
   const caseCode: string = f.manualNo && f.codeTouched ? cleanCode(f.manualCode) : suggestedShown;
   const codeFieldValue = f.codeTouched ? f.manualCode : suggestedShown;
 
@@ -150,7 +154,7 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
         ? `"${caseCode}" starts with a court code, so this matter will appear as litigious in the Matter Hub.`
         : "";
   const manualValid = caseCode.length >= 1
-  const shownFileNo = f.manualNo
+  const shownFileNo = (f.manualNo || (f.isLitigious && f.customLevel))
     ? `OM/${caseCode || "___"}/___/${new Date().getFullYear()}`
     : fileNo;
 
@@ -174,7 +178,10 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
   const submit = async () => {
     if (!f.client.trim() || !f.title.trim()) return;
     let reservedNo: string | undefined;
-    if (f.manualNo) {
+    if (f.isLitigious && f.customLevel && (!f.customCourtName.trim() || !customCourtCodeClean)) {
+      alert("Enter the court name and its code, for example Industrial Court and IC."); return;
+    }
+    if (f.manualNo || (f.isLitigious && f.customLevel)) {
       if (!manualValid) { alert("Enter a case number prefix, for example IP."); return; }
       setBusy(true);
       const { data, error } = await supabase.rpc("reserve_matter_number_auto", { p_code: caseCode });
@@ -186,7 +193,7 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
       f.isCustom && f.customType.trim() ? f.customType.trim() : f.type
     ) as Matter["type"];
 
-    if (f.isLitigious && f.useCustomStation && f.customStation.trim()) {
+    if (f.isLitigious && f.useCustomStation && f.customStation.trim() && !f.customLevel) {
       addCustomRegistry(f.customStation.trim(), f.courtLevel);
     }
 
@@ -198,7 +205,7 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
       partyA:      partyAPreview,
       partyB:      partyBPreview,
       // court: exact court_registries.name so the DB trigger's category lookup matches
-      court:       f.isLitigious && effectiveStation ? effectiveStation : undefined,
+      court: f.isLitigious ? ((effectiveStation || (f.customLevel ? f.customCourtName.trim() : "")) || undefined) : undefined,
       // Automatic: fileNo omitted and the DB trigger assigns it atomically on insert.
       // Manual: the number was validated and reserved above.
       ...(reservedNo ? { fileNo: reservedNo } : {}),
@@ -353,8 +360,10 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
                 <div className="space-y-1.5">
                   <Label>Court Level</Label>
                   <Select
-                    value={f.courtLevel}
-                    onValueChange={v => setF(p => ({ ...p, courtLevel: v, courtStation: "", customStation: "", useCustomStation: false }))}
+                    value={f.customLevel ? "__custom__" : f.courtLevel}
+                    onValueChange={v => setF(p => v === "__custom__"
+                      ? { ...p, customLevel: true, courtStation: "", customStation: "", useCustomStation: true }
+                      : { ...p, customLevel: false, customCourtName: "", customCourtCode: "", courtLevel: v, courtStation: "", customStation: "", useCustomStation: false })}
                   >
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -366,6 +375,9 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
                           {level}
                         </SelectItem>
                       ))}
+                      <SelectItem value="__custom__">
+                        <span className="text-primary">✎ Other — specify manually</span>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -400,6 +412,33 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
                     </Select>
                   )}
                 </div>
+              </div>
+            )}
+            {f.isLitigious && f.customLevel && (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pl-6">
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label>Court name *</Label>
+                  <Input
+                    value={f.customCourtName}
+                    onChange={e => set("customCourtName", e.target.value)}
+                    placeholder="e.g. Industrial Court"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Court code *</Label>
+                  <div className="flex items-center gap-1">
+                    <span className="font-mono text-sm text-muted-foreground">OM/</span>
+                    <Input
+                      value={f.customCourtCode}
+                      onChange={e => set("customCourtCode", cleanCode(e.target.value))}
+                      placeholder="e.g. IC"
+                      className="font-mono"
+                    />
+                  </div>
+                </div>
+                <p className="sm:col-span-3 text-[11px] text-muted-foreground">
+                  Type the court name and the code used in its case numbers. The number and year are assigned automatically when you save. Type the station or registry in the box above.
+                </p>
               </div>
             )}
           </div>
