@@ -98,12 +98,23 @@ const COURT_GROUP_ORDER = [...Object.values(COURT_CODE_LABELS), "Non-Litigious"]
 // "COA" confirmed by Omuyoma as Court of Appeal (covers COACA/COACAPPL).
 const LEGACY_PREFIX_CODES = ["ELRC", "ELC", "HC", "SCC", "SC", "MC", "KC", "TRB", "COA"];
 
+// A matter filed in a court that is not on the standard list (court typed manually in New Matter):
+// it has a court set, but its case number code is not a standard court code.
+function hasCustomCourt(m: Matter): boolean {
+  const code = m.fileNo?.split("/")[1];
+  if (!code || !(m.court || "").trim()) return false;
+  if (COURT_CODE_LABELS[code]) return false;
+  if (LEGACY_PREFIX_CODES.some(p => code.startsWith(p))) return false;
+  return true;
+}
+
 function getMatterCourtGroup(m: Matter): string {
   const code = m.fileNo?.split("/")[1];
   if (!code) return "Non-Litigious";
   if (COURT_CODE_LABELS[code]) return COURT_CODE_LABELS[code];
   const prefixMatch = LEGACY_PREFIX_CODES.find(p => code.startsWith(p));
   if (prefixMatch) return COURT_CODE_LABELS[prefixMatch];
+  if (hasCustomCourt(m)) return `Other court (${code})`;
   return "Non-Litigious";
 }
 
@@ -302,7 +313,7 @@ function isLitigiousMatter(m: Matter): boolean {
   const code = m.fileNo?.split("/")[1];
   if (!code) return false;
   const knownCourtCodes = ["SC", "COA", "HC", "ELC", "ELRC", "MC", "KC", "SCC", "TRB"];
-  return knownCourtCodes.some(c => code.startsWith(c));
+  return knownCourtCodes.some(c => code.startsWith(c)) || hasCustomCourt(m);
 }
 
 // Activity type -> matching deadline type, for the auto-created calendar entry
@@ -873,8 +884,8 @@ export const Matters = ({
       map.get(g)!.push(m);
     });
     return Array.from(map.entries()).sort((a, b) => {
-      const ia = COURT_GROUP_ORDER.indexOf(a[0]);
-      const ib = COURT_GROUP_ORDER.indexOf(b[0]);
+      const ia = COURT_GROUP_ORDER.indexOf(a[0]) === -1 ? 999 : COURT_GROUP_ORDER.indexOf(a[0]);
+      const ib = COURT_GROUP_ORDER.indexOf(b[0]) === -1 ? 999 : COURT_GROUP_ORDER.indexOf(b[0]);
       if (ia === -1 && ib === -1) return a[0].localeCompare(b[0]);
       if (ia === -1) return 1;
       if (ib === -1) return -1;

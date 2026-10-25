@@ -149,7 +149,7 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
   const codeWarning =
     !f.manualNo || !caseCode ? "" :
     f.isLitigious && !codeLooksLitigious
-      ? `This matter is marked litigious, but "${caseCode}" does not start with a court code (${COURT_CODES.join(", ")}), so it will appear under Non-Litigious in the Matter Hub.`
+      ? `This matter is marked litigious, but "${caseCode}" is not a standard court code (${COURT_CODES.join(", ")}). ${(effectiveStation || (f.customLevel && f.customCourtName.trim())) ? `It will appear under "Other court (${caseCode})" in the Matter Hub.` : "No court is selected, so it will appear under Non-Litigious in the Matter Hub."}`
       : !f.isLitigious && codeLooksLitigious
         ? `"${caseCode}" starts with a court code, so this matter will appear as litigious in the Matter Hub.`
         : "";
