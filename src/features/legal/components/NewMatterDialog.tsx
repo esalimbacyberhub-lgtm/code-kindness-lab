@@ -383,9 +383,6 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
                     <SelectContent>
                       {Object.keys(COURT_CATEGORY_CODES).map(level => (
                         <SelectItem key={level} value={level}>
-                          <span className="font-mono text-[11px] text-muted-foreground mr-2">
-                            {COURT_CATEGORY_CODES[level]}
-                          </span>
                           {level}
                         </SelectItem>
                       ))}
