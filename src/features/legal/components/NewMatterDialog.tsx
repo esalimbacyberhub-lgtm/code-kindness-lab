@@ -149,17 +149,9 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
       : !f.isLitigious && codeLooksLitigious
         ? `"${caseCode}" starts with a court code, so this matter will appear as litigious in the Matter Hub.`
         : "";
-  const seqNum  = parseInt(f.manualSeq, 10);
-  const yearNum = parseInt(f.manualYear, 10);
-  const manualValid =
-    caseCode.length >= 1 &&
-    Number.isInteger(seqNum) && seqNum >= 1 && seqNum <= 9999 &&
-    Number.isInteger(yearNum) && yearNum >= 1990 && yearNum <= new Date().getFullYear() + 1;
-  const manualFileNo = manualValid
-    ? `OM/${caseCode}/${String(seqNum).padStart(3, "0")}/${yearNum}`
-    : "";
+  const manualValid = caseCode.length >= 1
   const shownFileNo = f.manualNo
-    ? (manualFileNo || `OM/${caseCode}/___/${f.manualYear}`)
+    ? `OM/${caseCode || "___"}/___/${new Date().getFullYear()}`
     : fileNo;
 
   // Multi-party helpers
@@ -183,14 +175,12 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
     if (!f.client.trim() || !f.title.trim()) return;
     let reservedNo: string | undefined;
     if (f.manualNo) {
-      if (!manualValid) { alert("Enter a valid prefix, sequence number (1-9999) and year."); return; }
+      if (!manualValid) { alert("Enter a case number prefix, for example IP."); return; }
       setBusy(true);
-      const { data, error } = await supabase.rpc("reserve_matter_number", {
-        p_code: caseCode, p_year: yearNum, p_seq: seqNum,
-      });
+      const { data, error } = await supabase.rpc("reserve_matter_number_auto", { p_code: caseCode });
       setBusy(false);
-      if (error) { alert("Could not reserve that case number: " + error.message); return; }
-      reservedNo = (data as string) || manualFileNo;
+      if (error || !data) { alert("Could not reserve a case number: " + (error?.message || "no number returned")); return; }
+      reservedNo = data as string;
     }
     const effectiveType = (
       f.isCustom && f.customType.trim() ? f.customType.trim() : f.type
@@ -242,7 +232,7 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
           <FileText className="w-5 h-5 text-primary shrink-0" />
           <div>
             <p className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground font-mono mb-0.5">
-              {f.manualNo ? "Manual Case Number" : "Auto Case Number"}
+              {f.manualNo ? "Case Number · custom prefix" : "Auto Case Number"}
             </p>
             <p className="font-mono font-bold text-primary text-xl leading-none tracking-wide">
               {shownFileNo}
@@ -259,11 +249,11 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
               onChange={e => set("manualNo", e.target.checked)}
               className="rounded border-border"
             />
-            <span className="text-sm">Enter case number manually</span>
+            <span className="text-sm">Type the case number prefix manually</span>
           </label>
           {f.manualNo && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pl-6">
-              <div className="space-y-1.5 col-span-2 sm:col-span-1">
+            <div className="grid grid-cols-1 gap-3 pl-6">
+              <div className="space-y-1.5">
                 <Label>Prefix (type the code)</Label>
                 <div className="flex items-center gap-1">
                   <span className="font-mono text-sm text-muted-foreground">OM/</span>
@@ -280,28 +270,11 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
                   </button>
                 )}
               </div>
-              <div className="space-y-1.5">
-                <Label>Sequence</Label>
-                <Input
-                  inputMode="numeric"
-                  value={f.manualSeq}
-                  onChange={e => set("manualSeq", e.target.value.replace(/\D/g, "").slice(0, 4))}
-                  placeholder="e.g. 012"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Year</Label>
-                <Input
-                  inputMode="numeric"
-                  value={f.manualYear}
-                  onChange={e => set("manualYear", e.target.value.replace(/\D/g, "").slice(0, 4))}
-                />
-              </div>
-              <p className="col-span-2 sm:col-span-3 text-[11px] text-muted-foreground">
-                The code is suggested from the court or matter type chosen below, but you can type any code. "OM/" is added automatically.
+              <p className="text-[11px] text-muted-foreground">
+                The code is suggested from the court or matter type chosen below, but you can type any code. "OM/" is added automatically. The number and year are assigned automatically when you save.
               </p>
               {codeWarning && (
-                <p className="col-span-2 sm:col-span-3 text-[11px] text-warning">{codeWarning}</p>
+                <p className="text-[11px] text-warning">{codeWarning}</p>
               )}
             </div>
           )}
