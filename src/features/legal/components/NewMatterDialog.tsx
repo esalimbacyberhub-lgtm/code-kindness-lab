@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog, DialogContent, DialogHeader,
   DialogTitle, DialogFooter, DialogDescription,
@@ -154,9 +154,22 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
         ? `"${caseCode}" starts with a court code, so this matter will appear as litigious in the Matter Hub.`
         : "";
   const manualValid = caseCode.length >= 1
-  const shownFileNo = (f.manualNo || (f.isLitigious && f.customLevel))
+  // Next number for this prefix, read from the database without using it up
+  const [nextNo, setNextNo] = useState<string | null>(null);
+  useEffect(() => {
+    setNextNo(null);
+    if (!open || !caseCode) return;
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      const { data, error } = await supabase.rpc("peek_matter_number", { p_code: caseCode });
+      if (!cancelled) setNextNo(!error && data ? (data as string) : null);
+    }, 300);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [caseCode, open]);
+  const fallbackNo = (f.manualNo || (f.isLitigious && f.customLevel))
     ? `OM/${caseCode || "___"}/___/${new Date().getFullYear()}`
     : fileNo;
+  const shownFileNo = nextNo || fallbackNo;
 
   // Multi-party helpers
   const updateParty = (side: "plaintiffs" | "defendants", idx: number, value: string) =>
@@ -194,7 +207,7 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
     ) as Matter["type"];
 
     if (f.isLitigious && f.useCustomStation && f.customStation.trim() && !f.customLevel) {
-      addCustomRegistry(f.customStation.trim(), f.courtLevel);
+      await addCustomRegistry(f.customStation.trim(), f.courtLevel);
     }
 
     setBusy(true);
@@ -239,11 +252,12 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
           <FileText className="w-5 h-5 text-primary shrink-0" />
           <div>
             <p className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground font-mono mb-0.5">
-              {f.manualNo ? "Case Number · custom prefix" : "Auto Case Number"}
+              {f.manualNo ? "Next Case Number · custom prefix" : "Next Case Number"}
             </p>
             <p className="font-mono font-bold text-primary text-xl leading-none tracking-wide">
               {shownFileNo}
             </p>
+            <p className="text-[10px] text-muted-foreground mt-1">Confirmed when you save</p>
           </div>
         </div>
 
