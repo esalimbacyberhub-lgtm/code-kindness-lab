@@ -90,7 +90,23 @@ const Index = () => {
         <Sidebar current={state.currentView} role={state.role} collapsed={state.sidebarCollapsed} onToggle={toggleSidebar} onNavigate={setView} />
         <main className="flex-1 overflow-y-auto custom-scroll p-6 md:p-8">{renderView()}</main>
       </div>
-      <NewMatterDialog open={matterDialogOpen} onOpenChange={setMatterDialogOpen} matterCount={state.matters.length} onCreate={(m) => { addMatter(m); setMatterDialogOpen(false); }} />
+      <NewMatterDialog open={matterDialogOpen} onOpenChange={setMatterDialogOpen} matterCount={state.matters.length} onCreate={async (m, files) => {
+        const id = await addMatter(m);
+        if (files && files.length > 0) {
+          if (!id) {
+            alert("The matter was not created, so its files were not uploaded.");
+          } else {
+            const today = new Date().toISOString().split("T")[0];
+            for (const file of files) {
+              await addDocument({
+                file, name: file.name, matter: "", matterId: id, folderId: null,
+                fileType: file.type || "application/octet-stream", date: today, uploadedBy: state.role,
+              });
+            }
+          }
+        }
+        setMatterDialogOpen(false);
+      }} />
     </div>
   );
 };

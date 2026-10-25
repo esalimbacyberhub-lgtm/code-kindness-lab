@@ -10,7 +10,7 @@ import {
   Select, SelectContent, SelectItem,
   SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { FileText, Users, Plus, X } from "lucide-react";
+import { FileText, Users, Plus, X, Paperclip } from "lucide-react";
 import type { Matter } from "../types";
 import { useCourtRegistries } from "../hooks/useCourtRegistries";
 import { supabase } from "@/lib/supabase";
@@ -18,7 +18,7 @@ import { supabase } from "@/lib/supabase";
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
-  onCreate: (m: Omit<Matter, "id" | "status">) => void;
+  onCreate: (m: Omit<Matter, "id" | "status">, files?: File[]) => void | Promise<unknown>;
   matters?: any[];
   matterCount?: number;
 }
@@ -87,6 +87,7 @@ const BLANK = {
 
 export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], matterCount = 0 }: Props) {
   const [f, setF] = useState(BLANK);
+  const [files, setFiles] = useState<File[]>([]);
   const set = (k: keyof typeof BLANK, v: string | boolean) =>
     setF(p => ({ ...p, [k]: v }));
 
@@ -108,7 +109,18 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
           : undefined),
   );
 
-  const reset = () => setF(BLANK);
+  const reset = () => { setF(BLANK); setFiles([]); };
+
+  // Optional case files, uploaded to the matter's Documents once it is created
+  const MAX_FILE_MB = 20;
+  const MAX_FILES = 10;
+  const addFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = Array.from(e.target.files || []);
+    e.target.value = "";
+    const tooBig = picked.filter(p => p.size > MAX_FILE_MB * 1024 * 1024);
+    if (tooBig.length) alert(`Skipped (over ${MAX_FILE_MB} MB): ` + tooBig.map(p => p.name).join(", "));
+    setFiles(prev => [...prev, ...picked.filter(p => p.size <= MAX_FILE_MB * 1024 * 1024)].slice(0, MAX_FILES));
+  };
 
   // Manual case number: the prefix mirrors what set_matter_file_no() would use
   const [busy, setBusy] = useState(false);
@@ -168,7 +180,8 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
       addCustomRegistry(f.customStation.trim(), f.courtLevel);
     }
 
-    onCreate({
+    setBusy(true);
+    await onCreate({
       client:      f.client.trim(),
       title:       f.title.trim(),
       type:        effectiveType,
@@ -180,7 +193,8 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
       // Manual: the number was validated and reserved above.
       ...(reservedNo ? { fileNo: reservedNo } : {}),
       openedDate:  new Date().toISOString().split("T")[0],
-    });
+    }, files);
+    setBusy(false);
     reset();
     onOpenChange(false);
   };
@@ -195,7 +209,7 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
 
   return (
     <Dialog open={open} onOpenChange={o => { if (!o) reset(); onOpenChange(o); }}>
-      <DialogContent className="glass-card border-border max-w-lg">
+      <DialogContent className="glass-card border-border max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-serif text-2xl">New Matter</DialogTitle>
           <DialogDescription>
@@ -455,6 +469,34 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
 
         </div>
 
+        {/* ── Case files (optional) ── */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label>Case files (optional)</Label>
+            <label className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 cursor-pointer font-semibold">
+              <Paperclip className="w-3.5 h-3.5" /> Attach files
+              <input type="file" multiple className="hidden" onChange={addFiles} />
+            </label>
+          </div>
+          {files.length > 0 ? (
+            <ul className="space-y-1">
+              {files.map((file, i) => (
+                <li key={i} className="flex items-center justify-between gap-2 text-xs px-3 py-1.5 rounded-lg bg-muted/30">
+                  <span className="truncate">{file.name}</span>
+                  <span className="flex items-center gap-2 shrink-0">
+                    <span className="text-muted-foreground">{Math.max(1, Math.round(file.size / 1024))} KB</span>
+                    <button type="button" onClick={() => setFiles(p => p.filter((_, idx) => idx !== i))} className="text-muted-foreground hover:text-destructive" title="Remove">
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-[11px] text-muted-foreground">Optional. Files are saved in the matter's Documents once it is created.</p>
+          )}
+        </div>
+
         <DialogFooter>
           <Button variant="ghost" onClick={() => { reset(); onOpenChange(false); }}>
             Cancel
@@ -464,7 +506,7 @@ export function NewMatterDialog({ open, onOpenChange, onCreate, matters = [], ma
             disabled={!f.client.trim() || !f.title.trim() || busy}
             className="btn-royal"
           >
-            Open Matter →
+            {busy ? (files.length > 0 ? "Creating & uploading..." : "Creating...") : "Open Matter →"}
           </Button>
         </DialogFooter>
       </DialogContent>

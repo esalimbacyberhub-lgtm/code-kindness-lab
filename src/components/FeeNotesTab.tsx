@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react"
+import { FeeNoteWhatsApp } from "./FeeNoteWhatsApp"
 import { FirmLetterhead, FirmFooter, FIRM } from "./FirmLetterhead"
 import { useSupabaseFeeNotes } from "@/features/legal/hooks/useSupabaseFeeNotes"
 
@@ -469,6 +470,7 @@ export function FeeNotesTab({ invoices = [], addInvoice }: { invoices?: any[]; a
                         {fn.status === "draft" && <button onClick={() => markIssued(fn.id)} style={{ padding: "5px 12px", background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)", color: "#22c55e", borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Issue</button>}
                         {fn.status !== "draft" && !invoices.some(inv => inv.sourceFeeNoteId === fn.id) && <button onClick={() => generateInvoice(fn)} style={{ padding: "5px 12px", background: "rgba(201,168,76,0.14)", border: "1px solid rgba(201,168,76,0.3)", color: "#C9A84C", borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Generate Invoice</button>}
                         {invoices.some(inv => inv.sourceFeeNoteId === fn.id) && <span style={{ padding: "5px 10px", fontSize: 10, fontWeight: 800, color: "#22c55e" }}>✓ Invoiced</span>}
+                        {fn.status !== "draft" && <FeeNoteWhatsApp feeNote={fn} />}
                         <button onClick={() => deleteFN(fn.id)} style={{ padding: "5px 12px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "#ef4444", borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Del</button>
                       </div>
                     </td>

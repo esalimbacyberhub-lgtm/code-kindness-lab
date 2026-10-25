@@ -64,7 +64,7 @@ export function useLegalState() {
   const deleteTask = useCallback((id: string) => { sbTask.deleteTask(id); }, [sbTask]);
 
   const addMatter = useCallback((m: Omit<Matter, "id" | "status">) => {
-    sb.addMatter({ ...m, openedDate: new Date().toISOString().slice(0, 10) });
+    return sb.addMatter({ ...m, openedDate: new Date().toISOString().slice(0, 10) });
   }, [sb]);
 
   const addDeadline = useCallback((d: any) => { sbDl.addDeadline(d); }, [sbDl]);
@@ -87,7 +87,7 @@ export function useLegalState() {
   const addMessage = useCallback((msg: any) => { sbMsg.sendMessage(msg); }, [sbMsg]);
 
   const addInvoice = useCallback((i: any) => { sbInv.addInvoice(i); }, [sbInv]);
-  const addDocument = useCallback((d: any) => { sbDoc.addDocument(d); }, [sbDoc]);
+  const addDocument = useCallback((d: any) => sbDoc.addDocument(d), [sbDoc]);
 
   const deleteDocument = useCallback((id: string) => { sbDoc.deleteDocument(id); }, [sbDoc]);
   const updateDocument = useCallback((id: string, updates: any) => { sbDoc.updateDocument(id, updates); }, [sbDoc]);

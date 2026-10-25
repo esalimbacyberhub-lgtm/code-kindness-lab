@@ -106,8 +106,9 @@ export function useSupabaseMatters() {
     const { data: { session } } = await supabase.auth.getSession();
     const row = matterToRow(matter);
     if (session) row.created_by = session.user.id;
-    const { error } = await supabase.from("matters").insert([row]);
-    if (error) { console.error("addMatter:", error); alert("Could not save matter: " + error.message); }
+    const { data, error } = await supabase.from("matters").insert([row]).select("id").single();
+    if (error) { console.error("addMatter:", error); alert("Could not save matter: " + error.message); return null; }
+    return (data?.id as string | undefined) ?? null;
   }, []);
 
   const updateMatter = useCallback(async (id: string, updates: any) => {
