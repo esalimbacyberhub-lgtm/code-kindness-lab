@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { interpretDelete } from "@/lib/masterPassword";
 import { supabase } from "@/lib/supabase";
 
 const BUCKET = "matter-documents";
@@ -119,13 +120,15 @@ export function useSupabaseDocuments(matters: any[]) {
   // stored file from Storage once the DB row is confirmed deleted.
   const deleteDocumentWithPassword = useCallback(async (id: string, password: string): Promise<{ ok: boolean; error?: string }> => {
     const { data: row } = await supabase.from("documents").select("storage_path").eq("id", id).single();
-    const { error } = await supabase.rpc("delete_document_with_password", {
+    const { data: delData, error } = await supabase.rpc("delete_document_with_password", {
       p_document_id: id,
       p_password: password,
     });
     if (error) {
       return { ok: false, error: error.message || "Failed to delete document" };
     }
+    const delRes = interpretDelete(delData)
+    if (!delRes.ok) return delRes
     if (row?.storage_path) {
       const { error: rmErr } = await supabase.storage.from(BUCKET).remove([row.storage_path]);
       if (rmErr) console.error("storage remove:", rmErr);

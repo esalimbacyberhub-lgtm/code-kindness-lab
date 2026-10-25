@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { interpretDelete } from "@/lib/masterPassword";
 import { supabase } from "@/lib/supabase";
 import type { Matter } from "../types";
 
@@ -124,14 +125,14 @@ export function useSupabaseMatters() {
   // Password-gated matter delete — same security_settings-backed check used
   // for folders and documents.
   const deleteMatterWithPassword = useCallback(async (id: string, password: string): Promise<{ ok: boolean; error?: string }> => {
-    const { error } = await supabase.rpc("delete_matter_with_password", {
+    const { data: delData, error } = await supabase.rpc("delete_matter_with_password", {
       p_matter_id: id,
       p_password: password,
     });
     if (error) {
       return { ok: false, error: error.message || "Failed to delete matter" };
     }
-    return { ok: true };
+    return interpretDelete(delData);
   }, []);
 
   const assignMatter = useCallback(async (id: string, assigneeId: string) => {

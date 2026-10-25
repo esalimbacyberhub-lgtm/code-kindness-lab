@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { interpretDelete } from "@/lib/masterPassword";
 import { supabase } from "@/lib/supabase";
 import type { MatterFolder } from "../types";
 
@@ -80,13 +81,15 @@ export function useMatterFolders(matterId: string | null) {
   }, [refetch]);
 
   const deleteFolder = useCallback(async (id: string, password: string): Promise<{ ok: boolean; error?: string }> => {
-    const { error } = await supabase.rpc("delete_folder_with_password", {
+    const { data: delData, error } = await supabase.rpc("delete_folder_with_password", {
       p_folder_id: id,
       p_password: password,
     });
     if (error) {
       return { ok: false, error: error.message || "Failed to delete folder" };
     }
+    const delRes = interpretDelete(delData);
+    if (!delRes.ok) return delRes;
     await refetch();
     return { ok: true };
   }, [refetch]);
